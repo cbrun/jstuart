@@ -22,7 +22,7 @@ import fr.obeo.tools.stuart.git.GitLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
 import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
 
-public class SiriusHeartBeats {
+public class SiriusHeartBeatsTest {
 
 	@Test
 	public void sendEventsToSiriusPrivateChan() throws Exception {
