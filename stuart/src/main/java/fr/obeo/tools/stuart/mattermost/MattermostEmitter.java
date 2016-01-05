@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.Call;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -45,7 +46,12 @@ public class MattermostEmitter {
 		Request request = new Request.Builder().url(url).post(body).build();
 		Response response;
 		try {
-			response = client.newCall(request).execute();
+			Call call = client.newCall(request);
+			response = call.execute();
+			if (!response.isSuccessful()) {
+				throw new IOException("Unexpected code " + response + "canceled ?:" + call.isCanceled());
+			}
+			System.out.println(response.message());
 			response.body().close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
