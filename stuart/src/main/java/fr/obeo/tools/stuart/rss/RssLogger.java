@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document.OutputSettings;
@@ -23,7 +22,7 @@ import com.rometools.rome.io.XmlReader;
 
 import fr.obeo.tools.stuart.Post;
 
-public class RssLogger implements Supplier<Collection<Post>> {
+public class RssLogger {
 
 	private String RSS_ICON = "http://www.megaicons.net/static/img/icons_title/40/110/title/rss-icon.png";
 	private URL feedUrl;
@@ -66,7 +65,7 @@ public class RssLogger implements Supplier<Collection<Post>> {
 						}
 
 						Post newPost = Post.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
-								entry.getAuthor(), RSS_ICON,entry.getPublishedDate()).addURLs(entry.getUri());
+								entry.getAuthor(), RSS_ICON, entry.getPublishedDate()).addURLs(entry.getUri());
 						Element img = Jsoup.parse(html).getElementsByTag("img").first();
 						if (img != null && img.attr("src") != null) {
 							String href = img.attr("src");

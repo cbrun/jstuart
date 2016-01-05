@@ -1,7 +1,6 @@
 package fr.obeo.tools.stuart.mattermost;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -15,7 +14,7 @@ import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.MattermostPost;
 
-public class MattermostEmitter implements Consumer<MattermostPost> {
+public class MattermostEmitter {
 
 	public static final MediaType JSON = MediaType.parse("application/json");
 
