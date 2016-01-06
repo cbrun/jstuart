@@ -26,9 +26,12 @@ public class SiriusHeartBeatsTest {
 
 	@Test
 	public void sendEventsToSiriusPrivateChan() throws Exception {
+
+//		System.setProperty("java.net.preferIPv4Stack", "true");
+//		System.setProperty("deployment.security.TLSv1.2", "true");
 		String host = "mattermost-test.eclipse.org";
 		String storage = System.getenv("WORKSPACE");
-		if (storage ==null) {
+		if (storage == null) {
 			storage = ".";
 		}
 		
@@ -38,11 +41,12 @@ public class SiriusHeartBeatsTest {
 			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
 
 			Calendar cal = Calendar.getInstance();
-			int nbDays = 30;
+			int nbDays = 3;
 			cal.add(Calendar.DATE, -nbDays);
 			Date daysAgo = cal.getTime();
 
-			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(
+					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
@@ -75,16 +79,16 @@ public class SiriusHeartBeatsTest {
 	}
 
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
-		if (!trace.containsKey(post.getKey())) {
+	//	if (!trace.containsKey(post.getKey())) {
 			try {
 				System.err.println("Sending :" + post.getKey());
 				emitter.accept(MattermostPost.fromGenericPost(post));
 				trace.put(post.getKey(), new Date());
 				Thread.sleep(500);
 			} catch (Exception e) {
-
+				e.printStackTrace();
 			}
-		}
+//		}
 	}
 
 }

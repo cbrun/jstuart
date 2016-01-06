@@ -90,13 +90,18 @@ public class MattermostPost {
 		}));
 
 		StringBuffer message = new StringBuffer();
+		String bodyString = cleanedBody.toString().trim();
+		if (bodyString.length() > 250) {
+			bodyString = bodyString.substring(0, 250);
+			bodyString += "(...)";
+		}
 		if (in.getSubject().isPresent()) {
 			message.append("##### ");
 			message.append(in.getSubject().get().trim());
 			message.append(' ');
 			message.append(tags);
 			message.append('\n');
-			message.append(cleanedBody.toString().trim());
+			message.append(bodyString);
 			embedMedias(in, message);
 			message.append('\n');
 			message.append(urls);
@@ -106,7 +111,7 @@ public class MattermostPost {
 				message.append(tags);
 				message.append('\n');
 			}
-			message.append(cleanedBody.toString().trim());
+			message.append(bodyString);
 			embedMedias(in, message);
 			message.append('\n');
 			message.append(urls);

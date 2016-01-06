@@ -12,9 +12,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.Post;
 import fr.obeo.tools.stuart.jenkins.model.BuildAction;
@@ -24,6 +21,9 @@ import fr.obeo.tools.stuart.jenkins.model.BuildResult;
 import fr.obeo.tools.stuart.jenkins.model.ChangeSetItem;
 import fr.obeo.tools.stuart.jenkins.model.Job;
 import fr.obeo.tools.stuart.jenkins.model.ServerResult;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class JenkinsLogger {
 
