@@ -10,13 +10,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.Post;
 import fr.obeo.tools.stuart.gerrit.model.PatchSet;
 import fr.obeo.tools.stuart.git.GitLogger;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class GerritLogger {
 

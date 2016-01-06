@@ -2,19 +2,22 @@ package fr.obeo.tools.stuart.mattermost;
 
 import java.io.IOException;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.FormEncodingBuilder;
+import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.MultipartBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.MattermostPost;
-import okhttp3.Call;
-import okhttp3.FormBody;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class MattermostEmitter {
 
@@ -40,10 +43,18 @@ public class MattermostEmitter {
 		// .build();
 		this.client = new OkHttpClient();
 		// this.client.setConnectionSpecs(Collections.singletonList(spec));
+		this.client.setHostnameVerifier(new HostnameVerifier() {
+
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		});
 	}
 
 	public void accept(MattermostPost post) {
-		RequestBody body = new FormBody.Builder().add("payload", gson.toJson(post)).build();
+		// gson.toJson(post)
+		RequestBody body = new FormEncodingBuilder().add("payload",gson.toJson(post)).build();
 
 		HttpUrl url = new HttpUrl.Builder().scheme(scheme).host(host).addPathSegment("hooks").addPathSegment(channel)
 				.build();
