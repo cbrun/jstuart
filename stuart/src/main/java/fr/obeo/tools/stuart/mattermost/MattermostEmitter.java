@@ -36,15 +36,7 @@ public class MattermostEmitter {
 		this.gson = new GsonBuilder().disableHtmlEscaping()
 				.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting()
 				.serializeNulls().create();
-
-		// ConnectionSpec spec = new
-		// ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS).tlsVersions(TlsVersion.TLS_1_2)
-		// .cipherSuites(CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		// CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		// CipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256)
-		// .build();
 		this.client = new OkHttpClient();
-		// this.client.setConnectionSpecs(Collections.singletonList(spec));
 		this.client.setHostnameVerifier(new HostnameVerifier() {
 
 			@Override
@@ -52,15 +44,18 @@ public class MattermostEmitter {
 				return true;
 			}
 		});
-		client.setCertificatePinner(new CertificatePinner.Builder()
-			       .add("mattermost-test.eclipse.org", "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
-			       .add("92.51.162.68", "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
-			       .add("Let's Encrypt Authority X1, O=Let's Encrypt", "sha1/2ptSqHcRadMTGKVn4dybH0S1s1w=")
-			       
-			       .build());
-		
-		Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("proxy.eclipse.org", 9898));
-		client.setProxy(proxy);
+		// client.setCertificatePinner(new CertificatePinner.Builder()
+		// .add("mattermost-test.eclipse.org",
+		// "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
+		// .add("92.51.162.68", "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
+		// .add("Let's Encrypt Authority X1, O=Let's Encrypt",
+		// "sha1/2ptSqHcRadMTGKVn4dybH0S1s1w=")
+		//
+		// .build());
+		////
+		// Proxy proxy = new Proxy(Proxy.Type.HTTP,
+		// InetSocketAddress.createUnresolved("proxy.eclipse.org", 9898));
+		// client.setProxy(proxy);
 	}
 
 	public void accept(MattermostPost post) {
