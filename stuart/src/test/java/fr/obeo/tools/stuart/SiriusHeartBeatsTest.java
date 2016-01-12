@@ -32,9 +32,11 @@ public class SiriusHeartBeatsTest {
 			storage = ".";
 		}
 
+		String bug_Channel = System.getenv("PLATFORM_BUG_CHANNEL");
 		String qa_Channel = System.getenv("PLATFORM_QA_CHANNEL");
-		if (qa_Channel != null) {
-			MattermostEmitter emitter = new MattermostEmitter("https", host, qa_Channel);
+		if (qa_Channel != null && bug_Channel != null) {
+			MattermostEmitter qaEmitter = new MattermostEmitter("https", host, qa_Channel);
+			MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bug_Channel);
 
 			Date daysAgo = getDateXDaysAgo(3);
 
@@ -56,12 +58,23 @@ public class SiriusHeartBeatsTest {
 			});
 
 			for (Post post : posts) {
-				send(emitter, trace, post);
+				send(qaEmitter, trace, post);
 			}
+
+			List<Post> bugzillas = Lists.newArrayList();
+			bugzillas.addAll(
+					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
+							.bugzillaLog(3, Sets.newHashSet("Platform")));
+
+			for (Post post : bugzillas) {
+				send(bugEmitter, trace, post);
+			}
+			
+			
 			traceFile.evictOldEvents(trace, 60);
 			traceFile.save(trace);
 		} else {
-			Assert.fail("Expecting the PLATFORM_QA_CHANNEL environment variable to be set");
+			Assert.fail("Expecting the PLATFORM_QA_CHANNEL, PLATFORM_BUG_CHANNEL environment variable to be set");
 		}
 	}
 
