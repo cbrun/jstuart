@@ -25,6 +25,54 @@ import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
 public class SiriusHeartBeatsTest {
 
 	@Test
+	public void sendEventsToPlatformChans() throws Exception {
+		String host = "mattermost-test.eclipse.org";
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String qa_Channel = System.getenv("PLATFORM_QA_CHANNEL");
+		if (qa_Channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, qa_Channel);
+
+			Date daysAgo = getDateXDaysAgo(3);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_platform" + "_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new EclipseForumsLogger(11, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger(116, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger(106, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger(12, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger(100, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger(15, daysAgo).forumLog());
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the PLATFORM_QA_CHANNEL environment variable to be set");
+		}
+	}
+
+	private Date getDateXDaysAgo(int nbDays) {
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, -nbDays);
+		Date daysAgo = cal.getTime();
+		return daysAgo;
+	}
+
+	@Test
 	public void sendEventsToSiriusPrivateChan() throws Exception {
 
 		// String host = "92.51.162.68";
@@ -39,10 +87,8 @@ public class SiriusHeartBeatsTest {
 			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
 
 			int nbDays = 3;
-			
-			Calendar cal = Calendar.getInstance();
-			cal.add(Calendar.DATE, -nbDays);
-			Date daysAgo = cal.getTime();
+
+			Date daysAgo = getDateXDaysAgo(nbDays);
 
 			EmitterTrace traceFile = new EmitterTrace(
 					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
