@@ -52,7 +52,9 @@ public class MattermostEmitter {
 		});
 		client.setCertificatePinner(new CertificatePinner.Builder()
 			       .add("mattermost-test.eclipse.org", "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
+			       .add("92.51.162.68", "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
 			       .add("Let's Encrypt Authority X1, O=Let's Encrypt", "sha1/2ptSqHcRadMTGKVn4dybH0S1s1w=")
+			       
 			       .build());
 	}
 

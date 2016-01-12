@@ -57,8 +57,8 @@ public class SiriusHeartBeatsTest {
 		
 		// System.setProperty("java.net.preferIPv4Stack", "true");
 		// System.setProperty("deployment.security.TLSv1.2", "true");
-		//String host = "92.51.162.68";
-		String host = "mattermost-test.eclipse.org";
+		String host = "92.51.162.68";
+//		String host = "mattermost-test.eclipse.org";
 		String storage = System.getenv("WORKSPACE");
 		if (storage == null) {
 			storage = ".";
