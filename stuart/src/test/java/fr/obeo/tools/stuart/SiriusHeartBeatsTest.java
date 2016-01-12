@@ -1,12 +1,20 @@
 package fr.obeo.tools.stuart;
 
 import java.io.File;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,19 +32,38 @@ import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
 
 public class SiriusHeartBeatsTest {
 
+//	private static class DefaultTrustManager implements X509TrustManager {
+//
+//		@Override
+//		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+//		}
+//
+//		@Override
+//		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+//		}
+//
+//		@Override
+//		public X509Certificate[] getAcceptedIssuers() {
+//			return null;
+//		}
+//	}
+
 	@Test
 	public void sendEventsToSiriusPrivateChan() throws Exception {
-
-//		System.setProperty("java.net.preferIPv4Stack", "true");
-//		System.setProperty("deployment.security.TLSv1.2", "true");
-		String host = "92.51.162.68";
-//		String host = "mattermost-test.eclipse.org";
+//		SSLContext ctx = SSLContext.getInstance("TLS");
+//		ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
+//		SSLContext.setDefault(ctx);
+		
+		
+		// System.setProperty("java.net.preferIPv4Stack", "true");
+		// System.setProperty("deployment.security.TLSv1.2", "true");
+		//String host = "92.51.162.68";
+		String host = "mattermost-test.eclipse.org";
 		String storage = System.getenv("WORKSPACE");
 		if (storage == null) {
 			storage = ".";
 		}
-		
-		
+
 		String channel = System.getenv("MATTERMOST_CHANNEL");
 		if (channel != null) {
 			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
@@ -54,7 +81,7 @@ public class SiriusHeartBeatsTest {
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://git.eclipse.org/r/sirius/org.eclipse.sirius",
 					"https://git.eclipse.org/c/sirius/org.eclipse.sirius.git/commit/?id="));
-			posts.addAll(new EclipseForumsLogger(165, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger(262, daysAgo).forumLog());
 
 			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults());
 			posts.addAll(new GerritLogger("https://git.eclipse.org/r").getPatchsets(nbDays,
@@ -80,16 +107,16 @@ public class SiriusHeartBeatsTest {
 	}
 
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
-	//	if (!trace.containsKey(post.getKey())) {
-			try {
-				System.err.println("Sending :" + post.getKey());
-				emitter.accept(MattermostPost.fromGenericPost(post));
-				trace.put(post.getKey(), new Date());
-				Thread.sleep(500);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-//		}
+		// if (!trace.containsKey(post.getKey())) {
+		try {
+			System.err.println("Sending :" + post.getKey());
+			emitter.accept(MattermostPost.fromGenericPost(post));
+			trace.put(post.getKey(), new Date());
+			Thread.sleep(500);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// }
 	}
 
 }

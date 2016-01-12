@@ -9,9 +9,9 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.squareup.okhttp.Call;
+import com.squareup.okhttp.CertificatePinner;
 import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -50,11 +50,15 @@ public class MattermostEmitter {
 				return true;
 			}
 		});
+		client.setCertificatePinner(new CertificatePinner.Builder()
+			       .add("mattermost-test.eclipse.org", "sha1/+1YwGEPdk4OT2oj03RBvB0+xSBA=")
+			       .add("Let's Encrypt Authority X1, O=Let's Encrypt", "sha1/2ptSqHcRadMTGKVn4dybH0S1s1w=")
+			       .build());
 	}
 
 	public void accept(MattermostPost post) {
 		// gson.toJson(post)
-		RequestBody body = new FormEncodingBuilder().add("payload",gson.toJson(post)).build();
+		RequestBody body = new FormEncodingBuilder().add("payload", gson.toJson(post)).build();
 
 		HttpUrl url = new HttpUrl.Builder().scheme(scheme).host(host).addPathSegment("hooks").addPathSegment(channel)
 				.build();
