@@ -1,6 +1,8 @@
 package fr.obeo.tools.stuart.mattermost;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -56,6 +58,9 @@ public class MattermostEmitter {
 			       .add("Let's Encrypt Authority X1, O=Let's Encrypt", "sha1/2ptSqHcRadMTGKVn4dybH0S1s1w=")
 			       
 			       .build());
+		
+		Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("proxy.eclipse.org", 9898));
+		client.setProxy(proxy);
 	}
 
 	public void accept(MattermostPost post) {
