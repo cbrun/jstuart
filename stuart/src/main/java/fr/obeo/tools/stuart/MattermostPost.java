@@ -91,7 +91,7 @@ public class MattermostPost {
 
 		StringBuffer message = new StringBuffer();
 		String bodyString = cleanedBody.toString().trim();
-		if (bodyString.length() > 250) {
+		if (bodyString.length() > 250 && in.mightTruncate()) {
 			bodyString = bodyString.substring(0, 250);
 			bodyString += "(...)";
 		}

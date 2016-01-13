@@ -119,7 +119,7 @@ public class EclipseMattermostInstanceTest {
 		}
 	}
 
-	private Date getDateXDaysAgo(int nbDays) {
+	public static Date getDateXDaysAgo(int nbDays) {
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.DATE, -nbDays);
 		Date daysAgo = cal.getTime();
@@ -152,7 +152,7 @@ public class EclipseMattermostInstanceTest {
 					"https://git.eclipse.org/c/sirius/org.eclipse.sirius.git/commit/?id="));
 			posts.addAll(new EclipseForumsLogger(262, daysAgo).forumLog());
 
-			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults());
+			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
 			posts.addAll(new GerritLogger("https://git.eclipse.org/r").getPatchsets(nbDays,
 					Sets.newHashSet("sirius/org.eclipse.sirius")));
 			posts.addAll(

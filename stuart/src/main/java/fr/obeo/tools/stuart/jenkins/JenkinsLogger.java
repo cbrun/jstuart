@@ -5,10 +5,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections.MultiMap;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,6 +33,10 @@ import fr.obeo.tools.stuart.jenkins.model.BuildResult;
 import fr.obeo.tools.stuart.jenkins.model.ChangeSetItem;
 import fr.obeo.tools.stuart.jenkins.model.Job;
 import fr.obeo.tools.stuart.jenkins.model.ServerResult;
+import fr.obeo.tools.stuart.jenkins.model.testResults.ChildReport;
+import fr.obeo.tools.stuart.jenkins.model.testResults.TestCase;
+import fr.obeo.tools.stuart.jenkins.model.testResults.TestReport;
+import fr.obeo.tools.stuart.jenkins.model.testResults.TestSuite;
 
 public class JenkinsLogger {
 
@@ -41,6 +54,10 @@ public class JenkinsLogger {
 	}
 
 	public Collection<Post> getBuildResults() {
+		return getBuildResults(Sets.<String> newLinkedHashSet());
+	}
+
+	public Collection<Post> getBuildResults(Set<String> alreadySent) {
 		List<Post> posts = new ArrayList<Post>();
 		String url = serverURL + "api/json?tree=jobs[name,lastBuild[building,timestamp,url]]";
 		Request request = new Request.Builder().url(url).get().build();
@@ -60,57 +77,116 @@ public class JenkinsLogger {
 						Response jobResponse = client.newCall(new Request.Builder().url(jURL).get().build()).execute();
 						String jobJson = jobResponse.body().string();
 						BuildResult lastBuild = gson.fromJson(jobJson, BuildResult.class);
-						boolean manualTrigger = false;
-						int totalCount = 0;
-						int failCount = 0;
-						int skipCount = 0;
+						String postKey = lastBuild.getUrl();
+						if (!alreadySent.contains(postKey)) {
+							boolean manualTrigger = false;
+							int totalCount = 0;
+							int failCount = 0;
+							int skipCount = 0;
+							String testReportURLName = null;
 
-						String testsResults = "";
+							String testsResults = "";
 
-						for (BuildAction action : lastBuild.getActions()) {
-							totalCount += action.getTotalCount();
-							failCount += action.getFailCount();
-							skipCount += action.getSkipCount();
-							for (BuildCause cause : action.getCauses()) {
-								if (cause.getShortDescription() != null) {
-									manualTrigger = cause.getShortDescription().contains("user")
-											|| cause.getShortDescription().contains("utilisateur");
+							for (BuildAction action : lastBuild.getActions()) {
+								totalCount += action.getTotalCount();
+								failCount += action.getFailCount();
+								skipCount += action.getSkipCount();
+								if (totalCount > 0) {
+									testReportURLName = action.getUrlName();
+									String rootReportURL = j.getLastBuild().getUrl() + testReportURLName;
+									Request requestXMLTestReport = new Request.Builder()
+											.url(rootReportURL + "/api/json?pretty=true").get().build();
+									TestReport rootReport = gson.fromJson(
+											client.newCall(requestXMLTestReport).execute().body().charStream(),
+											TestReport.class);
+									System.out.println("JenkinsLogger.getBuildResults()");
+
+									Map<String, TestReport> reports = allNonEmptyReports(rootReport, rootReportURL);
+									StringBuffer reportString = new StringBuffer();
+									reportString.append(
+											"| Configuration        | Duration  | All  | Failed | Skipped | Age |\n");
+									reportString.append(
+											"| -------------------- |:---------:| ----:|-------:|--------:|-----|\n");
+									for (Map.Entry<String, TestReport> r : reports.entrySet()) {
+										if (r.getValue().getFailCount() > 0) {
+											reportString.append("| " + r.getKey() + "         | "
+													+ Math.round(r.getValue().getDuration() / 60) + " min | "
+													+ r.getValue().getTotalCount() + " |" + r.getValue().getFailCount()
+													+ " | " + r.getValue().getSkipCount() + "|   |\n");
+											for (TestSuite suite : r.getValue().getSuites()) {
+												List<TestCase> casesToDisplay = Lists.newArrayList(
+														Iterables.filter(suite.getCases(), new Predicate<TestCase>() {
+
+															@Override
+															public boolean apply(TestCase input) {
+																return "FAILED".equals(input.getStatus())
+																		&& input.getAge() < 30;
+															}
+														}));
+												if (casesToDisplay.size() > 0) {
+													for (TestCase tCase : casesToDisplay) {
+														String className = tCase.getClassName();
+														if (className.lastIndexOf(".") != -1) {
+															className = className
+																	.substring(className.lastIndexOf(".") + 1);
+														}
+														reportString.append("|    " + className + "." + tCase.getName()
+																+ "         | " + Math.round(tCase.getDuration())
+																+ " sec | " + " " + " |" + " " + " | " + " " + "| "
+																+ tCase.getAge() + "  |\n");
+
+													}
+
+												}
+
+											}
+										}
+									}
+									if (reports.entrySet().size() > 0) {
+										testsResults = reportString.toString();
+									}
 								}
+								for (BuildCause cause : action.getCauses()) {
+									if (cause.getShortDescription() != null) {
+										manualTrigger = cause.getShortDescription().contains("user")
+												|| cause.getShortDescription().contains("utilisateur");
+									}
 
+								}
 							}
-						}
 
-						if (totalCount > 0) {
-							testsResults = " tests - total : " + totalCount + ", skipped " + skipCount + " : failed "
-									+ failCount;
-						}
-
-						Collection<String> authors = Sets.newLinkedHashSet();
-						for (BuildAuthor culprit : lastBuild.getCulprits()) {
-							if (culprit.getFullName() != null) {
-								authors.add(culprit.getFullName());
+							Collection<String> authors = Sets.newLinkedHashSet();
+							for (BuildAuthor culprit : lastBuild.getCulprits()) {
+								if (culprit.getFullName() != null) {
+									authors.add(culprit.getFullName());
+								}
 							}
-						}
 
-						Collection<String> comments = Sets.newLinkedHashSet();
-						for (ChangeSetItem i : lastBuild.getChangeSet().getItems()) {
-							if (i.getComment() != null) {
-								comments.add(Iterables.getFirst(Splitter.on('\n').split(i.getComment()), "no commit"));
+							Collection<String> comments = Sets.newLinkedHashSet();
+							for (ChangeSetItem i : lastBuild.getChangeSet().getItems()) {
+								if (i.getComment() != null) {
+									comments.add(
+											Iterables.getFirst(Splitter.on('\n').split(i.getComment()), "no commit"));
+								}
 							}
-						}
-						String authorTxt = "...";
-						if (authors.size() <= 2 && authors.size() > 0) {
-							authorTxt = Joiner.on(',').join(authors);
-						}
-						if (manualTrigger) {
-							Post newPost = Post.createPostWithSubject(lastBuild.getUrl(),
-									lastBuild.getFullDisplayName() + " is " + lastBuild.getResult() + testsResults,
-									Joiner.on('\n').join(comments), authorTxt, JENKINS_ICON,new Date(lastBuild.getTimestamp()));
-							newPost.addURLs(lastBuild.getUrl());
-							posts.add(newPost);
+							String authorTxt = "...";
+							if (authors.size() <= 2 && authors.size() > 0) {
+								authorTxt = Joiner.on(',').join(authors);
+							}
+							if (manualTrigger) {
+
+								Post newPost = Post.createPostWithSubject(postKey,
+										lastBuild.getFullDisplayName() + " is " + lastBuild.getResult() + testsResults,
+										Joiner.on('\n').join(comments), authorTxt, JENKINS_ICON,
+										new Date(lastBuild.getTimestamp()));
+								newPost.mightBeTruncated(testsResults.length() > 0);
+								newPost.addURLs(postKey);
+								posts.add(newPost);
+							}
 						}
 					}
 				}
+
 			}
 
 			response.body().close();
@@ -119,6 +195,24 @@ public class JenkinsLogger {
 		}
 
 		return posts;
+	}
+
+	public static Map<String, TestReport> allNonEmptyReports(TestReport rep, String rootURL) {
+		Map<String, TestReport> result = Maps.newLinkedHashMap();
+		if (rep.getChildReports().size() > 0) {
+			for (ChildReport childReport : rep.getChildReports()) {
+				TestReport childTestResults = childReport.getResult();
+				if (childTestResults.getSkipCount() > 0 || childTestResults.getPassCount() > 0) {
+					String name = childReport.getChild().getUrl()
+							.substring(childReport.getChild().getUrl().indexOf("./") + 2);
+					String url = "[" + name + "](" + childReport.getChild().getUrl() + ")";
+					result.put(url, childTestResults);
+				}
+			}
+		} else if (rep.getTotalCount() > 0) {
+			result.put(rootURL, rep);
+		}
+		return result;
 	}
 
 }

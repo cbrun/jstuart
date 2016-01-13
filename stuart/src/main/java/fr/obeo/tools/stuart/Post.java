@@ -23,8 +23,10 @@ public class Post {
 	private Set<String> urls;
 
 	private Set<String> mediaURLs;
-	
+
 	private Date createdAt = new Date();
+
+	private boolean mightTruncate = true;
 
 	public Date getCreatedAt() {
 		return createdAt;
@@ -81,7 +83,7 @@ public class Post {
 		}
 		return this;
 	}
-	
+
 	public Post addMediaURLs(String... urls) {
 		for (String newURL : urls) {
 			this.mediaURLs.add(newURL);
@@ -95,7 +97,15 @@ public class Post {
 				+ ", subject=" + subject + "]";
 	}
 
-	public static Post createPost(String key, String markdownBody, String author, String iconURL,Date createdAt) {
+	public void mightBeTruncated(boolean value) {
+		this.mightTruncate = value;
+	}
+
+	public boolean mightTruncate() {
+		return this.mightTruncate;
+	}
+
+	public static Post createPost(String key, String markdownBody, String author, String iconURL, Date createdAt) {
 		Post p = new Post(key);
 		p.author = author;
 		p.iconURL = iconURL;
@@ -105,7 +115,7 @@ public class Post {
 	}
 
 	public static Post createPostWithSubject(String key, String subject, String markdownBody, String author,
-			String iconURL,Date createdAt) {
+			String iconURL, Date createdAt) {
 		Post p = new Post(key);
 		p.author = author;
 		p.iconURL = iconURL;
