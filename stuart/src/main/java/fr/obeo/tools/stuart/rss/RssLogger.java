@@ -45,8 +45,13 @@ public class RssLogger {
 		for (int i = 0; i < 1 && !foundAnOld; i++) {
 			try {
 				SyndFeed feed = input.build(new XmlReader(feedUrl));
+				Date publishedDate =feed.getPublishedDate();				
 				for (SyndEntry entry : feed.getEntries()) {
-					if (entry.getPublishedDate().after(daysAgo)) {
+					 publishedDate = entry.getPublishedDate();
+					if (publishedDate == null) {
+						publishedDate = entry.getUpdatedDate();
+					}
+					if (publishedDate != null && publishedDate.after(daysAgo)) {
 						String html = entry.getDescription().getValue();
 
 						String htmlConvertedToText = Jsoup.clean(html, "", Whitelist.none(),
@@ -65,7 +70,7 @@ public class RssLogger {
 						}
 
 						Post newPost = Post.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
-								entry.getAuthor(), RSS_ICON, entry.getPublishedDate()).addURLs(entry.getUri());
+								entry.getAuthor(), RSS_ICON, publishedDate).addURLs(entry.getUri());
 						Element img = Jsoup.parse(html).getElementsByTag("img").first();
 						if (img != null && img.attr("src") != null) {
 							String href = img.attr("src");

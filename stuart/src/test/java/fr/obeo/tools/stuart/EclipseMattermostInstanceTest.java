@@ -39,14 +39,16 @@ public class EclipseMattermostInstanceTest {
 		if (channel != null) {
 			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
 
-			Date daysAgo = getDateXDaysAgo(5);
+			Date daysAgo = getDateXDaysAgo(15);
 
 			EmitterTrace traceFile = new EmitterTrace(
 					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-			posts.addAll(new RssLogger(new URL("http://feeds.feedburner.com/eclipse/fnews"), daysAgo).get());
+			posts.addAll(
+					new RssLogger(new URL("https://dev.eclipse.org/mhonarc/lists/eclipse.org-committers/maillist.rss"),
+							daysAgo).get());
 			posts.addAll(new RssLogger(new URL("http://planet.eclipse.org/planet/rss20.xml"), daysAgo).get());
 
 			Collections.sort(posts, new Comparator<Post>() {
