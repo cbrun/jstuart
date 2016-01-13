@@ -48,10 +48,16 @@ public class MattermostPost {
 
 		StringBuffer cleanedBody = new StringBuffer();
 
-		for (String line : Splitter.on('\n').omitEmptyStrings().trimResults().split(in.getMarkdownBody())) {
-			cleanedBody.append('>');
-			cleanedBody.append(line);
-			cleanedBody.append('\n');
+		if (in.mightTruncate()) {
+			for (String line : Splitter.on('\n').omitEmptyStrings().trimResults().split(in.getMarkdownBody())) {
+				if (in.isQuote()) {
+					cleanedBody.append('>');
+				}
+				cleanedBody.append(line);
+				cleanedBody.append('\n');
+			}
+		} else {
+			cleanedBody.append(in.getMarkdownBody());
 		}
 
 		Iterable<String> cleanedHrefs = Iterables.transform(in.getURLs(), new Function<String, String>() {

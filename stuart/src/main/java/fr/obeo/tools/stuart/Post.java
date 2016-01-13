@@ -28,6 +28,8 @@ public class Post {
 
 	private boolean mightTruncate = true;
 
+	private boolean isQuote = true;
+
 	public Date getCreatedAt() {
 		return createdAt;
 	}
@@ -43,6 +45,14 @@ public class Post {
 		this.tags = new LinkedHashSet<String>();
 		this.urls = new LinkedHashSet<String>();
 		this.mediaURLs = new LinkedHashSet<String>();
+	}
+
+	public boolean isQuote() {
+		return isQuote;
+	}
+
+	public void setQuote(boolean isQuote) {
+		this.isQuote = isQuote;
 	}
 
 	public String getKey() {

@@ -81,6 +81,7 @@ public class JenkinsLogger {
 						if (!alreadySent.contains(postKey)) {
 							boolean manualTrigger = false;
 							int totalCount = 0;
+							boolean hasRecentRegressions = false;
 							int failCount = 0;
 							int skipCount = 0;
 							String testReportURLName = null;
@@ -124,16 +125,26 @@ public class JenkinsLogger {
 															}
 														}));
 												if (casesToDisplay.size() > 0) {
+													hasRecentRegressions = true;
 													for (TestCase tCase : casesToDisplay) {
 														String className = tCase.getClassName();
 														if (className.lastIndexOf(".") != -1) {
 															className = className
 																	.substring(className.lastIndexOf(".") + 1);
 														}
-														reportString.append("|    " + className + "." + tCase.getName()
-																+ "         | " + Math.round(tCase.getDuration())
-																+ " sec | " + " " + " |" + " " + " | " + " " + "| "
-																+ tCase.getAge() + "  |\n");
+														if (tCase.getAge() <= 2) {
+															reportString.append("|    **" + className + "."
+																	+ tCase.getName() + "**         | "
+																	+ Math.round(tCase.getDuration()) + " sec | " + " "
+																	+ " |" + " " + " | " + " " + "| **" + tCase.getAge()
+																	+ "**  |\n");
+														} else {
+															reportString.append("|    " + className + "."
+																	+ tCase.getName() + "         | "
+																	+ Math.round(tCase.getDuration()) + " sec | " + " "
+																	+ " |" + " " + " | " + " " + "| " + tCase.getAge()
+																	+ "  |\n");
+														}
 
 													}
 
@@ -173,13 +184,16 @@ public class JenkinsLogger {
 							if (authors.size() <= 2 && authors.size() > 0) {
 								authorTxt = Joiner.on(',').join(authors);
 							}
-							if (manualTrigger) {
-
+							if (manualTrigger || hasRecentRegressions) {
+								String body = Joiner.on('\n').join(comments);
+								if (hasRecentRegressions) {
+									body += "\n\n" + testsResults + "\n";
+								}
 								Post newPost = Post.createPostWithSubject(postKey,
-										lastBuild.getFullDisplayName() + " is " + lastBuild.getResult() + testsResults,
-										Joiner.on('\n').join(comments), authorTxt, JENKINS_ICON,
-										new Date(lastBuild.getTimestamp()));
-								newPost.mightBeTruncated(testsResults.length() > 0);
+										lastBuild.getFullDisplayName() + " is " + lastBuild.getResult(), body,
+										authorTxt, JENKINS_ICON, new Date(lastBuild.getTimestamp()));
+								newPost.mightBeTruncated(!hasRecentRegressions);
+								newPost.setQuote(false);
 								newPost.addURLs(postKey);
 								posts.add(newPost);
 							}
