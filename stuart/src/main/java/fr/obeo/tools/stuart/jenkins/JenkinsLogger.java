@@ -121,7 +121,7 @@ public class JenkinsLogger {
 															@Override
 															public boolean apply(TestCase input) {
 																return "FAILED".equals(input.getStatus())
-																		&& input.getAge() < 30;
+																		&& input.getAge() < 3;
 															}
 														}));
 												if (casesToDisplay.size() > 0) {
@@ -133,17 +133,17 @@ public class JenkinsLogger {
 																	.substring(className.lastIndexOf(".") + 1);
 														}
 														if (tCase.getAge() <= 2) {
-															reportString.append("|    **" + className + "."
-																	+ tCase.getName() + "**         | "
+															reportString.append("|**" + className + "."
+																	+ tCase.getName() + "**|"
 																	+ Math.round(tCase.getDuration()) + " sec | " + " "
-																	+ " |" + " " + " | " + " " + "| **" + tCase.getAge()
-																	+ "**  |\n");
+																	+ "|" + " " + "|" + " " + "|**" + tCase.getAge()
+																	+ "**|\n");
 														} else {
-															reportString.append("|    " + className + "."
-																	+ tCase.getName() + "         | "
-																	+ Math.round(tCase.getDuration()) + " sec | " + " "
-																	+ " |" + " " + " | " + " " + "| " + tCase.getAge()
-																	+ "  |\n");
+															reportString.append("|" + className + "."
+																	+ tCase.getName() + "| "
+																	+ Math.round(tCase.getDuration()) + " sec|" + " "
+																	+ "|" + " " + "|" + " " + "|" + tCase.getAge()
+																	+ "|\n");
 														}
 
 													}
@@ -185,9 +185,11 @@ public class JenkinsLogger {
 								authorTxt = Joiner.on(',').join(authors);
 							}
 							if (manualTrigger || hasRecentRegressions) {
-								String body = Joiner.on('\n').join(comments);
+								String body = "";
 								if (hasRecentRegressions) {
 									body += "\n\n" + testsResults + "\n";
+								} else {
+									body = Joiner.on('\n').join(comments);
 								}
 								Post newPost = Post.createPostWithSubject(postKey,
 										lastBuild.getFullDisplayName() + " is " + lastBuild.getResult(), body,

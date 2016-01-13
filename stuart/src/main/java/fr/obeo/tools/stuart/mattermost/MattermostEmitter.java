@@ -76,6 +76,7 @@ public class MattermostEmitter {
 			System.out.println(response.message());
 			response.body().close();
 		} catch (IOException e) {
+			System.out.println("Message was length:" + post.getText().length() + "\n" + post);
 			throw new RuntimeException(e);
 		}
 
