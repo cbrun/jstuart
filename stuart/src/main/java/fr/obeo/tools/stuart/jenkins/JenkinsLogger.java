@@ -170,9 +170,11 @@ public class JenkinsLogger {
 	};
 
 	private boolean generatePerTestCaseReport(Map<String, TestReport> reports, StringBuffer out) {
+		Map<TestReport,String> reportToName= Maps.newLinkedHashMap();
 		boolean hasRecentRegressions = false;
 		Multimap<String, TestReport> testNameToReports = HashMultimap.create();
 		for (Map.Entry<String, TestReport> r : reports.entrySet()) {
+			reportToName.put(r.getValue(),r.getKey());
 			if (r.getValue().getFailCount() > 0) {
 				for (TestSuite suite : r.getValue().getSuites()) {
 
@@ -194,9 +196,10 @@ public class JenkinsLogger {
 		out.append("| Test");
 		int platformIndex = 1;
 		Collection<TestReport> reportsWithFailures = Sets.newLinkedHashSet(testNameToReports.values());
-		for (Map.Entry<String, TestReport> r : reports.entrySet()) {
-			if (reportsWithFailures.contains(r.getValue())) {
-				String name = r.getKey().substring(r.getKey().indexOf("./") + 2);
+		for (TestReport r : reportToName.keySet()) {
+			if (reportsWithFailures.contains(r)) {
+				String reportURL = reportToName.get(r);
+				String name =reportURL.substring(reportURL.indexOf("./") + 2);
 				if (name.indexOf("PLATFORM=") != -1) {
 					name = name.substring(name.indexOf("PLATFORM=") + 9);
 					if (name.indexOf(",") != -1) {
@@ -205,7 +208,7 @@ public class JenkinsLogger {
 
 				}
 				out.append('|');
-				out.append("[" + name + "](" + r.getKey() + ")");
+				out.append("[" + name + "](" + reportURL + ")");
 				platformIndex++;
 			}
 		}
@@ -218,7 +221,7 @@ public class JenkinsLogger {
 		for (String testName : testNameToReports.keySet()) {
 			Collection<TestReport> configWhereItFails = testNameToReports.get(testName);
 			boolean hasRecentFailure = false;
-			for (TestReport r : reportsWithFailures) {
+			for (TestReport r : reportToName.keySet()) {
 				if (configWhereItFails.contains(r)) {
 					TestCase tCase = findTestCaseFromName(testName, r);
 					if (tCase != null) {
@@ -235,7 +238,7 @@ public class JenkinsLogger {
 				out.append("|" + testName);
 			}
 
-			for (TestReport r : reportsWithFailures) {
+			for (TestReport r : reportToName.keySet()) {
 				if (configWhereItFails.contains(r)) {
 					out.append("|");
 					TestCase tCase = findTestCaseFromName(testName, r);
