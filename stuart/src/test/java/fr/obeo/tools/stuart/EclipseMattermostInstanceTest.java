@@ -1,6 +1,7 @@
 package fr.obeo.tools.stuart;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,12 +22,51 @@ import fr.obeo.tools.stuart.gerrit.GerritLogger;
 import fr.obeo.tools.stuart.git.GitLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
 import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
+import fr.obeo.tools.stuart.rss.RssLogger;
 
-public class SiriusHeartBeatsTest {
+public class EclipseMattermostInstanceTest {
+
+	private String host = "mattermost-test.eclipse.org";
+
+	@Test
+	public void eclipseAnnounces() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String channel = System.getenv("NEWS_CHANNEL");
+		if (channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
+
+			Date daysAgo = getDateXDaysAgo(5);
+
+			EmitterTrace traceFile = new EmitterTrace(
+					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new RssLogger(new URL("http://feeds.feedburner.com/eclipse/fnews"), daysAgo).get());
+			posts.addAll(new RssLogger(new URL("http://planet.eclipse.org/planet/rss20.xml"), daysAgo).get());
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the NEWS_CHANNEL environment variable to be set");
+		}
+	}
 
 	@Test
 	public void sendEventsToPlatformChans() throws Exception {
-		String host = "mattermost-test.eclipse.org";
 		String storage = System.getenv("WORKSPACE");
 		if (storage == null) {
 			storage = ".";
@@ -69,8 +109,7 @@ public class SiriusHeartBeatsTest {
 			for (Post post : bugzillas) {
 				send(bugEmitter, trace, post);
 			}
-			
-			
+
 			traceFile.evictOldEvents(trace, 60);
 			traceFile.save(trace);
 		} else {
@@ -88,8 +127,6 @@ public class SiriusHeartBeatsTest {
 	@Test
 	public void sendEventsToSiriusPrivateChan() throws Exception {
 
-		// String host = "92.51.162.68";
-		String host = "mattermost-test.eclipse.org";
 		String storage = System.getenv("WORKSPACE");
 		if (storage == null) {
 			storage = ".";
