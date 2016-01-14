@@ -60,7 +60,7 @@ public class GerritLogger {
 			PatchSet[] recentReviews = gson.fromJson(returnedJson, PatchSet[].class);
 			List<PatchSet> reviewsToSend = Lists.newArrayList();
 			for (PatchSet review : recentReviews) {
-				if (review.isMergeable() && !review.getSubject().contains("DRAFT")) {
+				if (!review.getSubject().contains("DRAFT")) {
 					reviewsToSend.add(review);
 				}
 			}
@@ -74,9 +74,8 @@ public class GerritLogger {
 				for (PatchSet review : reviewsToSend) {
 					Post newPost = Post.createPostWithSubject(serverURL + "/" + review.getId(),
 							GitLogger.detectBugzillaLink(review.getSubject()),
-							"ready for review (Validated and mergeable)\n\n" + "|additions| deletions|\n"
-									+ "|---------|----------|\n" + "|" + review.getInsertions() + " | "
-									+ review.getDeletions() + "|",
+							"ready for review (Validated)\n\n" + "|additions| deletions|\n" + "|---------|----------|\n"
+									+ "|" + review.getInsertions() + " | " + review.getDeletions() + "|",
 							review.getOwner().getName(), GERRIT_ICON, review.getUpdated());
 					newPost.addURLs(serverURL + "/#/c/" + review.get_number());
 					newPost.setQuote(false);
@@ -84,24 +83,30 @@ public class GerritLogger {
 					posts.add(newPost);
 				}
 			} else if (reviewsToSend.size() > 1) {
-				
-				List<List<PatchSet>> partitions = Lists.partition(reviewsToSend,14);
+
+				List<List<PatchSet>> partitions = Lists.partition(reviewsToSend, 14);
 				for (List<PatchSet> reviews : partitions) {
-					String body = "\n" + "|subject|author|changes| |\n" + "|-------|:------:|---------|---------|-|\n";
+					String body = "\n" + "|subject|author|changes| merge ?|   |\n"
+							+ "|-------|:------:|---------|-------|------|----|\n";
 					Set<String> authors = Sets.newLinkedHashSet();
 					Set<String> urls = Sets.newLinkedHashSet();
 					for (PatchSet review : reviews) {
 						String reviewKey = serverURL + "/" + review.getId();
+						String mergeable = ":boom:";
+						if (review.isMergeable()) {
+							mergeable = ":star:";
+						}
+						
 						body += "| " + GitLogger.detectBugzillaLink(review.getSubject()) + " | "
 								+ review.getOwner().getName() + " | *+" + review.getInsertions() + "/-"
-								+ review.getDeletions() + "*|" + "[link](" + serverURL + "/#/c/" + review.get_number() + ")"
-								+ "|\n";
+								+ review.getDeletions() + "*|"+  mergeable +   "| [link](" + serverURL + "/#/c/" + review.get_number()
+								+ ")|\n";
 						authors.add(review.getOwner().getName());
 						urls.add(reviewKey);
 					}
 					String authorName = Joiner.on(',').join(authors);
 					String postKey = Joiner.on('_').join(urls);
-					
+
 					Post newPost = Post.createPostWithSubject(postKey, "Ready for reviews (" + reviews.size() + ")",
 							body, authorName, GERRIT_ICON, reviews.iterator().next().getUpdated());
 					newPost.setQuote(false);
