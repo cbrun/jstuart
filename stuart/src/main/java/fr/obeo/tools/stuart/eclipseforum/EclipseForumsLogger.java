@@ -70,6 +70,9 @@ public class EclipseForumsLogger {
 						Element img = Jsoup.parse(html).getElementsByTag("img").first();
 						if (img != null && img.attr("src") != null) {
 							String href = img.attr("src");
+							if (!href.startsWith("http")) {
+								href = "https://www.eclipse.org/forums/" + href;
+							}
 							newPost.addMediaURLs(href);
 						}
 						posts.add(newPost);
