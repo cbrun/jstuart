@@ -119,6 +119,46 @@ public class EclipseMattermostInstanceTest {
 		}
 	}
 
+	@Test
+	public void sendEventsToCDTChans() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String qa_Channel = System.getenv("CDT_CHANNEL");
+		if (qa_Channel != null) {
+			MattermostEmitter qaEmitter = new MattermostEmitter("https", host, qa_Channel);
+
+			Date daysAgo = getDateXDaysAgo(3);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_cdtgeneral" + "_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new EclipseForumsLogger(80, daysAgo).forumLog());
+			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/cdt"), daysAgo)
+					.setIcon("https://veithen.github.io/images/icon-stackoverflow.svg").get());
+			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-cdt"), daysAgo)
+					.setIcon("https://veithen.github.io/images/icon-stackoverflow.svg").get());
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(qaEmitter, trace, post);
+			}
+
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the CDT_CHANNEL environment variable to be set");
+		}
+	}
+
 	public static Date getDateXDaysAgo(int nbDays) {
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.DATE, -nbDays);
