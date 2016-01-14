@@ -152,9 +152,10 @@ public class EclipseMattermostInstanceTest {
 					"https://git.eclipse.org/c/sirius/org.eclipse.sirius.git/commit/?id="));
 			posts.addAll(new EclipseForumsLogger(262, daysAgo).forumLog());
 
-			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
-			posts.addAll(new GerritLogger("https://git.eclipse.org/r").getPatchsets(nbDays,
-					Sets.newHashSet("sirius/org.eclipse.sirius")));
+			posts.addAll(
+					new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
+			posts.addAll(new GerritLogger("https://git.eclipse.org/r", nbDays)
+					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius")));
 			posts.addAll(
 					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 							.bugzillaLog(3, Sets.newHashSet("Sirius")));
