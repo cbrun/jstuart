@@ -19,7 +19,7 @@ import fr.obeo.tools.stuart.git.GitLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
 import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
 
-public class ObeoMattermostInstance {
+public class ObeoMattermostInstanceTest {
 
 	private String host = "mattermost.obeo.fr";
 
