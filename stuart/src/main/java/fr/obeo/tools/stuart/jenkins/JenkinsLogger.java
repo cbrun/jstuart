@@ -95,7 +95,6 @@ public class JenkinsLogger {
 									TestReport rootReport = gson.fromJson(
 											client.newCall(requestXMLTestReport).execute().body().charStream(),
 											TestReport.class);
-									System.out.println("JenkinsLogger.getBuildResults()");
 
 									Map<String, TestReport> reports = allNonEmptyReports(rootReport, rootReportURL);
 									StringBuffer reportString = new StringBuffer();
