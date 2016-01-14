@@ -79,7 +79,7 @@ public class JenkinsLogger {
 						String jobJson = jobResponse.body().string();
 						BuildResult lastBuild = gson.fromJson(jobJson, BuildResult.class);
 						String postKey = lastBuild.getUrl();
-						if (!alreadySent.contains(postKey)) {
+						if (!alreadySent.contains(postKey) && !lastBuild.isBuilding()) {
 							boolean manualTrigger = false;
 							int totalCount = 0;
 							int failCount = 0;
