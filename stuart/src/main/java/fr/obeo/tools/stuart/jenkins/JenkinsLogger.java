@@ -39,6 +39,8 @@ import fr.obeo.tools.stuart.jenkins.model.testResults.TestSuite;
 
 public class JenkinsLogger {
 
+	private static final int MAX_FAILED_TESTS = 20;
+
 	private static final String JENKINS_ICON = "https://www.urbaninsight.com/files/pkg.png";
 
 	private String serverURL;
@@ -80,6 +82,8 @@ public class JenkinsLogger {
 						if (!alreadySent.contains(postKey)) {
 							boolean manualTrigger = false;
 							int totalCount = 0;
+							int failCount = 0;
+							int skippedCount = 0;
 							boolean hasRecentRegressions = false;
 							String testReportURLName = null;
 
@@ -87,6 +91,8 @@ public class JenkinsLogger {
 
 							for (BuildAction action : lastBuild.getActions()) {
 								totalCount += action.getTotalCount();
+								failCount += action.getFailCount();
+								skippedCount += action.getSkipCount();
 								if (totalCount > 0) {
 									testReportURLName = action.getUrlName();
 									String rootReportURL = j.getLastBuild().getUrl() + testReportURLName;
@@ -98,6 +104,8 @@ public class JenkinsLogger {
 
 									Map<String, TestReport> reports = allNonEmptyReports(rootReport, rootReportURL);
 									StringBuffer reportString = new StringBuffer();
+									
+									reportString.append("failed : " + failCount + "/" + totalCount + " (skipped : " + skippedCount + ")\n\n");
 									hasRecentRegressions = hasRecentRegressions
 											|| generatePerTestCaseReport(reports, reportString);
 									if (reports.entrySet().size() > 0) {
@@ -145,9 +153,12 @@ public class JenkinsLogger {
 									statusIcon = "https://img.shields.io/shippable/54d119db5ab6cc13528ab183.svg";
 								} else if ("FAILED".equals(lastBuild.getResult())) {
 									statusIcon = "https://img.shields.io/circleci/project/BrightFlair/PHP.Gt.svg";
+								} else if ("SUCCESS".equals(lastBuild.getResult())) {
+									statusIcon = "https://img.shields.io/shippable/54d119db5ab6cc13528ab183.svg";
 								}
 								Post newPost = Post.createPostWithSubject(postKey,
-										" [![](" + statusIcon + ") " + lastBuild.getFullDisplayName() + "](" + postKey + ")" ,
+										" [![](" + statusIcon + ") " + lastBuild.getFullDisplayName() + "](" + postKey
+												+ ")",
 										body, authorTxt, JENKINS_ICON, new Date(lastBuild.getTimestamp()));
 								newPost.mightBeTruncated(!hasRecentRegressions);
 								newPost.setQuote(false);
@@ -172,7 +183,7 @@ public class JenkinsLogger {
 
 		@Override
 		public boolean apply(TestCase input) {
-			return "FAILED".equals(input.getStatus()) && input.getAge() < 30;
+			return "FAILED".equals(input.getStatus()) || "REGRESSION".equals(input.getStatus()) && input.getAge() < 30;
 		}
 	};
 
@@ -207,13 +218,16 @@ public class JenkinsLogger {
 			String name = reportURL.substring(reportURL.indexOf("./") + 2);
 			if (name.indexOf("PLATFORM=") != -1) {
 				name = name.substring(name.indexOf("PLATFORM=") + 9);
-				if (name.indexOf(",") != -1) {
-					name = name.substring(0, name.indexOf(","));
-				}
-
-				out.append('|');
-				out.append("[" + name + "](" + reportURL + ")");
 			}
+			if (name.indexOf(",") != -1) {
+				name = name.substring(0, name.indexOf(","));
+			}
+			if (name.length() > 10) {
+				name = "report";
+			}
+
+			out.append('|');
+			out.append("[" + name + "](" + reportURL + ")");
 		}
 		out.append("|\n");
 		out.append("|----------");
@@ -221,47 +235,53 @@ public class JenkinsLogger {
 			out.append("|:--------");
 		}
 		out.append("|\n");
+		int nb = 0;
 		for (String testName : testNameToReports.keySet()) {
-			Collection<TestReport> configWhereItFails = testNameToReports.get(testName);
-			boolean hasRecentFailure = false;
-			for (TestReport r : reportsWithFailures) {
-				if (configWhereItFails.contains(r)) {
-					TestCase tCase = findTestCaseFromName(testName, r);
-					if (tCase != null) {
-						if (tCase.getAge() <= 10) {
-							hasRecentFailure = true;
-						}
+			if (nb < 20) {
+				Collection<TestReport> configWhereItFails = testNameToReports.get(testName);
+				boolean hasRecentFailure = false;
+				for (TestReport r : reportsWithFailures) {
+					if (configWhereItFails.contains(r)) {
+						TestCase tCase = findTestCaseFromName(testName, r);
+						if (tCase != null) {
+							if (tCase.getAge() <= 10) {
+								hasRecentFailure = true;
+							}
 
+						}
 					}
 				}
-			}
-			if (hasRecentFailure) {
-				out.append("|**" + testName + "**");
-			} else {
-				out.append("|" + testName);
-			}
+				if (hasRecentFailure) {
+					out.append("|**" + testName + "**");
+				} else {
+					out.append("|" + testName);
+				}
 
-			for (TestReport r : reportsWithFailures) {
-				if (configWhereItFails.contains(r)) {
-					out.append("|");
-					TestCase tCase = findTestCaseFromName(testName, r);
-					if (tCase != null) {
-						if (hasRecentFailure) {
-							out.append("**");
-						}
-						out.append(tCase.getAge());
-						if (hasRecentFailure) {
-							out.append("**");
+				for (TestReport r : reportsWithFailures) {
+					if (configWhereItFails.contains(r)) {
+						out.append("|");
+						TestCase tCase = findTestCaseFromName(testName, r);
+						if (tCase != null) {
+							if (hasRecentFailure) {
+								out.append("**");
+							}
+							out.append(tCase.getAge());
+							if (hasRecentFailure) {
+								out.append("**");
+							}
+						} else {
+							out.append('X');
 						}
 					} else {
-						out.append('X');
+						out.append("| ");
 					}
-				} else {
-					out.append("| ");
 				}
+				out.append("|\n");
 			}
-			out.append("|\n");
-
+			nb++;
+		}
+		if (nb > MAX_FAILED_TESTS) {
+			out.append(":warning: **" + nb + "**  recent failed tests in total, some could not be displayed.");
 		}
 		return hasRecentRegressions;
 	}
