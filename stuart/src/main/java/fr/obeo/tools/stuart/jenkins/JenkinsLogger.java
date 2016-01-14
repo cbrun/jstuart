@@ -135,13 +135,21 @@ public class JenkinsLogger {
 							if (manualTrigger || hasRecentRegressions) {
 								String body = "";
 								if (hasRecentRegressions) {
-									body += "\n\n" + testsResults + "\n";
+									body += testsResults + "\n";
 								} else {
 									body = Joiner.on('\n').join(comments);
 								}
+								String statusIcon = "https://img.shields.io/badge/build-unknown-lightgrey.svg";
+								if ("UNSTABLE".equals(lastBuild.getResult())) {
+									statusIcon = "https://img.shields.io/badge/build-unstable-yellow.svg";
+								} else if ("STABLE".equals(lastBuild.getResult())) {
+									statusIcon = "https://img.shields.io/shippable/54d119db5ab6cc13528ab183.svg";
+								} else if ("FAILED".equals(lastBuild.getResult())) {
+									statusIcon = "https://img.shields.io/circleci/project/BrightFlair/PHP.Gt.svg";
+								}
 								Post newPost = Post.createPostWithSubject(postKey,
-										lastBuild.getFullDisplayName() + " is " + lastBuild.getResult(), body,
-										authorTxt, JENKINS_ICON, new Date(lastBuild.getTimestamp()));
+										" [![](" + statusIcon + ") " + lastBuild.getFullDisplayName() + "](" + postKey + ")" ,
+										body, authorTxt, JENKINS_ICON, new Date(lastBuild.getTimestamp()));
 								newPost.mightBeTruncated(!hasRecentRegressions);
 								newPost.setQuote(false);
 								newPost.addURLs(postKey);
@@ -165,16 +173,16 @@ public class JenkinsLogger {
 
 		@Override
 		public boolean apply(TestCase input) {
-			return "FAILED".equals(input.getStatus()) && input.getAge() < 40;
+			return "FAILED".equals(input.getStatus()) && input.getAge() < 30;
 		}
 	};
 
 	private boolean generatePerTestCaseReport(Map<String, TestReport> reports, StringBuffer out) {
-		Map<TestReport,String> reportToName= Maps.newLinkedHashMap();
+		Map<TestReport, String> reportToName = Maps.newLinkedHashMap();
 		boolean hasRecentRegressions = false;
 		Multimap<String, TestReport> testNameToReports = HashMultimap.create();
 		for (Map.Entry<String, TestReport> r : reports.entrySet()) {
-			reportToName.put(r.getValue(),r.getKey());
+			reportToName.put(r.getValue(), r.getKey());
 			if (r.getValue().getFailCount() > 0) {
 				for (TestSuite suite : r.getValue().getSuites()) {
 
@@ -194,22 +202,18 @@ public class JenkinsLogger {
 		}
 
 		out.append("| Test");
-		int platformIndex = 1;
 		Collection<TestReport> reportsWithFailures = Sets.newLinkedHashSet(testNameToReports.values());
-		for (TestReport r : reportToName.keySet()) {
-			if (reportsWithFailures.contains(r)) {
-				String reportURL = reportToName.get(r);
-				String name =reportURL.substring(reportURL.indexOf("./") + 2);
-				if (name.indexOf("PLATFORM=") != -1) {
-					name = name.substring(name.indexOf("PLATFORM=") + 9);
-					if (name.indexOf(",") != -1) {
-						name = name.substring(0, name.indexOf(","));
-					}
-
+		for (TestReport r : reportsWithFailures) {
+			String reportURL = reportToName.get(r);
+			String name = reportURL.substring(reportURL.indexOf("./") + 2);
+			if (name.indexOf("PLATFORM=") != -1) {
+				name = name.substring(name.indexOf("PLATFORM=") + 9);
+				if (name.indexOf(",") != -1) {
+					name = name.substring(0, name.indexOf(","));
 				}
+
 				out.append('|');
 				out.append("[" + name + "](" + reportURL + ")");
-				platformIndex++;
 			}
 		}
 		out.append("|\n");
@@ -221,7 +225,7 @@ public class JenkinsLogger {
 		for (String testName : testNameToReports.keySet()) {
 			Collection<TestReport> configWhereItFails = testNameToReports.get(testName);
 			boolean hasRecentFailure = false;
-			for (TestReport r : reportToName.keySet()) {
+			for (TestReport r : reportsWithFailures) {
 				if (configWhereItFails.contains(r)) {
 					TestCase tCase = findTestCaseFromName(testName, r);
 					if (tCase != null) {
@@ -238,7 +242,7 @@ public class JenkinsLogger {
 				out.append("|" + testName);
 			}
 
-			for (TestReport r : reportToName.keySet()) {
+			for (TestReport r : reportsWithFailures) {
 				if (configWhereItFails.contains(r)) {
 					out.append("|");
 					TestCase tCase = findTestCaseFromName(testName, r);
