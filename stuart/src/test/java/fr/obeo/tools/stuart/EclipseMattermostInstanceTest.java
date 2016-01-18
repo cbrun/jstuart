@@ -175,6 +175,50 @@ public class EclipseMattermostInstanceTest {
 		}
 	}
 
+	@Test
+	public void sendEventsToPackageDrone() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String qa_Channel = System.getenv("PACKAGEDRONE_CHANNEL");
+		if (qa_Channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, qa_Channel);
+
+			Date daysAgo = getDateXDaysAgo(3);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_cdtgeneral" + "_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(
+					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
+							.bugzillaLog(3, Sets.newHashSet("Package-Drone")));
+			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
+					"https://github.com/eclipse/packagedrone.git", "https://github.com/eclipse/packagedrone/commit/"));
+			posts.addAll(new EclipseForumsLogger(318, daysAgo).forumLog());
+			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/package-drone/", daysAgo).getBuildResults());
+
+			posts.addAll(new RssLogger(new URL("https://dentrassi.de/feed/"), daysAgo).get());
+			
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the PACKAGEDRONE_CHANNEL environment variable to be set");
+		}
+	}
+
 	public static Date getDateXDaysAgo(int nbDays) {
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.DATE, -nbDays);
