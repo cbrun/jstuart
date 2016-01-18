@@ -9,41 +9,41 @@ This has been done at first to integrate the **Eclipse projects infrastructure**
 
 ### RSS
 
-!(doc/rss.png)
+![RSS integration](doc/rss.png)
 
 This can also be used for mailling list archives or stackoverflow for instance :
 
-!(doc/stackoverflow.png)
+![RSS integration used for StackOverflow](doc/stackoverflow.png)
 
 ### Git
 
 Create a message for any new commit in the repository.
 
-!(doc/git.png)
+![GIT integration](doc/git.png)
 
 ### Gerrit
 
 Send aggregated reports of patchset waiting for reviews.
 
-!(doc/gerrit.png)
+![Gerrit integration](doc/gerrit.png)
 
 ### Bugzilla
 
 Create a message for any new bug or any new comment on a bugzilla ticket.
 
-!(doc/bugzilla.png)
+![Bugzilla Integration](doc/bugzilla.png)
 
 ### Eclipse Forums
 
-!(doc/forums.png)
+![Eclipse Forums -- tweaked RSS](doc/forums.png)
 
 ### Twitter
 
-!(doc/twitter.png)
+![Twitter](doc/twitter.png)
 
 ### Jenkins/Hudson
 
-!(doc/jenkins.png)
+![Jenkins](doc/jenkins.png)
 
 
 ## How is that supposed to be used ?
