@@ -76,9 +76,9 @@ public class EclipseMattermostInstanceTest {
 
 		String bug_Channel = System.getenv("PLATFORM_BUG_CHANNEL");
 		String qa_Channel = System.getenv("PLATFORM_QA_CHANNEL");
-		if (qa_Channel != null && bug_Channel != null) {
+		String patch_Channel = System.getenv("PLATFORM_PATCHES_CHANNEL");
+		if (qa_Channel != null && bug_Channel != null && patch_Channel != null) {
 			MattermostEmitter qaEmitter = new MattermostEmitter("https", host, qa_Channel);
-			MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bug_Channel);
 
 			Date daysAgo = getDateXDaysAgo(3);
 
@@ -103,6 +103,7 @@ public class EclipseMattermostInstanceTest {
 				send(qaEmitter, trace, post);
 			}
 
+			MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bug_Channel);
 			List<Post> bugzillas = Lists.newArrayList();
 			bugzillas.addAll(
 					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
@@ -112,10 +113,25 @@ public class EclipseMattermostInstanceTest {
 				send(bugEmitter, trace, post);
 			}
 
+			List<Post> patches = Lists.newArrayList();
+			bugzillas.addAll(new GerritLogger("https://git.eclipse.org/r", 10).getPatchsets(Sets.newHashSet(
+					"platform/eclipse.platform", "platform/eclipse.platform.common", "platform/eclipse.platform.debug",
+					"platform/eclipse.platform.images", "platform/eclipse.platform.news",
+					"platform/eclipse.platform.resources", "platform/eclipse.platform.runtime",
+					"platform/eclipse.platform.swt", "platform/eclipse.platform.team", "platform/eclipse.platform.text",
+					"platform/eclipse.platform.ua", "platform/eclipse.platform.ui",
+					"platform/eclipse.platform.tools")));
+
+			MattermostEmitter patchesEmitter = new MattermostEmitter("https", host, patch_Channel);
+			for (Post post : patches) {
+				send(patchesEmitter, trace, post);
+			}
+
 			traceFile.evictOldEvents(trace, 60);
 			traceFile.save(trace);
 		} else {
-			Assert.fail("Expecting the PLATFORM_QA_CHANNEL, PLATFORM_BUG_CHANNEL environment variable to be set");
+			Assert.fail(
+					"Expecting the PLATFORM_QA_CHANNEL, PLATFORM_BUG_CHANNEL,PLATFORM_PATCHES_CHANNEL environment variable to be set");
 		}
 	}
 

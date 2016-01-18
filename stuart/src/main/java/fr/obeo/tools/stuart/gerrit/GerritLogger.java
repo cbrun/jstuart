@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -91,16 +92,26 @@ public class GerritLogger {
 					Set<String> authors = Sets.newLinkedHashSet();
 					Set<String> urls = Sets.newLinkedHashSet();
 					for (PatchSet review : reviews) {
+
+						boolean recentlyUpdated = (new Date().getTime() - review.getUpdated().getTime()) < 24 * 60 * 60
+								* 1000;
 						String reviewKey = serverURL + "/" + review.getId();
 						String mergeable = ":boom:";
 						if (review.isMergeable()) {
 							mergeable = ":star:";
 						}
-						
-						body += "| " + GitLogger.detectBugzillaLink(review.getSubject()) + " | "
-								+ review.getOwner().getName() + " | *+" + review.getInsertions() + "/-"
-								+ review.getDeletions() + "*|"+  mergeable +   "| [link](" + serverURL + "/#/c/" + review.get_number()
-								+ ")|\n";
+
+						if (recentlyUpdated) {
+							body += "| **" + GitLogger.detectBugzillaLink(review.getSubject()) + "** | **"
+									+ review.getOwner().getName() + "** | *+" + review.getInsertions() + "/-"
+									+ review.getDeletions() + "*|" + mergeable + "| [link](" + serverURL + "/#/c/"
+									+ review.get_number() + ")|\n";
+						} else {
+							body += "| " + GitLogger.detectBugzillaLink(review.getSubject()) + " | "
+									+ review.getOwner().getName() + " | *+" + review.getInsertions() + "/-"
+									+ review.getDeletions() + "*|" + mergeable + "| [link](" + serverURL + "/#/c/"
+									+ review.get_number() + ")|\n";
+						}
 						authors.add(review.getOwner().getName());
 						urls.add(reviewKey);
 					}
