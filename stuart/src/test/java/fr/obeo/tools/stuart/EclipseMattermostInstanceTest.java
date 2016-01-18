@@ -188,7 +188,7 @@ public class EclipseMattermostInstanceTest {
 
 			Date daysAgo = getDateXDaysAgo(3);
 
-			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_cdtgeneral" + "_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_mattermost" + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();

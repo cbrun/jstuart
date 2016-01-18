@@ -104,11 +104,14 @@ public class JenkinsLogger {
 
 									Map<String, TestReport> reports = allNonEmptyReports(rootReport, rootReportURL);
 									StringBuffer reportString = new StringBuffer();
-									
-									reportString.append("failed : " + failCount + "/" + totalCount + " (skipped : " + skippedCount + ")\n\n");
-									hasRecentRegressions = hasRecentRegressions
-											|| generatePerTestCaseReport(reports, reportString);
-									if (reports.entrySet().size() > 0) {
+
+									reportString.append("failed : " + failCount + "/" + totalCount + " (skipped : "
+											+ skippedCount + ")\n\n");
+									if (failCount > 0) {
+										hasRecentRegressions = hasRecentRegressions
+												|| generatePerTestCaseReport(reports, reportString);
+									}
+									if (reports.entrySet().size() > 0 || failCount ==0) {
 										testsResults = reportString.toString();
 									}
 								}
@@ -141,7 +144,7 @@ public class JenkinsLogger {
 							}
 							if (manualTrigger || hasRecentRegressions) {
 								String body = "";
-								if (hasRecentRegressions) {
+								if (hasRecentRegressions || failCount == 0) {
 									body += testsResults + "\n";
 								} else {
 									body = Joiner.on('\n').join(comments);
@@ -232,7 +235,7 @@ public class JenkinsLogger {
 		out.append("|\n");
 		out.append("|----------");
 		for (int i = 0; i < reports.entrySet().size(); i++) {
-			out.append("|:--------");
+			out.append("|--------");
 		}
 		out.append("|\n");
 		int nb = 0;
