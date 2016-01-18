@@ -118,8 +118,9 @@ public class GerritLogger {
 					String authorName = Joiner.on(',').join(authors);
 					String postKey = Joiner.on('_').join(urls);
 
-					Post newPost = Post.createPostWithSubject(postKey, "Ready for reviews (" + reviews.size() + ")",
-							body, authorName, GERRIT_ICON, reviews.iterator().next().getUpdated());
+					Post newPost = Post.createPostWithSubject(postKey,
+							"Ready for reviews (" + reviews.size() + "/" + reviewsToSend.size() + ")", body, authorName,
+							GERRIT_ICON, reviews.iterator().next().getUpdated());
 					newPost.setQuote(false);
 					newPost.mightBeTruncated(false);
 					posts.add(newPost);
