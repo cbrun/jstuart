@@ -3,7 +3,7 @@
 Utility code to request development infrastructure (tickets, scm, reviews, continuous integration) 
 and transmit events to [Mattermost](http://www.mattermost.org/)
 
-This has been done at first to integrate the **Eclipse projects infrastructure** with the **Mattermost [Eclipse Instance](https://mattermost-test.eclipse.org/eclipse/)**
+This has been done at first to integrate the **Eclipse projects infrastructure** with the **Mattermost [Eclipse Instance](https://mattermost-test.eclipse.org/eclipse/)** but can be used for your on premise instance of Mattermost and can be useful especially if you are a Java shop.
 
 ## Integrations
 
