@@ -78,7 +78,8 @@ public class GerritLogger {
 							"ready for review (Validated)\n\n" + "|project|additions| deletions| mergeable | |\n"
 									+ "|-----|---------|----------|----------|-----|\n" + "|" + review.getProject()
 									+ "|" + review.getInsertions() + " | " + review.getDeletions() + "|"
-									+ mergeableText(review) + "| [link](" + serverURL + "/#/c/" + review.get_number() + ")|",
+									+ mergeableText(review) + "| [link](" + serverURL + "/#/c/" + review.get_number()
+									+ ")|",
 							review.getOwner().getName(), GERRIT_ICON, review.getUpdated());
 					newPost.setQuote(false);
 					newPost.mightBeTruncated(false);
