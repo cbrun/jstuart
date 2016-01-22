@@ -23,6 +23,16 @@ public class PatchSet {
 
 	private String subject;
 
+	private String project;
+
+	public String getProject() {
+		return project;
+	}
+
+	public void setProject(String project) {
+		this.project = project;
+	}
+
 	private int _number;
 
 	public int get_number() {
