@@ -98,6 +98,16 @@ public class BuildResult {
 
 	private Collection<BuildAuthor> culprits = Lists.newArrayList();
 
+	private Collection<BuildArtifact> artifacts = Lists.newArrayList();
+
+	public Collection<BuildArtifact> getArtifacts() {
+		return artifacts;
+	}
+
+	public void setArtifacts(Collection<BuildArtifact> artifacts) {
+		this.artifacts = artifacts;
+	}
+
 	public Collection<BuildAuthor> getCulprits() {
 		return culprits;
 	}

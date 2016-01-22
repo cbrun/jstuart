@@ -26,6 +26,7 @@ import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.Post;
 import fr.obeo.tools.stuart.jenkins.model.BuildAction;
+import fr.obeo.tools.stuart.jenkins.model.BuildArtifact;
 import fr.obeo.tools.stuart.jenkins.model.BuildAuthor;
 import fr.obeo.tools.stuart.jenkins.model.BuildCause;
 import fr.obeo.tools.stuart.jenkins.model.BuildResult;
@@ -111,7 +112,7 @@ public class JenkinsLogger {
 										hasRecentRegressions = hasRecentRegressions
 												|| generatePerTestCaseReport(reports, reportString);
 									}
-									if (reports.entrySet().size() > 0 || failCount ==0) {
+									if (reports.entrySet().size() > 0 || failCount == 0) {
 										testsResults = reportString.toString();
 									}
 								}
@@ -138,6 +139,7 @@ public class JenkinsLogger {
 											Iterables.getFirst(Splitter.on('\n').split(i.getComment()), "no commit"));
 								}
 							}
+
 							String authorTxt = "...";
 							if (authors.size() <= 2 && authors.size() > 0) {
 								authorTxt = Joiner.on(',').join(authors);
@@ -146,8 +148,16 @@ public class JenkinsLogger {
 								String body = "";
 								if (hasRecentRegressions || failCount == 0) {
 									body += testsResults + "\n";
-								} else {
+								} else if (comments.size() > 0) {
 									body = Joiner.on('\n').join(comments);
+								}
+								if (lastBuild.getArtifacts().size() > 0) {
+									body += "\nArtifacts:";
+									for (BuildArtifact artifact : lastBuild.getArtifacts()) {
+										body += "\n* [" + artifact.getDisplayPath() + "](" + lastBuild.getUrl()
+												+ "artifact/" + artifact.getRelativePath() + ")";
+									}
+									body += "\n";
 								}
 								String statusIcon = "https://img.shields.io/badge/build-unknown-lightgrey.svg";
 								if ("UNSTABLE".equals(lastBuild.getResult())) {
@@ -163,9 +173,8 @@ public class JenkinsLogger {
 										" [![](" + statusIcon + ") " + lastBuild.getFullDisplayName() + "](" + postKey
 												+ ")",
 										body, authorTxt, JENKINS_ICON, new Date(lastBuild.getTimestamp()));
-								newPost.mightBeTruncated(!hasRecentRegressions);
+								newPost.mightBeTruncated(false);
 								newPost.setQuote(false);
-								newPost.addURLs(postKey);
 								posts.add(newPost);
 							}
 						}
