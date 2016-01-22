@@ -135,4 +135,9 @@ public class GerritLogger {
 		return posts;
 	}
 
+	public GerritLogger groupReviews(boolean value) {
+		this.groupReviews = value;
+		return this;
+	}
+
 }
