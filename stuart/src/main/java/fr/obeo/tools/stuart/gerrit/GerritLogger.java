@@ -75,10 +75,11 @@ public class GerritLogger {
 				for (PatchSet review : reviewsToSend) {
 					Post newPost = Post.createPostWithSubject(serverURL + "/" + review.getId(),
 							GitLogger.detectBugzillaLink(review.getSubject()),
-							"ready for review (Validated)\n\n" + "|additions| deletions|\n" + "|---------|----------|\n"
-									+ "|" + review.getInsertions() + " | " + review.getDeletions() + "|",
+							"ready for review (Validated)\n\n" + "|project|additions| deletions| mergeable | |\n"
+									+ "|-----|---------|----------|----------|-----|\n" + "|" + review.getProject()
+									+ "|" + review.getInsertions() + " | " + review.getDeletions() + "|"
+									+ mergeableText(review) + "| [link](" + serverURL + "/#/c/" + review.get_number() + ")|",
 							review.getOwner().getName(), GERRIT_ICON, review.getUpdated());
-					newPost.addURLs(serverURL + "/#/c/" + review.get_number());
 					newPost.setQuote(false);
 					newPost.mightBeTruncated(false);
 					posts.add(newPost);
@@ -96,10 +97,7 @@ public class GerritLogger {
 						boolean recentlyUpdated = (new Date().getTime() - review.getUpdated().getTime()) < 24 * 60 * 60
 								* 1000;
 						String reviewKey = serverURL + "/" + review.getId();
-						String mergeable = ":boom:";
-						if (review.isMergeable()) {
-							mergeable = ":star:";
-						}
+						String mergeable = mergeableText(review);
 
 						if (recentlyUpdated) {
 							body += "| **" + GitLogger.detectBugzillaLink(review.getSubject()) + "** | **"
@@ -133,6 +131,14 @@ public class GerritLogger {
 		}
 
 		return posts;
+	}
+
+	private String mergeableText(PatchSet review) {
+		String mergeable = ":boom:";
+		if (review.isMergeable()) {
+			mergeable = ":star:";
+		}
+		return mergeable;
 	}
 
 	public GerritLogger groupReviews(boolean value) {
