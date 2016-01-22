@@ -114,7 +114,7 @@ public class EclipseMattermostInstanceTest {
 			}
 
 			List<Post> patches = Lists.newArrayList();
-			patches.addAll(new GerritLogger("https://git.eclipse.org/r", 3).getPatchsets(Sets.newHashSet(
+			patches.addAll(new GerritLogger("https://git.eclipse.org/r", 1).getPatchsets(Sets.newHashSet(
 					"platform/eclipse.platform", "platform/eclipse.platform.common", "platform/eclipse.platform.debug",
 					"platform/eclipse.platform.images", "platform/eclipse.platform.news",
 					"platform/eclipse.platform.resources", "platform/eclipse.platform.runtime",
