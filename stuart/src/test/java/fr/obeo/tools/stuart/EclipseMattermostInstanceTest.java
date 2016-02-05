@@ -114,13 +114,14 @@ public class EclipseMattermostInstanceTest {
 			}
 
 			List<Post> patches = Lists.newArrayList();
-			patches.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false).getPatchsets(Sets.newHashSet(
-					"platform/eclipse.platform", "platform/eclipse.platform.common", "platform/eclipse.platform.debug",
-					"platform/eclipse.platform.images", "platform/eclipse.platform.news",
-					"platform/eclipse.platform.resources", "platform/eclipse.platform.runtime",
-					"platform/eclipse.platform.swt", "platform/eclipse.platform.team", "platform/eclipse.platform.text",
-					"platform/eclipse.platform.ua", "platform/eclipse.platform.ui",
-					"platform/eclipse.platform.tools")));
+			patches.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
+					.getPatchsets(Sets.newHashSet("platform/eclipse.platform", "platform/eclipse.platform.common",
+							"platform/eclipse.platform.debug", "platform/eclipse.platform.images",
+							"platform/eclipse.platform.news", "platform/eclipse.platform.resources",
+							"platform/eclipse.platform.runtime", "platform/eclipse.platform.swt",
+							"platform/eclipse.platform.team", "platform/eclipse.platform.text",
+							"platform/eclipse.platform.ua", "platform/eclipse.platform.ui",
+							"platform/eclipse.platform.tools")));
 
 			MattermostEmitter patchesEmitter = new MattermostEmitter("https", host, patch_Channel);
 			for (Post post : patches) {
@@ -181,10 +182,10 @@ public class EclipseMattermostInstanceTest {
 		if (storage == null) {
 			storage = ".";
 		}
-
-		String qa_Channel = System.getenv("PACKAGEDRONE_CHANNEL");
-		if (qa_Channel != null) {
-			MattermostEmitter emitter = new MattermostEmitter("https", host, qa_Channel);
+		String mainChannelID = System.getenv("PACKAGEDRONE_MAIN_CHANNEL");
+		String log_Channel = System.getenv("PACKAGEDRONE_CHANNEL");
+		if (log_Channel != null && mainChannelID != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, log_Channel);
 
 			Date daysAgo = getDateXDaysAgo(3);
 
@@ -200,9 +201,6 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(new EclipseForumsLogger(318, daysAgo).forumLog());
 			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/package-drone/", daysAgo).getBuildResults());
 
-			posts.addAll(new RssLogger(new URL("https://dentrassi.de/feed/"), daysAgo).get());
-			posts.addAll(new RssLogger(new URL("http://packagedrone.org/feed/"), daysAgo).get());
-			
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
 					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
@@ -211,6 +209,11 @@ public class EclipseMattermostInstanceTest {
 
 			for (Post post : posts) {
 				send(emitter, trace, post);
+			}
+
+			MattermostEmitter mainChannelEmitter = new MattermostEmitter("https", host, mainChannelID);
+			for (Post post : new RssLogger(new URL("http://packagedrone.org/feed/"), daysAgo).get()) {
+				send(mainChannelEmitter, trace, post);
 			}
 
 			traceFile.evictOldEvents(trace, 60);
