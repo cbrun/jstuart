@@ -201,6 +201,7 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/package-drone/", daysAgo).getBuildResults());
 
 			posts.addAll(new RssLogger(new URL("https://dentrassi.de/feed/"), daysAgo).get());
+			posts.addAll(new RssLogger(new URL("http://packagedrone.org/feed/"), daysAgo).get());
 			
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
