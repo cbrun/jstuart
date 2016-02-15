@@ -42,7 +42,7 @@ public class ObeoMattermostInstanceTest {
 
 		String channel = System.getenv("EEF_CHANNEL");
 		if (channel != null) {
-			MattermostEmitter emitter = new MattermostEmitter("http", host, channel);
+			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
 
 			int nbDays = 10;
 
