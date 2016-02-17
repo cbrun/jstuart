@@ -26,6 +26,7 @@ import fr.obeo.tools.stuart.rss.RssLogger;
 
 public class EclipseMattermostInstanceTest {
 
+	private static final String SO_ICON = "https://veithen.github.io/images/icon-stackoverflow.svg";
 	private String host = "mattermost-test.eclipse.org";
 
 	@Test
@@ -103,6 +104,17 @@ public class EclipseMattermostInstanceTest {
 				send(qaEmitter, trace, post);
 			}
 
+			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-plugin"), daysAgo)
+					.setIcon(SO_ICON).get());
+			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-rcp"), daysAgo)
+					.setIcon(SO_ICON).get());
+			posts.addAll(
+					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/swt"), daysAgo).setIcon(SO_ICON).get());
+			posts.addAll(
+					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/jface"), daysAgo).setIcon(SO_ICON).get());
+			posts.addAll(
+					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/e4"), daysAgo).setIcon(SO_ICON).get());
+
 			MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bug_Channel);
 			List<Post> bugzillas = Lists.newArrayList();
 			bugzillas.addAll(
@@ -154,10 +166,10 @@ public class EclipseMattermostInstanceTest {
 
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new EclipseForumsLogger(80, daysAgo).forumLog());
-			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/cdt"), daysAgo)
-					.setIcon("https://veithen.github.io/images/icon-stackoverflow.svg").get());
+			posts.addAll(
+					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/cdt"), daysAgo).setIcon(SO_ICON).get());
 			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-cdt"), daysAgo)
-					.setIcon("https://veithen.github.io/images/icon-stackoverflow.svg").get());
+					.setIcon(SO_ICON).get());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
