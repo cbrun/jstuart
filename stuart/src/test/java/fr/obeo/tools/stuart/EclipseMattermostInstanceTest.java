@@ -100,10 +100,6 @@ public class EclipseMattermostInstanceTest {
 				}
 			});
 
-			for (Post post : posts) {
-				send(qaEmitter, trace, post);
-			}
-
 			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-plugin"), daysAgo)
 					.setIcon(SO_ICON).get());
 			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-rcp"), daysAgo)
@@ -114,6 +110,11 @@ public class EclipseMattermostInstanceTest {
 					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/jface"), daysAgo).setIcon(SO_ICON).get());
 			posts.addAll(
 					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/e4"), daysAgo).setIcon(SO_ICON).get());
+			
+			for (Post post : posts) {
+				send(qaEmitter, trace, post);
+			}
+
 
 			MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bug_Channel);
 			List<Post> bugzillas = Lists.newArrayList();
