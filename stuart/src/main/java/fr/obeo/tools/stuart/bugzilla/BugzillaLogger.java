@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,11 @@ public class BugzillaLogger {
 	}
 
 	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products) throws MalformedURLException {
+		return bugzillaLog(nbDaysAgo, products, Collections.EMPTY_SET);
+	}
+
+	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products, Collection<String> components)
+			throws MalformedURLException {
 		List<Post> posts = new ArrayList<Post>();
 		BugzillaHttpSession session = new BugzillaHttpSession();
 		session.setBaseUrl(new URL(this.baseURL));
@@ -39,6 +45,9 @@ public class BugzillaLogger {
 			Date daysAgo = cal.getTime();
 			for (String productName : products) {
 				searchData.add("product", productName);
+			}
+			for (String componentName : components) {
+				searchData.add("component", componentName);
 			}
 			searchData.add("limit", "20");
 
@@ -54,8 +63,9 @@ public class BugzillaLogger {
 					if (issue.getCreationTimestamp().after(daysAgo)
 							&& !this.authorsToIgnore.contains(issue.getReporter().getName())) {
 						posts.add(Post.createPostWithSubject(issue.getUri(),
-								"[[" + issue.getId() + "](" + issue.getUri() + ")] " +  issue.getSummary(),
-								"Has been created", issue.getReporter().getName(), BUG_ICON,issue.getCreationTimestamp()).addURLs(issue.getUri()));
+								"[[" + issue.getId() + "](" + issue.getUri() + ")] " + issue.getSummary(),
+								"Has been created", issue.getReporter().getName(), BUG_ICON,
+								issue.getCreationTimestamp()).addURLs(issue.getUri()));
 					}
 
 				} else {
@@ -64,9 +74,9 @@ public class BugzillaLogger {
 						if (!authorsToIgnore.contains(c.getAuthor().getName())) {
 							if (c.getCreationTimestamp().after(daysAgo)) {
 								String commentURL = issue.getUri() + "#c" + index;
-								posts.add(Post
-										.createPostWithSubject(commentURL, "[[" + issue.getId() + "](" + commentURL + ")] " +  issue.getSummary(),
-												c.getTheText(), c.getAuthor().getName(), BUG_ICON,c.getCreationTimestamp())
+								posts.add(Post.createPostWithSubject(commentURL,
+										"[[" + issue.getId() + "](" + commentURL + ")] " + issue.getSummary(),
+										c.getTheText(), c.getAuthor().getName(), BUG_ICON, c.getCreationTimestamp())
 										.addURLs(commentURL));
 							}
 						}
