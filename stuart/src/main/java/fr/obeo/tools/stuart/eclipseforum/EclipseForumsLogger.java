@@ -28,6 +28,8 @@ public class EclipseForumsLogger {
 	private int forumNumber;
 	private Date daysAgo;
 
+	private boolean silentFail = true;
+
 	public EclipseForumsLogger(int forumNumber, Date daysAgo) {
 		super();
 		this.forumNumber = forumNumber;
@@ -40,7 +42,7 @@ public class EclipseForumsLogger {
 		SyndFeedInput input = new SyndFeedInput();
 		boolean foundAnOld = false;
 		for (int i = 0; i < 100 && !foundAnOld; i++) {
-			URL feedUrl;
+			URL feedUrl = null;
 			try {
 				feedUrl = new URL("http://www.eclipse.org/forums/feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&n="
 						+ requestSize + "&o=" + i * requestSize);
@@ -65,8 +67,10 @@ public class EclipseForumsLogger {
 							}
 						}
 
-						Post newPost = Post.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
-								entry.getAuthor(), FORUM_ICON,entry.getPublishedDate()).addURLs(entry.getUri());
+						Post newPost = Post
+								.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
+										entry.getAuthor(), FORUM_ICON, entry.getPublishedDate())
+								.addURLs(entry.getUri());
 						Element img = Jsoup.parse(html).getElementsByTag("img").first();
 						if (img != null && img.attr("src") != null) {
 							String href = img.attr("src");
@@ -82,13 +86,25 @@ public class EclipseForumsLogger {
 
 				}
 			} catch (MalformedURLException e) {
-				throw new RuntimeException(e);
+				System.err.println(feedUrl);
+				if (!silentFail) {
+					throw new RuntimeException(e);
+				}
 			} catch (IllegalArgumentException e) {
-				throw new RuntimeException(e);
+				System.err.println(feedUrl);
+				if (!silentFail) {
+					throw new RuntimeException(e);
+				}
 			} catch (FeedException e) {
-				throw new RuntimeException(e);
+				System.err.println(feedUrl);
+				if (!silentFail) {
+					throw new RuntimeException(e);
+				}
 			} catch (IOException e) {
-				throw new RuntimeException(e);
+				System.err.println(feedUrl);
+				if (!silentFail) {
+					throw new RuntimeException(e);
+				}
 			}
 		}
 		return posts;
