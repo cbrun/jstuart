@@ -77,11 +77,9 @@ public class EclipseMattermostInstanceTest {
 		}
 
 		// channels
-		String qaChannel = "webtools-bots";
-		String bugChannel = "webtools-bots";
-		String patchChannel = "webtools-bots";
+		String webtoolsChannel = System.getenv("WEBTOOLS-BOTS-CHANNEL");
 
-		MattermostEmitter qaEmitter = new MattermostEmitter("https", host, qaChannel);
+		MattermostEmitter webToolsEmitter = new MattermostEmitter("https", host, webtoolsChannel);
 
 		Date daysAgo = getDateXDaysAgo(3);
 		EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_webtools" + "_trace.json"));
@@ -92,53 +90,38 @@ public class EclipseMattermostInstanceTest {
 		posts.addAll(new EclipseForumsLogger(88, daysAgo).forumLog());
 		posts.addAll(new EclipseForumsLogger(114, daysAgo).forumLog());
 
+		// log stackoverflow posts with given keywords
+		posts.addAll(
+				new RssLogger(new URL("http://stackoverflow.com/feeds/tag/webtools"), daysAgo).setIcon(SO_ICON).get());
+		posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-wtp"), daysAgo).setIcon(SO_ICON)
+				.get());
+		posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/jsdt"), daysAgo).setIcon(SO_ICON).get());
+
+		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
+				.bugzillaLog(3, Sets.newHashSet("JSDT", "WTP Source Editing", "WTP Java EE Tools", "WTP Common Tools",
+						"Web Tools", "Java Server Faces")));
+
+		// log git commits
+		List<Post> patches = Lists.newArrayList();
+		patches.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
+				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "webtools.sourceediting", "webtools.releng")));
+
+		
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
 				return m1.getCreatedAt().compareTo(m2.getCreatedAt());
 			}
 		});
-
+		
 		for (Post post : posts) {
-			send(qaEmitter, trace, post);
-		}
-		// log stackoverflow posts with given keywords
-		posts.addAll(new RssLogger(
-				new URL("http://stackoverflow.com/feeds/tag/webtools"), daysAgo).setIcon(SO_ICON).get());
-		posts.addAll(new RssLogger(
-				new URL("http://stackoverflow.com/feeds/tag/eclipse-wtp"), daysAgo).setIcon(SO_ICON).get());
-		posts.addAll(new RssLogger(
-				new URL("http://stackoverflow.com/feeds/tag/jsdt"), daysAgo).setIcon(SO_ICON).get());
-
-		MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bugChannel);
-		List<Post> bugzillas = Lists.newArrayList();
-		// log bugzilla patches from genie
-		bugzillas.addAll(
-				new BugzillaLogger("https://bugs.eclipse.org/bugs", 
-						Sets.newHashSet("genie", "genie@eclipse.org"))
-								.bugzillaLog(3, Sets.newHashSet("JSDT", "WTP Source Editing", "WTP Java EE Tools",
-										"WTP Common Tools", "Web Tools", "Java Server Faces")));
-
-		for (Post post : bugzillas) {
-			send(bugEmitter, trace, post);
-		}
-		// log git commits
-		List<Post> patches = Lists.newArrayList();
-		patches.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
-				.getPatchsets(Sets.newHashSet(
-						"jsdt/webtools.jsdt", 
-						"webtools.sourceediting",
-						"webtools.releng")));
-
-		MattermostEmitter patchesEmitter = new MattermostEmitter("https", host, patchChannel);
-		for (Post post : patches) {
-			send(patchesEmitter, trace, post);
+			send(webToolsEmitter, trace, post);
 		}
 
 		traceFile.evictOldEvents(trace, 60);
 		traceFile.save(trace);
 
 	}
-	
+
 	@Test
 	public void sendEventsToPlatformChans() throws Exception {
 		String storage = System.getenv("WORKSPACE");
@@ -181,11 +164,10 @@ public class EclipseMattermostInstanceTest {
 					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/jface"), daysAgo).setIcon(SO_ICON).get());
 			posts.addAll(
 					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/e4"), daysAgo).setIcon(SO_ICON).get());
-			
+
 			for (Post post : posts) {
 				send(qaEmitter, trace, post);
 			}
-
 
 			MattermostEmitter bugEmitter = new MattermostEmitter("https", host, bug_Channel);
 			List<Post> bugzillas = Lists.newArrayList();
