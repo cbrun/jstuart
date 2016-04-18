@@ -327,11 +327,13 @@ public class EclipseMattermostInstanceTest {
 			for (Post post : posts) {
 				send(emitter, trace, post);
 			}
-
+/*
+For some reasons the packagedrone feed parsing is currently failing 
 			MattermostEmitter mainChannelEmitter = new MattermostEmitter("https", host, mainChannelID);
 			for (Post post : new RssLogger(new URL("http://packagedrone.org/feed/"), daysAgo).get()) {
 				send(mainChannelEmitter, trace, post);
 			}
+			*/
 
 			traceFile.evictOldEvents(trace, 60);
 			traceFile.save(trace);
