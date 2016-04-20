@@ -149,12 +149,11 @@ public class EclipseMattermostInstanceTest {
 		}
 
 		// log blog posts waiting for URL from Marcel
-//		posts.addAll(
-//				new RssLogger(new URL(""), daysAgo).get());
-		
+		// posts.addAll(
+		// new RssLogger(new URL(""), daysAgo).get());
 
 		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
-				.bugzillaLog(3, Sets.newHashSet("EPP"),Sets.newHashSet("Error Reporting and Logging ")));
+				.bugzillaLog(3, Sets.newHashSet("EPP"), Sets.newHashSet("Error Reporting and Logging ")));
 
 		posts.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
 				.getPatchsets(Sets.newHashSet("epp/org.eclipse.epp.logging")));
@@ -327,13 +326,13 @@ public class EclipseMattermostInstanceTest {
 			for (Post post : posts) {
 				send(emitter, trace, post);
 			}
-/*
-For some reasons the packagedrone feed parsing is currently failing 
-			MattermostEmitter mainChannelEmitter = new MattermostEmitter("https", host, mainChannelID);
-			for (Post post : new RssLogger(new URL("http://packagedrone.org/feed/"), daysAgo).get()) {
-				send(mainChannelEmitter, trace, post);
-			}
-			*/
+			/*
+			 * For some reasons the packagedrone feed parsing is currently
+			 * failing MattermostEmitter mainChannelEmitter = new
+			 * MattermostEmitter("https", host, mainChannelID); for (Post post :
+			 * new RssLogger(new URL("http://packagedrone.org/feed/"),
+			 * daysAgo).get()) { send(mainChannelEmitter, trace, post); }
+			 */
 
 			traceFile.evictOldEvents(trace, 60);
 			traceFile.save(trace);
@@ -396,6 +395,42 @@ For some reasons the packagedrone feed parsing is currently failing
 			traceFile.save(trace);
 		} else {
 			Assert.fail("Expecting the MATTERMOST_CHANNEL environment variable to be set");
+		}
+	}
+
+	@Test
+	public void sendEventsToArchitectureCouncilChannel() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String ac_Channel = System.getenv("AC_CHANNEL");
+		if (ac_Channel != null) {
+			MattermostEmitter acEmitter = new MattermostEmitter("https", host, ac_Channel);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_ac_council" + "_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(
+					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
+							.bugzillaLog(3, Sets.newHashSet("Community"), Sets.newHashSet("Architecture Council")));
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(acEmitter, trace, post);
+			}
+
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the AC_CHANNEL environment variable to be set");
 		}
 	}
 
