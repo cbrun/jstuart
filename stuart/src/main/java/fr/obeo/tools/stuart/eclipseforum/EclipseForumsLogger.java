@@ -24,6 +24,7 @@ import fr.obeo.tools.stuart.Post;
 
 public class EclipseForumsLogger {
 
+	private static final int MAX_REQUESTS = 1000;
 	private static final String FORUM_ICON = "https://billing.ragesw.com/images/forum_speachbubble.png";
 	private int forumNumber;
 	private Date daysAgo;
@@ -41,12 +42,13 @@ public class EclipseForumsLogger {
 		int requestSize = 50;
 		SyndFeedInput input = new SyndFeedInput();
 		boolean foundAnOld = false;
-		for (int i = 0; i < 100 && !foundAnOld; i++) {
+		for (int i = 0; i < MAX_REQUESTS && !foundAnOld; i++) {
 			URL feedUrl = null;
 			try {
 				feedUrl = new URL("http://www.eclipse.org/forums/feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&n="
 						+ requestSize + "&o=" + i * requestSize);
 
+				System.out.println(feedUrl);
 				SyndFeed feed = input.build(new XmlReader(feedUrl));
 				for (SyndEntry entry : feed.getEntries()) {
 					if (entry.getPublishedDate().after(daysAgo)) {
