@@ -29,11 +29,16 @@ public class BugzillaLogger {
 	}
 
 	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products) throws MalformedURLException {
-		return bugzillaLog(nbDaysAgo, products, Collections.EMPTY_SET);
+		return bugzillaLog(nbDaysAgo, products, Collections.EMPTY_SET, Collections.EMPTY_SET);
 	}
 
 	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products, Collection<String> components)
 			throws MalformedURLException {
+		return bugzillaLog(nbDaysAgo, products, components, Collections.EMPTY_SET);
+	}
+
+	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products, Collection<String> components,
+			Collection<String> keywords) throws MalformedURLException {
 		List<Post> posts = new ArrayList<Post>();
 		BugzillaHttpSession session = new BugzillaHttpSession();
 		session.setBaseUrl(new URL(this.baseURL));
@@ -48,6 +53,10 @@ public class BugzillaLogger {
 			}
 			for (String componentName : components) {
 				searchData.add("component", componentName);
+			}
+
+			for (String keywordName : keywords) {
+				searchData.add("keywords", keywordName);
 			}
 			searchData.add("limit", "20");
 

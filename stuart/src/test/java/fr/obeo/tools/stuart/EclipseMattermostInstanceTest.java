@@ -432,7 +432,50 @@ public class EclipseMattermostInstanceTest {
 		} else {
 			Assert.fail("Expecting the AC_CHANNEL environment variable to be set");
 		}
+
+	
+	
 	}
+	
+	@Test
+	public void sendEventsToUXChannel() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String ux_Channel = System.getenv("UX_CHANNEL");
+		if (ux_Channel != null) {
+			MattermostEmitter acEmitter = new MattermostEmitter("https", host, ux_Channel);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_ux_channel" + "_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
+					.bugzillaLog(4, Collections.<String>emptySet(), Collections.<String>emptySet(),
+							Sets.newHashSet("usability")));
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(acEmitter, trace, post);
+			}
+
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the UX_CHANNEL environment variable to be set");
+		}
+
+	
+	
+	}
+
 
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
 		if (!trace.containsKey(post.getKey())) {
