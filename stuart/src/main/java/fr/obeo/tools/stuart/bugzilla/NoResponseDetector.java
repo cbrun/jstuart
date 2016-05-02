@@ -83,20 +83,21 @@ public class NoResponseDetector {
 		}
 		List<Date> allDatesDates = Lists.newArrayList();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-ww");
+		StringBuffer delay = new StringBuffer();
 		for (String user : delaysInAnswering.keySet()) {
 			Collection<Answer> answers = delaysInAnswering.get(user);
 			for (Answer answer : answers) {
 				allDatesDates.add(answer.getAnsweredOn());
 			}
-			System.out.println(user + " : " + Joiner.on(",").join(answers));
+			delay.append(user + " : " + Joiner.on(",").join(answers) + "\n");
 		}
 		Collections.sort(allDatesDates);
 		Set<String> allDates = Sets.newLinkedHashSet();
 		for (Date date : allDatesDates) {
 			allDates.add(sdf.format(date));
 		}
-		System.out.println("");
-		System.out.println(" ;" + Joiner.on(" ; ").join(allDates));
+		delay.append("\n");
+		delay.append(" ;" + Joiner.on(" ; ").join(allDates)+ "\n");
 		for (String user : delaysInAnswering.keySet()) {
 			Collection<Answer> answers = delaysInAnswering.get(user);
 			StringBuffer buf = new StringBuffer();
@@ -119,9 +120,9 @@ public class NoResponseDetector {
 				}
 				buf.append(" ;");
 			}
-			System.out.println(buf.toString());
+			delay.append(buf.toString());
 		}
-		System.out.println("");
+		delay.append("\n");
 		return result;
 
 	}
