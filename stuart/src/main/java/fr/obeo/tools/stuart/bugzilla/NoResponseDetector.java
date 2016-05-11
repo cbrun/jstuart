@@ -54,7 +54,7 @@ public class NoResponseDetector {
 	public Collection<IssueWithAnswer> noResponseFromTeam() throws MalformedURLException {
 		List<IssueWithAnswer> result = Lists.newArrayList();
 		Multimap<String, Answer> delaysInAnswering = LinkedHashMultimap.create();
-		Iterator<Issue> openedIssues = searchAllIssues();
+		Iterator<Issue> openedIssues = searchOpenedIssues();
 		while (openedIssues.hasNext()) {
 			IssueWithAnswer issue = new IssueWithAnswer(openedIssues.next());
 
