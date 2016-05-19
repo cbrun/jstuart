@@ -142,7 +142,7 @@ public class EclipseMattermostInstanceTest {
 
 		for (Post post : new EclipseForumsLogger(69, daysAgo).forumLog()) {
 
-			if (post.getSubject().isPresent() && post.getSubject().get().contains("[aeri]")) {
+			if (post.getSubject() !=null  && post.getSubject().contains("[aeri]")) {
 				posts.add(post);
 			}
 

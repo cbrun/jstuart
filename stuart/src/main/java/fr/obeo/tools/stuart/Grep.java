@@ -16,9 +16,9 @@ public class Grep implements Predicate<Post> {
 
 	public boolean apply(Post input) {
 		boolean found = false;
-		if (searchTitle && input.getSubject().isPresent()) {
+		if (searchTitle && input.getSubject()!=null) {
 			for (String term : terms) {
-				found = found || input.getSubject().get().contains(term);
+				found = found || input.getSubject().contains(term);
 			}
 		}
 		if (!found && searchBody && input.getMarkdownBody() != null) {

@@ -27,6 +27,7 @@ import b4j.core.DefaultSearchData;
 import b4j.core.Issue;
 import b4j.core.User;
 import b4j.core.session.BugzillaHttpSession;
+import fr.obeo.tools.stuart.UserRequest;
 
 public class NoResponseDetector {
 
@@ -35,6 +36,7 @@ public class NoResponseDetector {
 	private String baseURL;
 	private Collection<String> authorsToIgnore;
 	private Collection<String> products;
+	private Collection<String> components;
 	private Predicate<Comment> notGenie = new Predicate<Comment>() {
 
 		@Override
@@ -44,15 +46,16 @@ public class NoResponseDetector {
 	};
 
 	public NoResponseDetector(Collection<String> teamMembers, String baseURL, Collection<String> authorsToIgnore,
-			Collection<String> products) {
+			Collection<String> products, Collection<String> components) {
 		this.teamMembers = teamMembers;
 		this.baseURL = baseURL;
 		this.authorsToIgnore = authorsToIgnore;
 		this.products = products;
+		this.components = components;
 	}
 
-	public Collection<IssueWithAnswer> noResponseFromTeam() throws MalformedURLException {
-		List<IssueWithAnswer> result = Lists.newArrayList();
+	public Collection<UserRequest> noResponseFromTeam() throws MalformedURLException {
+		List<UserRequest> result = Lists.newArrayList();
 		Multimap<String, Answer> delaysInAnswering = LinkedHashMultimap.create();
 		Iterator<Issue> openedIssues = searchOpenedIssues();
 		while (openedIssues.hasNext()) {
@@ -97,7 +100,7 @@ public class NoResponseDetector {
 			allDates.add(sdf.format(date));
 		}
 		delay.append("\n");
-		delay.append(" ;" + Joiner.on(" ; ").join(allDates)+ "\n");
+		delay.append(" ;" + Joiner.on(" ; ").join(allDates) + "\n");
 		for (String user : delaysInAnswering.keySet()) {
 			Collection<Answer> answers = delaysInAnswering.get(user);
 			StringBuffer buf = new StringBuffer();
@@ -137,6 +140,9 @@ public class NoResponseDetector {
 			for (String productName : products) {
 				searchData.add("product", productName);
 			}
+			for (String componentName : components) {
+				searchData.add("component", componentName);
+			}
 			searchData.add("resolution", "---");
 
 			openedIssues = session.searchBugs(searchData, null).iterator();
@@ -155,6 +161,9 @@ public class NoResponseDetector {
 			for (String productName : products) {
 				searchData.add("product", productName);
 			}
+			for (String componentName : components) {
+				searchData.add("component", componentName);
+			}
 
 			allIssues = session.searchBugs(searchData, null).iterator();
 
@@ -162,7 +171,7 @@ public class NoResponseDetector {
 		return allIssues;
 	}
 
-	public class IssueWithAnswer {
+	public class IssueWithAnswer implements UserRequest {
 
 		private Issue issue;
 
@@ -200,6 +209,26 @@ public class NoResponseDetector {
 			long nbdays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
 			return nbdays;
 
+		}
+
+		@Override
+		public String getSummary() {
+			return getIssue().getSummary();
+		}
+
+		@Override
+		public String getLastAuthorName() {
+			return getLastAuthor().getName();
+		}
+
+		@Override
+		public String getReporterName() {
+			return issue.getReporter().getName();
+		}
+
+		@Override
+		public String getUrl() {
+			return issue.getUri();
 		}
 
 	}

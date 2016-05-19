@@ -101,9 +101,9 @@ public class MattermostPost {
 			bodyString = bodyString.substring(0, 250);
 			bodyString += "(...)";
 		}
-		if (in.getSubject().isPresent()) {
+		if (in.getSubject() != null) {
 			message.append("##### ");
-			message.append(in.getSubject().get().trim());
+			message.append(in.getSubject().trim());
 			message.append(' ');
 			message.append(tags);
 			message.append('\n');

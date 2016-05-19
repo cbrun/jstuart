@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.google.common.base.Optional;
-
 public class Post {
 
 	private String key;
@@ -17,7 +15,7 @@ public class Post {
 
 	private String iconURL = "";
 
-	private Optional<String> subject = Optional.absent();
+	private String subject = null;
 
 	private Set<String> tags;
 	private Set<String> urls;
@@ -29,6 +27,16 @@ public class Post {
 	private boolean mightTruncate = true;
 
 	private boolean isQuote = true;
+
+	private String threadID;
+
+	public String getThreadID() {
+		return threadID;
+	}
+
+	public void setThreadID(String threadID) {
+		this.threadID = threadID;
+	}
 
 	public Date getCreatedAt() {
 		return createdAt;
@@ -71,7 +79,7 @@ public class Post {
 		return iconURL;
 	}
 
-	public Optional<String> getSubject() {
+	public String getSubject() {
 		return subject;
 	}
 
@@ -130,7 +138,7 @@ public class Post {
 		p.author = author;
 		p.iconURL = iconURL;
 		p.markdownBody = markdownBody;
-		p.subject = Optional.of(subject);
+		p.subject = subject;
 		p.createdAt = createdAt;
 		return p;
 	}

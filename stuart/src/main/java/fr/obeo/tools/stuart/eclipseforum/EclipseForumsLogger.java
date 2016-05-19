@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.safety.Whitelist;
 
@@ -53,8 +54,9 @@ public class EclipseForumsLogger {
 				for (SyndEntry entry : feed.getEntries()) {
 					if (entry.getPublishedDate().after(daysAgo)) {
 						String html = entry.getDescription().getValue();
-
-						String htmlConvertedToText = Jsoup.clean(html, "", Whitelist.none(),
+						Document doc = Jsoup.parse(html);
+						doc.getElementsByClass("pre").remove();
+						String htmlConvertedToText = Jsoup.clean(doc.toString(), "", Whitelist.none(),
 								new OutputSettings().prettyPrint(false));
 						StringBuffer cleaned = new StringBuffer();
 						boolean foundSignature = false;
@@ -109,7 +111,21 @@ public class EclipseForumsLogger {
 				}
 			}
 		}
+		/*
+		 * set the thread ID
+		 */
+		for (Post post : posts) {
+			post.setThreadID(findThread(post));
+		}
 		return posts;
+	}
+
+	private static String findThread(Post post) {
+		String id = "";
+		String url = post.getKey();
+		String threadAndMessId = url.substring(url.indexOf("msg/") + 4);
+		id = threadAndMessId.substring(0, threadAndMessId.indexOf("/"));
+		return id;
 	}
 
 }
