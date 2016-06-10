@@ -27,7 +27,7 @@ import fr.obeo.tools.stuart.rss.RssLogger;
 public class EclipseMattermostInstanceTest {
 
 	private static final String SO_ICON = "https://veithen.github.io/images/icon-stackoverflow.svg";
-	private String host = "mattermost-test.eclipse.org";
+	private String host = "mattermost.eclipse.org";
 
 	@Test
 	public void eclipseAnnounces() throws Exception {
