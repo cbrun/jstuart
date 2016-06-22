@@ -32,10 +32,17 @@ public class EclipseForumsLogger {
 
 	private boolean silentFail = true;
 
+	private String baseURL = "http://www.eclipse.org/forums/";
+
 	public EclipseForumsLogger(int forumNumber, Date daysAgo) {
 		super();
 		this.forumNumber = forumNumber;
 		this.daysAgo = daysAgo;
+	}
+
+	public EclipseForumsLogger setBaseURL(String newURL) {
+		this.baseURL = newURL;
+		return this;
 	}
 
 	public Collection<Post> forumLog() {
@@ -46,8 +53,8 @@ public class EclipseForumsLogger {
 		for (int i = 0; i < MAX_REQUESTS && !foundAnOld; i++) {
 			URL feedUrl = null;
 			try {
-				feedUrl = new URL("http://www.eclipse.org/forums/feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&n="
-						+ requestSize + "&o=" + i * requestSize);
+				feedUrl = new URL(baseURL + "feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&n=" + requestSize
+						+ "&o=" + i * requestSize);
 
 				System.out.println(feedUrl);
 				SyndFeed feed = input.build(new XmlReader(feedUrl));
