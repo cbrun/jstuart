@@ -25,7 +25,7 @@ import fr.obeo.tools.stuart.Post;
 
 public class EclipseForumsLogger {
 
-	private static final int MAX_REQUESTS = 1000;
+	private static final int MAX_REQUESTS = 100000;
 	private static final String FORUM_ICON = "https://billing.ragesw.com/images/forum_speachbubble.png";
 	private int forumNumber;
 	private Date daysAgo;
@@ -50,7 +50,8 @@ public class EclipseForumsLogger {
 		int requestSize = 50;
 		SyndFeedInput input = new SyndFeedInput();
 		boolean foundAnOld = false;
-		for (int i = 0; i < MAX_REQUESTS && !foundAnOld; i++) {
+		int nbSuccessiveFailures = 0;
+		for (int i = 0; i < MAX_REQUESTS && !foundAnOld && nbSuccessiveFailures < 5; i++) {
 			URL feedUrl = null;
 			try {
 				feedUrl = new URL(baseURL + "feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&n=" + requestSize
@@ -96,23 +97,28 @@ public class EclipseForumsLogger {
 					}
 
 				}
+				nbSuccessiveFailures = 0;
 			} catch (MalformedURLException e) {
-				System.err.println(feedUrl);
+				System.err.println(feedUrl + " " + e.getMessage());
+				nbSuccessiveFailures++;
 				if (!silentFail) {
 					throw new RuntimeException(e);
 				}
 			} catch (IllegalArgumentException e) {
-				System.err.println(feedUrl);
+				System.err.println(feedUrl + " " + e.getMessage());
+				nbSuccessiveFailures++;
 				if (!silentFail) {
 					throw new RuntimeException(e);
 				}
 			} catch (FeedException e) {
-				System.err.println(feedUrl);
+				System.err.println(feedUrl + " " + e.getMessage());
+				nbSuccessiveFailures++;
 				if (!silentFail) {
 					throw new RuntimeException(e);
 				}
 			} catch (IOException e) {
-				System.err.println(feedUrl);
+				System.err.println(feedUrl + " " + e.getMessage());
+				nbSuccessiveFailures++;
 				if (!silentFail) {
 					throw new RuntimeException(e);
 				}
@@ -133,6 +139,11 @@ public class EclipseForumsLogger {
 		String threadAndMessId = url.substring(url.indexOf("msg/") + 4);
 		id = threadAndMessId.substring(0, threadAndMessId.indexOf("/"));
 		return id;
+	}
+
+	public EclipseForumsLogger setSilentFail(boolean val) {
+		this.silentFail = val;
+		return this;
 	}
 
 }
