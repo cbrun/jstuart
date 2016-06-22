@@ -142,7 +142,7 @@ public class EclipseMattermostInstanceTest {
 
 		for (Post post : new EclipseForumsLogger(69, daysAgo).forumLog()) {
 
-			if (post.getSubject() !=null  && post.getSubject().contains("[aeri]")) {
+			if (post.getSubject() != null && post.getSubject().contains("[aeri]")) {
 				posts.add(post);
 			}
 
@@ -398,26 +398,25 @@ public class EclipseMattermostInstanceTest {
 		}
 	}
 
-
-	
 	@Test
-	public void sendEventsToUXChannel() throws Exception {
-	/*	String storage = System.getenv("WORKSPACE");
+	public void sendEventsToRoverChannel() throws Exception {
+		String storage = System.getenv("WORKSPACE");
 		if (storage == null) {
 			storage = ".";
 		}
 
-		String ux_Channel = System.getenv("UX_CHANNEL");
-		if (ux_Channel != null) {
-			MattermostEmitter acEmitter = new MattermostEmitter("https", host, ux_Channel);
+		String rover_Channel = System.getenv("ROVER_CHANNEL");
+		if (rover_Channel != null) {
 
-			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_ux_channel" + "_trace.json"));
+			Date daysAgo = getDateXDaysAgo(80);
+			MattermostEmitter acEmitter = new MattermostEmitter("https", host, rover_Channel);
+
+			EmitterTrace traceFile = new EmitterTrace(
+					new File(storage + "/" + host + "_rover_channel" + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-			posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
-					.bugzillaLog(4, Collections.<String>emptySet(), Collections.<String>emptySet(),
-							Sets.newHashSet("usability")));
+			posts.addAll(new EclipseForumsLogger(20, daysAgo).setBaseURL("https://polarsys.org/forums/").forumLog());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
@@ -432,13 +431,10 @@ public class EclipseMattermostInstanceTest {
 			traceFile.evictOldEvents(trace, 60);
 			traceFile.save(trace);
 		} else {
-			Assert.fail("Expecting the UX_CHANNEL environment variable to be set");
+			Assert.fail("Expecting the ROVER_CHANNEL environment variable to be set");
 		}
 
-	*/
-	
 	}
-
 
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
 		if (!trace.containsKey(post.getKey())) {
