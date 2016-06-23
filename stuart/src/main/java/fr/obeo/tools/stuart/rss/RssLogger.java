@@ -24,7 +24,7 @@ import fr.obeo.tools.stuart.Post;
 
 public class RssLogger {
 
-	private String RSS_ICON = "http://www.megaicons.net/static/img/icons_title/40/110/title/rss-icon.png";
+	private String RSS_ICON = "https://i.imgur.com/nKoSYdn.png";
 	private URL feedUrl;
 	private Date daysAgo;
 
