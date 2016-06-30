@@ -45,7 +45,10 @@ public class MattermostPost {
 	}
 
 	public static MattermostPost fromGenericPost(Post in) {
+		return fromGenericPost(in, "");
+	}
 
+	public static MattermostPost fromGenericPost(Post in, String subtitle) {
 		StringBuffer cleanedBody = new StringBuffer();
 
 		if (in.mightTruncate()) {
@@ -104,6 +107,11 @@ public class MattermostPost {
 		if (in.getSubject() != null) {
 			message.append("##### ");
 			message.append(in.getSubject().trim());
+			if (subtitle.length() > 0) {
+				message.append(" *");
+				message.append(subtitle);
+				message.append("* ");
+			}
 			message.append(' ');
 			message.append(tags);
 			message.append('\n');

@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Predicate;
@@ -107,21 +108,7 @@ public class UserRequests {
 		});
 	}
 
-	public static String prettyDelayFromMinutes(long minutes) {
-		if (minutes < 60) {
-			return minutes + " min";
-		} else if (minutes < 60 * 24) {
-			return minutes / 60 + " hrs";
-		} else if (minutes < 60 * 24 * 7) {
-			return minutes / 1440 + " days";
-		} else if (minutes < 60 * 24 * 31) {
-			return minutes / (60 * 24 * 7) + " wks";
-		} else if (minutes < 60 * 24 * 31 * 12) {
-			return minutes / (60 * 24 * 31) + " months";
-		} else {
-			return minutes / (60 * 24 * 31 * 12) + " years";
-		}
-	}
+	
 
 	private static String[] congratsGifs = { "https://media.giphy.com/media/9g8PH1MbwTy4o/giphy.gif",
 			"https://media.giphy.com/media/Mp4hQy51LjY6A/giphy.gif",
@@ -158,7 +145,7 @@ public class UserRequests {
 					}
 					table.append("| [" + req.getSummary() + "](" + req.getUrl() + ")" + " | " + req.getReporterName()
 							+ " | " + req.getLastAuthorName() + " |  "
-							+ prettyDelayFromMinutes(req.getNbMinutesSinceLastAnswer()) + " | " + withResponse + "/"
+							+ Dates.prettyDelayFromMinutes(req.getNbMinutesSinceLastAnswer()) + " | " + withResponse + "/"
 							+ totalNbOfThread + "  |");
 					table.append("\n");
 				}
@@ -232,6 +219,68 @@ public class UserRequests {
 
 	public static PostWithAnswer createPostWithAnswer(Post firstPost) {
 		return new PostWithAnswer(firstPost);
+	}
+
+	public static List<PostWithAnswer> toPostsWithAnswers(Collection<Post> pPosts, Set<String> team) {
+		List<PostWithAnswer> result = Lists.newArrayList();
+		Multimap<String, Post> byThread = Posts.groupByThread(pPosts);
+
+		for (String thread : byThread.keySet()) {
+			List<Post> posts = Lists.newArrayList(byThread.get(thread));
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			if (!(posts.size() > 0 && team.contains(posts.get(0).getAuthor()))) {
+				/*
+				 * the reporter is not a team member, or we'll ignore that
+				 * thread.
+				 */
+
+				if (posts.size() >= 2) {
+					boolean isMonologue = true;
+					Post firstPost = posts.get(0);
+					String author = firstPost.getAuthor();
+					Post firstTeamResponse = null;
+					for (Post post : posts) {
+						if (!post.getAuthor().equals(author)) {
+							isMonologue = false;
+						}
+						if (post != firstPost && firstTeamResponse == null) {
+							if (team.contains(post.getAuthor())) {
+								firstTeamResponse = post;
+							}
+
+						}
+					}
+					PostWithAnswer pAn = UserRequests.createPostWithAnswer(firstPost);
+					if (firstTeamResponse != null) {
+						pAn.setAnswer(firstTeamResponse);
+					}
+					result.add(pAn);
+					if (!isMonologue) {
+						/*
+						 * response from somebody else
+						 */
+
+					} else {
+						/*
+						 * speaking alone.
+						 */
+					}
+				} else {
+					/*
+					 * no response from anybody
+					 */
+					PostWithAnswer pAn = new PostWithAnswer(posts.get(0));
+					result.add(pAn);
+				}
+			}
+		}
+		return result;
 	}
 
 }
