@@ -231,6 +231,14 @@ public class NoResponseDetector {
 			return issue.getUri();
 		}
 
+		@Override
+		public long getNbMinutesSinceLastAnswer() {
+			Calendar cal = Calendar.getInstance();
+			Date now = cal.getTime();
+			long diff = now.getTime() - getLastUpdate().getTime();
+			return diff / (1000 * 60);
+		}
+
 	}
 
 	public class Answer {

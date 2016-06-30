@@ -4,6 +4,8 @@ public interface UserRequest {
 
 	long getNbDaysSinceLastAnswer();
 
+	long getNbMinutesSinceLastAnswer();
+
 	String getSummary();
 
 	String getLastAuthorName();
