@@ -31,11 +31,11 @@ public class DumpForumPosts {
 	private static Gson gson = new GsonBuilder().setDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz").setPrettyPrinting()
 			.create();
 
-	public static List<Post> updateOnProject(int forumID, String prjName) {
+	public static List<Post> updateOnProject(int forumID, String prjName) throws IOException {
 		return updateOnProject(forumID, prjName, Lists.newArrayList());
 	}
 
-	public static List<Post> updateOnProject(int forumID, String prjName, List<Post> newPosts2) {
+	public static List<Post> updateOnProject(int forumID, String prjName, List<Post> newPosts2) throws IOException {
 		List<Post> alreadyThere = getPosts(prjName);
 		Date mostRecent = null;
 		Map<String, Post> postByKey = Maps.newLinkedHashMap();
@@ -71,7 +71,7 @@ public class DumpForumPosts {
 
 	}
 
-	private static void dumpOneProject(int nbWeeks, int forumID, String prjName) {
+	private static void dumpOneProject(int nbWeeks, int forumID, String prjName) throws IOException {
 
 		Date date = new Date();
 		Calendar c = Calendar.getInstance();
@@ -97,19 +97,16 @@ public class DumpForumPosts {
 		savePosts(prjName, posts);
 	}
 
-	public static void savePosts(String prjName, Collection<Post> posts) {
+	public static void savePosts(String prjName, Collection<Post> posts) throws IOException {
 		File dataFile = getPostsDataFile(prjName);
+		Files.createParentDirs(dataFile);
 
 		try (FileOutputStream out = new FileOutputStream(dataFile)) {
-			Files.createParentDirs(dataFile);
 
 			OutputStreamWriter writer = new OutputStreamWriter(out, "UTF-8");
 			gson.toJson(posts, writer);
 			writer.flush();
 			out.flush();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
