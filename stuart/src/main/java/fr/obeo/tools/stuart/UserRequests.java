@@ -112,7 +112,18 @@ public class UserRequests {
 			"https://media.giphy.com/media/Mp4hQy51LjY6A/giphy.gif",
 			"https://media.giphy.com/media/xTiTnAbu69LQDFTOEg/giphy.gif",
 			"https://media.giphy.com/media/7rj2ZgttvgomY/giphy.gif",
-			"https://media.giphy.com/media/XB6pGqvOfJqY8/giphy.gif" };
+			"https://media.giphy.com/media/XB6pGqvOfJqY8/giphy.gif",
+			"https://media.giphy.com/media/lnlAifQdenMxW/giphy.gif",
+			"https://media.giphy.com/media/5orToQ5JFECis/giphy.gif",
+			"https://media.giphy.com/media/sY1WaSHia8kMM/giphy.gif",
+			"https://media.giphy.com/media/Hp2KnoY45cSfm/giphy.gif",
+			"https://media.giphy.com/media/YKtTiAiiMyUc8/giphy.gif",
+			"https://media.giphy.com/media/7j0IQDjVURCH6/giphy.gif",
+			"https://media.giphy.com/media/PzztizcE7jvBS/giphy.gif",
+			"https://media.giphy.com/media/9cQVP2aRB4kUg/giphy.gif",
+			"https://media.giphy.com/media/jd6TVgsph6w7e/giphy.gif",
+			"https://media.giphy.com/media/6IQ9o86ThLoGY/giphy.gif",
+			"https://media.giphy.com/media/3BlN2bxcw0l5S/giphy.gif" };
 
 	public static Collection<StringBuffer> getTableReport(Collection<UserRequest> complete, int limitNbDays,
 			Multimap<String, UserRequest> requestsByAuthor) {
