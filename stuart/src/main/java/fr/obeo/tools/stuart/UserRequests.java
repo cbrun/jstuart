@@ -108,8 +108,6 @@ public class UserRequests {
 		});
 	}
 
-	
-
 	private static String[] congratsGifs = { "https://media.giphy.com/media/9g8PH1MbwTy4o/giphy.gif",
 			"https://media.giphy.com/media/Mp4hQy51LjY6A/giphy.gif",
 			"https://media.giphy.com/media/xTiTnAbu69LQDFTOEg/giphy.gif",
@@ -145,8 +143,8 @@ public class UserRequests {
 					}
 					table.append("| [" + req.getSummary() + "](" + req.getUrl() + ")" + " | " + req.getReporterName()
 							+ " | " + req.getLastAuthorName() + " |  "
-							+ Dates.prettyDelayFromMinutes(req.getNbMinutesSinceLastAnswer()) + " | " + withResponse + "/"
-							+ totalNbOfThread + "  |");
+							+ Dates.prettyDelayFromMinutes(req.getNbMinutesSinceLastAnswer()) + " | " + withResponse
+							+ "/" + totalNbOfThread + "  |");
 					table.append("\n");
 				}
 
@@ -196,8 +194,7 @@ public class UserRequests {
 			}
 		} else {
 			StringBuffer table = new StringBuffer();
-			table.append(
-					"Congrats!  **No one** has been waiting for more than " + limitNbDays + " days for an answer !\n");
+			table.append("Congrats!  **No one** is waiting for an answer !\n");
 			table.append("![](" + congratsGifURL() + ")\n");
 			result.add(table);
 		}
@@ -206,8 +203,8 @@ public class UserRequests {
 			if (result.size() > 0) {
 				table = Iterables.getLast(result);
 			}
-			table.append("*There are " + nbTooOld + " additional bugzillas waiting for an answer for more than "
-					+ limitNbDays + " days.*");
+			table.append("*There are " + nbTooOld + " old bugzillas (at least " + limitNbDays
+					+ " days old) waiting for an answer though.*");
 		}
 		return result;
 	}
