@@ -23,7 +23,6 @@ import b4j.core.Issue;
 import b4j.core.session.BugzillaHttpSession;
 import fr.obeo.tools.stuart.Dates;
 import fr.obeo.tools.stuart.Post;
-import fr.obeo.tools.stuart.UserRequest;
 
 public class BugzillaLogger {
 	private static final String BUG_ICON = "https://cdn2.iconfinder.com/data/icons/windows-8-metro-style/128/bug.png";
@@ -31,7 +30,10 @@ public class BugzillaLogger {
 	private Set<String> authorsToIgnore = Sets.newLinkedHashSet();
 
 	public BugzillaLogger() {
+	}
 
+	public BugzillaLogger(String baseURL) {
+		this.baseURL = baseURL;
 	}
 
 	public BugzillaLogger(String baseURL, Set<String> authorsToIgnore) {
@@ -152,7 +154,7 @@ public class BugzillaLogger {
 		 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=497734
 		 * 
 		 */
-		Pattern bugURL = Pattern.compile(this.baseURL + "/show_bug.cgi\\?id=(\\d{6}+)");
+		Pattern bugURL = Pattern.compile(this.baseURL + "/show_bug.cgi\\?id=(\\d+)");
 		if (bugURL.matcher(content).find()) {
 			Matcher matcher = bugURL.matcher(content);
 			while (matcher.find()) {
@@ -161,7 +163,7 @@ public class BugzillaLogger {
 			}
 		}
 
-		Pattern bugShortURL = Pattern.compile(this.baseURL + "/(\\d{6}+)");
+		Pattern bugShortURL = Pattern.compile(this.baseURL + "/(\\d+)");
 		if (bugShortURL.matcher(content).find()) {
 			Matcher matcher = bugShortURL.matcher(content);
 			while (matcher.find()) {
@@ -187,7 +189,7 @@ public class BugzillaLogger {
 					for (String key : potentialIds) {
 
 						Issue found = session.getIssue(key);
-						if (found != null) {
+						if (found != null && found.getReporter()!=null) {
 							bugs.add(found);
 						}
 					}

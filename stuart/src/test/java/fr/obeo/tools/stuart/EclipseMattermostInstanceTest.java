@@ -102,8 +102,8 @@ public class EclipseMattermostInstanceTest {
 						"Web Tools", "Java Server Faces")));
 
 		// log git commits
-		posts.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
-				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "webtools.sourceediting", "webtools.releng")));
+		posts.addAll(new GerritLogger("https://git.eclipse.org/r").groupReviews(false)
+				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "webtools.sourceediting", "webtools.releng"),1));
 
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
@@ -155,8 +155,8 @@ public class EclipseMattermostInstanceTest {
 		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 				.bugzillaLog(3, Sets.newHashSet("EPP"), Sets.newHashSet("Error Reporting and Logging ")));
 
-		posts.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
-				.getPatchsets(Sets.newHashSet("epp/org.eclipse.epp.logging")));
+		posts.addAll(new GerritLogger("https://git.eclipse.org/r").groupReviews(false)
+				.getPatchsets(Sets.newHashSet("epp/org.eclipse.epp.logging"),1));
 
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
@@ -230,14 +230,14 @@ public class EclipseMattermostInstanceTest {
 			}
 
 			List<Post> patches = Lists.newArrayList();
-			patches.addAll(new GerritLogger("https://git.eclipse.org/r", 1).groupReviews(false)
+			patches.addAll(new GerritLogger("https://git.eclipse.org/r").groupReviews(false)
 					.getPatchsets(Sets.newHashSet("platform/eclipse.platform", "platform/eclipse.platform.common",
 							"platform/eclipse.platform.debug", "platform/eclipse.platform.images",
 							"platform/eclipse.platform.news", "platform/eclipse.platform.resources",
 							"platform/eclipse.platform.runtime", "platform/eclipse.platform.swt",
 							"platform/eclipse.platform.team", "platform/eclipse.platform.text",
 							"platform/eclipse.platform.ua", "platform/eclipse.platform.ui",
-							"platform/eclipse.platform.tools")));
+							"platform/eclipse.platform.tools"),1));
 
 			MattermostEmitter patchesEmitter = new MattermostEmitter("https", host, patch_Channel);
 			for (Post post : patches) {
@@ -376,8 +376,8 @@ public class EclipseMattermostInstanceTest {
 
 			posts.addAll(
 					new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
-			posts.addAll(new GerritLogger("https://git.eclipse.org/r", nbDays)
-					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius")));
+			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
+					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius"),nbDays));
 			posts.addAll(
 					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 							.bugzillaLog(3, Sets.newHashSet("Sirius")));

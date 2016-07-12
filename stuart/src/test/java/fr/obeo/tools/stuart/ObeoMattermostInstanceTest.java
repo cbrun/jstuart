@@ -62,8 +62,8 @@ public class ObeoMattermostInstanceTest {
 
 			posts.addAll(
 					new JenkinsLogger("https://hudson.eclipse.org/eef/", daysAgo).getBuildResults(trace.keySet()));
-			posts.addAll(new GerritLogger("https://git.eclipse.org/r", nbDays)
-					.getPatchsets(Sets.newHashSet("eef/org.eclipse.eef")));
+			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
+					.getPatchsets(Sets.newHashSet("eef/org.eclipse.eef"),nbDays));
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {

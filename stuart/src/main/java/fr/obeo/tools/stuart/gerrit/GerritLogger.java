@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -20,6 +22,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import fr.obeo.tools.stuart.Dates;
 import fr.obeo.tools.stuart.Post;
 import fr.obeo.tools.stuart.gerrit.model.PatchSet;
 import fr.obeo.tools.stuart.git.GitLogger;
@@ -31,17 +34,14 @@ public class GerritLogger {
 	private String serverURL;
 	private Gson gson;
 
-	private int nbDays;
-
 	private boolean groupReviews = true;
 
-	public GerritLogger(String serverURL, int daysAgo) {
+	public GerritLogger(String serverURL) {
 		this.serverURL = serverURL;
 		gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").setPrettyPrinting().create();
-		this.nbDays = daysAgo;
 	}
 
-	public Collection<Post> getPatchsets(Collection<String> projects) {
+	public Collection<Post> getPatchsets(Collection<String> projects, int nbDays) {
 		List<Post> posts = new ArrayList<Post>();
 		String prjString = Joiner.on(" OR ").join(Iterables.transform(projects, new Function<String, String>() {
 
@@ -145,6 +145,84 @@ public class GerritLogger {
 	public GerritLogger groupReviews(boolean value) {
 		this.groupReviews = value;
 		return this;
+	}
+
+	public Collection<String> findPotentialPatchsetIDs(String content) {
+		Set<String> patchsetRefs = Sets.newLinkedHashSet();
+
+		/*
+		 * search for URLs
+		 * 
+		 * https://git.eclipse.org/r/#/c/76832/1
+		 * https://git.eclipse.org/r/#/c/76832
+		 * https://git.eclipse.org/r/#/c/76832
+		 * 
+		 * https://git.eclipse.org/r/32235
+		 * 
+		 */
+		Pattern patchsetURL = Pattern.compile(this.serverURL + "/(#/c/)?(\\d+)/*");
+		if (patchsetURL.matcher(content).find()) {
+			Matcher matcher = patchsetURL.matcher(content);
+			while (matcher.find()) {
+				String found = matcher.group(2);
+				patchsetRefs.add(found);
+			}
+		}
+
+		return patchsetRefs;
+	}
+
+	public List<PatchSet> findGerritPatchsets(String content) {
+		List<PatchSet> patchsets = Lists.newArrayList();
+		Collection<String> potentialIds = findPotentialPatchsetIDs(content);
+		if (potentialIds.size() > 0) {
+			OkHttpClient client = new OkHttpClient();
+
+			String changeString = Joiner.on(" OR ")
+					.join(Iterables.transform(potentialIds, new Function<String, String>() {
+
+						public String apply(String changeID) {
+							return "change:" + changeID;
+						}
+					}));
+			String url = serverURL + "/changes/?q=" + changeString + "&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION";
+			Request request = new Request.Builder().url(url).get().build();
+			Response response;
+			try {
+				response = client.newCall(request).execute();
+				String returnedJson = response.body().string();
+				response.body().close();
+				PatchSet[] reviews = gson.fromJson(returnedJson, PatchSet[].class);
+				for (PatchSet patchSet : reviews) {
+					patchsets.add(patchSet);
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return patchsets;
+	}
+
+	public Collection<StringBuffer> getTableReport(List<PatchSet> issues) {
+		List<StringBuffer> result = Lists.newArrayList();
+
+		for (List<PatchSet> requests : Lists.partition(issues, 20)) {
+			StringBuffer table = new StringBuffer();
+			table.append("| Status | Summary | reporter | last update| link | \n");
+			table.append("|---------------------------------------------------|\n");
+			for (PatchSet req : requests) {
+				long delay = (new Date().getTime() - req.getUpdated().getTime()) / (1000 * 60);
+				table.append("| " + req.getStatus() + "   | " + GitLogger.detectBugzillaLink(req.getSubject()) + " | "
+						+ req.getOwner().getName() + " | " + Dates.prettyDelayFromMinutes(delay) + "| [link]("
+						+ serverURL + "/#/c/" + req.get_number() + ")");
+				table.append("\n");
+			}
+
+			result.add(table);
+		}
+
+		return result;
 	}
 
 }
