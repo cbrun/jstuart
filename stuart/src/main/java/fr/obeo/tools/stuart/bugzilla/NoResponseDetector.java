@@ -79,7 +79,10 @@ public class NoResponseDetector {
 
 				}
 
-				if (issue.getIssue().getStatus().isOpen() && !teamMembers.contains(issue.getLastAuthor().getName())) {
+				boolean reporterAutoAsign = issue.getIssue().getReporter().getName()
+						.equals(issue.getIssue().getAssignee().getName());
+				if (!reporterAutoAsign && issue.getIssue().getStatus().isOpen()
+						&& !teamMembers.contains(issue.getLastAuthor().getName())) {
 					result.add(issue);
 				}
 			}
