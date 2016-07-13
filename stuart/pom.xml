@@ -18,7 +18,45 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 	</properties>
 
+
+
+
+	<repositories>
+		<repository>
+			<id>atlassian-public</id>
+			<url>https://m2proxy.atlassian.com/repository/public</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>atlassian-public</id>
+			<url>https://m2proxy.atlassian.com/repository/public</url>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<checksumPolicy>warn</checksumPolicy>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
 	<dependencies>
+		<dependency>
+			<groupId>com.atlassian.jira</groupId>
+			<artifactId>jira-rest-java-client</artifactId>
+			<version>2.0.0-m2</version>
+		</dependency>
 		<dependency>
 			<groupId>eu.ralph-schuster</groupId>
 			<artifactId>b4j</artifactId>
@@ -40,9 +78,19 @@
 			<version>2.7.1</version>
 		</dependency>
 		<dependency>
+			<groupId>com.squareup.okhttp</groupId>
+			<artifactId>okhttp-ws</artifactId>
+			<version>2.7.1</version>
+		</dependency>
+		<dependency>
 			<groupId>com.rometools</groupId>
 			<artifactId>rome</artifactId>
 			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.13</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>
@@ -59,6 +107,11 @@
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>9.3.7.v20160115</version>
 		</dependency>
 	</dependencies>
 
