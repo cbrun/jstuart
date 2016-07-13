@@ -22,13 +22,10 @@ public class BotSocketListener implements WebSocketListener {
 
 	@Override
 	public void onClose(int arg0, String arg1) {
-		System.out.println("MMBot.getPosts(...).new WebSocketListener() {...}.onClose()");
 	}
 
 	@Override
 	public void onFailure(IOException arg0, Response arg1) {
-		System.out.println("MMBot.getPosts(...).new WebSocketListener() {...}.onFailure() " + arg1);
-		System.err.println("Reconnecting...");
 		bot.listen();
 	}
 
@@ -39,13 +36,11 @@ public class BotSocketListener implements WebSocketListener {
 
 	@Override
 	public void onOpen(WebSocket arg0, Response arg1) {
-		System.err.println(arg0);
 
 	}
 
 	@Override
 	public void onPong(Buffer arg0) {
-		System.out.println("MMBot.getPosts(...).new WebSocketListener() {...}.onPong()");
 	}
 
 }

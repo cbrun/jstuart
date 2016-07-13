@@ -2,6 +2,7 @@ package fr.obeo.tools.stuart.mattermost.bot;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.List;
@@ -56,19 +57,15 @@ public class MMBot {
 				.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting().create();
 		String body = gson.toJson(new LoginMsg(userMail, pwd));
 		String url = host + "api/v3/users/login";
-		System.out.println(url);
 		Request request = new Request.Builder().url(url)
 				.post(RequestBody.create(MediaType.parse("application/json"), body)).build();
-		System.out.println(body);
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful())
 			throw new IOException("Unexpected code " + response);
 
 		String token = response.header("Token");
-		System.err.println(token);
 		String returnedBody = response.body().string();
-		User u = gson.fromJson(returnedBody, User.class);
-		System.out.println(returnedBody);
+		MUser u = gson.fromJson(returnedBody, MUser.class);
 		if (token != null && u != null) {
 			CookieManager cookieManager = new CookieManager();
 			cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
@@ -109,11 +106,11 @@ public class MMBot {
 
 	private String token;
 
-	private User u;
+	private MUser u;
 
 	private WebSocketCall websocket;
 
-	public MMBot(String token, User u, String host, OkHttpClient client, Gson gson) {
+	public MMBot(String token, MUser u, String host, OkHttpClient client, Gson gson) {
 		this.token = token;
 		this.host = host;
 		this.u = u;
@@ -156,13 +153,13 @@ public class MMBot {
 		return builder;
 	}
 
-	private Request get(String url) {
+	private Request getRequest(String url) {
 		Request r = new Request.Builder().url(url).header("Authorization", " Bearer " + this.token)
 				.addHeader("Cookie", "MMTOKEN=" + this.token).get().build();
 		return r;
 	}
 
-	public User getUser() {
+	public MUser getUser() {
 		return this.u;
 	}
 
@@ -178,7 +175,7 @@ public class MMBot {
 			String wsURL = this.host.replace("https", "wss").replace("http", "ws")
 					+ "api/v3/users/websocket?session_token_index=0&1";
 			System.out.println(wsURL);
-			Request request = get(wsURL);
+			Request request = getRequest(wsURL);
 
 			if (websocket != null) {
 				websocket.cancel();
@@ -243,26 +240,35 @@ public class MMBot {
 		return sendPost(toSend);
 	}
 
-	public List<MChannel> getChannels(String teamId) throws IOException {
-		String url = host + "api/v3/teams/" + teamId + "/channels/";
-		Response response = client.newCall(get(url)).execute();
+	private <T> T getResource(String url, Class<T> classOfT) throws IOException {
+		return getResource(url, (Type) classOfT);
+	}
+
+	private <T> T getResource(String url, Type typeOfT) throws IOException {
+		Response response = client.newCall(getRequest(url)).execute();
 		if (response.isSuccessful()) {
-			ChannelsWrapper allChannels = gson.fromJson(response.body().string(), ChannelsWrapper.class);
-			System.out.println(response.code());
+			T target = (T) gson.fromJson(response.body().string(), typeOfT);
 			response.body().close();
-			return allChannels.getChannels();
+			return target;
+		}
+		return null;
+	}
+
+	public List<MChannel> getChannels(String teamId) throws IOException {
+		ChannelsWrapper r = getResource(host + "api/v3/teams/" + teamId + "/channels/", ChannelsWrapper.class);
+		if (r != null && r.getChannels() != null) {
+			return r.getChannels();
 		}
 		return Lists.newArrayList();
 	}
 
 	public MChannel getChannel(String teamId, String channelId) throws IOException {
 		String url = host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/";
-		Response response = client.newCall(get(url)).execute();
+		Response response = client.newCall(getRequest(url)).execute();
 		if (response.isSuccessful()) {
 			Map<String, MChannel> allChannels = gson.fromJson(response.body().string(),
 					new TypeToken<Map<String, MChannel>>() {
 					}.getType());
-			System.out.println(response.code());
 			response.body().close();
 			return allChannels.get("channel");
 		}
@@ -270,43 +276,26 @@ public class MMBot {
 	}
 
 	public Map<String, MTeam> getTeams() throws IOException {
-		String url = host + "api/v3/teams/all";
-		Response response = client.newCall(get(url)).execute();
-		if (response.isSuccessful()) {
-			java.lang.reflect.Type mapType = new TypeToken<Map<String, MTeam>>() {
-			}.getType();
-			Map<String, MTeam> allChannels = gson.fromJson(response.body().string(), mapType);
-			System.out.println(response.code());
-			response.body().close();
-			return allChannels;
-		}
-		return null;
+		return getResource(host + "api/v3/teams/all", new TypeToken<Map<String, MTeam>>() {
+		}.getType());
 	}
 
 	public Map<String, MPost> getPostsSince(String teamId, String channelId, long since) throws IOException {
-		String url = host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/posts/since/" + since;
-		Response response = client.newCall(get(url)).execute();
-		if (response.isSuccessful()) {
-
-			MessagesWrapper msg = gson.fromJson(response.body().string(), MessagesWrapper.class);
-			response.body().close();
-			if (msg.getPosts() != null) {
-				return msg.getPosts();
-			}
+		MessagesWrapper r = getResource(
+				host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/posts/since/" + since,
+				MessagesWrapper.class);
+		if (r != null && r.getPosts() != null) {
+			return r.getPosts();
 		}
 		return Maps.newLinkedHashMap();
 	}
 
 	public Map<String, MPost> getPosts(String teamId, String channelId, int offset, int limit) throws IOException {
-		String url = host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/posts/page/" + offset + "/" + limit;
-		Response response = client.newCall(get(url)).execute();
-		if (response.isSuccessful()) {
-
-			MessagesWrapper msg = gson.fromJson(response.body().string(), MessagesWrapper.class);
-			response.body().close();
-			if (msg.getPosts() != null) {
-				return msg.getPosts();
-			}
+		MessagesWrapper r = getResource(
+				host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/posts/page/" + offset + "/" + limit,
+				MessagesWrapper.class);
+		if (r.getPosts() != null) {
+			return r.getPosts();
 		}
 		return Maps.newLinkedHashMap();
 	}
@@ -352,7 +341,6 @@ public class MMBot {
 
 	public MFileUpload uploadFile(String teamId, String channelId, File file) throws IOException {
 		String url = host + "api/v3/teams/" + teamId + "/files/upload";
-		System.out.println(url);
 		MultipartBuilder bodyBuilder = new MultipartBuilder().type(MediaType.parse("multipart/form-data"))
 				.addFormDataPart("channel_id", channelId).addFormDataPart("files", file.getName(),
 						RequestBody.create(MediaType.parse("application/octet-stream"), file));
@@ -365,69 +353,6 @@ public class MMBot {
 		}
 		response.body().close();
 		return null;
-	}
-
-}
-
-class User {
-	String email;
-
-	String firstName;
-
-	String id;
-
-	String lastName;
-
-	String teamId;
-
-	String username;
-
-	public String getEmail() {
-		return email;
-	}
-
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public String getTeamId() {
-		return teamId;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public void setTeamId(String teamId) {
-		this.teamId = teamId;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
 	}
 
 }
