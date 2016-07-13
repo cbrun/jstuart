@@ -220,8 +220,7 @@ public class MMBot {
 		Request r = auth(new Request.Builder()).url(url)
 				.post(RequestBody.create(MediaType.parse("application/json"), "")).build();
 		Response response = client.newCall(r).execute();
-		System.out.println("logout HTTP:" + response.code());
-		response.body().close();
+		System.out.println("logout HTTP:" + response.code());		
 	}
 
 	public void onMessage(ReactOnMessage r) {
@@ -247,9 +246,10 @@ public class MMBot {
 	private <T> T getResource(String url, Type typeOfT) throws IOException {
 		Response response = client.newCall(getRequest(url)).execute();
 		if (response.isSuccessful()) {
-			T target = (T) gson.fromJson(response.body().string(), typeOfT);
-			response.body().close();
-			return target;
+			try (ResponseBody body = response.body()) {
+				T target = (T) gson.fromJson(body.string(), typeOfT);
+				return target;
+			}
 		}
 		return null;
 	}
@@ -266,11 +266,12 @@ public class MMBot {
 		String url = host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/";
 		Response response = client.newCall(getRequest(url)).execute();
 		if (response.isSuccessful()) {
-			Map<String, MChannel> allChannels = gson.fromJson(response.body().string(),
-					new TypeToken<Map<String, MChannel>>() {
-					}.getType());
-			response.body().close();
-			return allChannels.get("channel");
+			try (ResponseBody body = response.body()) {
+				Map<String, MChannel> allChannels = gson.fromJson(body.string(),
+						new TypeToken<Map<String, MChannel>>() {
+						}.getType());
+				return allChannels.get("channel");
+			}
 		}
 		return null;
 	}
@@ -308,13 +309,12 @@ public class MMBot {
 				.post(RequestBody.create(MediaType.parse("application/json"), dataToSend)).build();
 		Response response = client.newCall(r).execute();
 		if (response.isSuccessful()) {
-			MPost msg = gson.fromJson(response.body().string(), MPost.class);
-			System.out.println(response.code());
-			response.body().close();
-			msg.setTeamId(toSend.getTeamId());
-			return msg;
+			try (ResponseBody body = response.body()) {
+				MPost msg = gson.fromJson(body.string(), MPost.class);
+				msg.setTeamId(toSend.getTeamId());
+				return msg;
+			}
 		}
-		response.body().close();
 		return null;
 	}
 
@@ -336,7 +336,6 @@ public class MMBot {
 		Request r = auth(new Request.Builder()).url(url)
 				.post(RequestBody.create(MediaType.parse("application/json"), dataToSend)).build();
 		Response response = client.newCall(r).execute();
-		response.body().close();
 	}
 
 	public MFileUpload uploadFile(String teamId, String channelId, File file) throws IOException {
@@ -347,11 +346,11 @@ public class MMBot {
 		Request r = auth(new Request.Builder()).url(url).post(bodyBuilder.build()).build();
 		Response response = client.newCall(r).execute();
 		if (response.isSuccessful()) {
-			MFileUpload files = gson.fromJson(response.body().string(), MFileUpload.class);
-			response.body().close();
-			return files;
+			try (ResponseBody body = response.body()) {
+				MFileUpload files = gson.fromJson(body.string(), MFileUpload.class);
+				return files;
+			}
 		}
-		response.body().close();
 		return null;
 	}
 
