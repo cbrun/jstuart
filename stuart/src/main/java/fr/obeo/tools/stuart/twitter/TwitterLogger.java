@@ -39,18 +39,9 @@ public class TwitterLogger {
 				ResponseList<Status> result = twitter.getUserTimeline("bruncedric", new Paging(1));
 				for (Status status : result) {
 					if (status.getCreatedAt().after(daysAgo)) {
-						String url = "https://twitter.com/" + status.getUser().getScreenName() + "/status/"
-								+ status.getId();
 						if (status.isRetweet()
 								&& !handles.contains(status.getRetweetedStatus().getUser().getScreenName())) {
-							String iconText = "[![pic]("
-									+ status.getRetweetedStatus().getUser().getProfileImageURLHttps() + ")](" + url
-									+ ")";
-							Post newPost = Post.createPost(url, iconText + " " + status.getText(),
-									status.getRetweetedStatus().getUser().getScreenName(), TWITTER_ICON,status.getCreatedAt());
-							for (MediaEntity entity : status.getMediaEntities()) {
-								newPost.addMediaURLs(entity.getMediaURLHttps());
-							}
+							Post newPost = createPost(status);
 							posts.add(newPost);
 						} else if (!status.isRetweet()) {
 
@@ -64,6 +55,26 @@ public class TwitterLogger {
 			throw new RuntimeException(e);
 		}
 		return posts;
+	}
+
+	public static Post createPost(Status status) {
+		Post newPost = null;
+		String url = "https://twitter.com/" + status.getUser().getScreenName() + "/status/" + status.getId();
+		if (status.isRetweet()) {
+			String iconText = "[![pic](" + status.getRetweetedStatus().getUser().getProfileImageURLHttps() + ")](" + url
+					+ ")";
+			newPost = Post.createPost(url, iconText + " " + status.getText(),
+					status.getRetweetedStatus().getUser().getScreenName(), TWITTER_ICON, status.getCreatedAt());
+		} else {
+			String iconText = "[![pic](" + status.getUser().getProfileImageURLHttps() + ")](" + url + ")";
+			newPost = Post.createPost(url, iconText + " " + status.getText(), status.getUser().getScreenName(),
+					TWITTER_ICON, status.getCreatedAt());
+		}
+		for (MediaEntity entity : status.getMediaEntities()) {
+			newPost.addMediaURLs(entity.getMediaURLHttps());
+		}
+
+		return newPost;
 	}
 
 }
