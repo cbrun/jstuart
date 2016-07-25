@@ -1,6 +1,5 @@
 package fr.obeo.tools.stuart;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,8 +16,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-
-import fr.obeo.tools.stuart.UserRequests.PostWithAnswer;
 
 public class UserRequests {
 
@@ -125,20 +122,12 @@ public class UserRequests {
 			"https://media.giphy.com/media/6IQ9o86ThLoGY/giphy.gif",
 			"https://media.giphy.com/media/3BlN2bxcw0l5S/giphy.gif" };
 
-	public static Collection<StringBuffer> getTableReport(Collection<UserRequest> complete, int limitNbDays,
+	public static Collection<StringBuffer> getTableReport(List<UserRequest> allRequests, int limitNbDays,
 			Multimap<String, UserRequest> requestsByAuthor) {
 		List<StringBuffer> result = Lists.newArrayList();
-		ArrayList<UserRequest> tableContent = Lists
-				.newArrayList(Iterables.filter(complete, new Predicate<UserRequest>() {
-
-					@Override
-					public boolean apply(UserRequest input) {
-						return input.getNbDaysSinceLastAnswer() <= limitNbDays;
-					}
-				}));
-		int nbTooOld = complete.size() - tableContent.size();
-		if (tableContent.size() > 0) {
-			for (List<UserRequest> requests : Lists.partition(tableContent, 20)) {
+		List<UserRequest> filtered = filterByAge(allRequests, limitNbDays);
+		if (filtered.size() > 0) {
+			for (List<UserRequest> requests : Lists.partition(allRequests, 20)) {
 				StringBuffer table = new StringBuffer();
 				table.append("| Summary | reporter | last author| delay so far | response/thread |\n");
 				table.append("|---------------------------------------------------|\n");
@@ -168,30 +157,33 @@ public class UserRequests {
 			table.append("![](" + congratsGifURL() + ")\n");
 			result.add(table);
 		}
-		if (nbTooOld > 0) {
+		if (filtered.size() > allRequests.size()) {
 			StringBuffer table = new StringBuffer();
 			if (result.size() > 0) {
 				table = Iterables.getLast(result);
 			}
-			table.append("*There are " + nbTooOld + " additional threads waiting for an answer for more than "
-					+ limitNbDays + " days.*");
+			table.append("*There are " + Integer.valueOf(allRequests.size() - filtered.size())
+					+ " additional threads waiting for an answer for more than " + limitNbDays + " days.*");
 		}
 		return result;
 	}
 
-	public static Collection<StringBuffer> getTableReport(Collection<UserRequest> complete, int limitNbDays) {
-		List<StringBuffer> result = Lists.newArrayList();
-		ArrayList<UserRequest> tableContent = Lists
-				.newArrayList(Iterables.filter(complete, new Predicate<UserRequest>() {
+	public static List<UserRequest> filterByAge(Collection<UserRequest> allRequests, int limitNbDays) {
+		return Lists.newArrayList(Iterables.filter(allRequests, new Predicate<UserRequest>() {
 
-					@Override
-					public boolean apply(UserRequest input) {
-						return input.getNbDaysSinceLastAnswer() <= limitNbDays;
-					}
-				}));
-		int nbTooOld = complete.size() - tableContent.size();
-		if (tableContent.size() > 0) {
-			for (List<UserRequest> requests : Lists.partition(tableContent, 20)) {
+			@Override
+			public boolean apply(UserRequest input) {
+				return input.getNbDaysSinceLastAnswer() <= limitNbDays;
+			}
+		}));
+
+	}
+
+	public static Collection<StringBuffer> getTableReport(List<UserRequest> complete, int limitNbDays) {
+		List<StringBuffer> result = Lists.newArrayList();
+		List<UserRequest> filtered = filterByAge(complete, limitNbDays);
+		if (filtered.size() > 0) {
+			for (List<UserRequest> requests : Lists.partition(complete, 20)) {
 				StringBuffer table = new StringBuffer();
 				table.append("| Summary | reporter | last author| days ago | \n");
 				table.append("|---------------------------------------------------|\n");
@@ -209,13 +201,13 @@ public class UserRequests {
 			table.append("![](" + congratsGifURL() + ")\n");
 			result.add(table);
 		}
-		if (nbTooOld > 0) {
+		if (filtered.size() > complete.size()) {
 			StringBuffer table = new StringBuffer();
 			if (result.size() > 0) {
 				table = Iterables.getLast(result);
 			}
-			table.append("*There are " + nbTooOld + " old bugzillas (at least " + limitNbDays
-					+ " days old) waiting for an answer though.*");
+			table.append("*There are " + Integer.valueOf(complete.size() - filtered.size())
+					+ " old bugzillas (at least " + limitNbDays + " days old) waiting for an answer though.*");
 		}
 		return result;
 	}
