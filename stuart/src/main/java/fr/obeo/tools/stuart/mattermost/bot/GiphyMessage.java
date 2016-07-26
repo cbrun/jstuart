@@ -52,7 +52,9 @@ public class GiphyMessage implements ReactOnMessage {
 							if (result != null && result.getData() != null
 									&& result.getData().getImages().get("original") != null) {
 								GiphyImg original = result.getData().getImages().get("original");
-								bot.respond(p, "![](" + original.getUrl() + ")");
+								if (original != null) {
+									bot.respond(p, "![](" + original.getUrl() + ")");
+								}
 							}
 						}
 					}
