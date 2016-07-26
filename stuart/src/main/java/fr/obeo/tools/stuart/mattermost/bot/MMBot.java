@@ -198,7 +198,11 @@ public class MMBot {
 						MPost p = gson.fromJson(msg.getProps().get("post"), MPost.class);
 						p.setTeamId(msg.getTeamId());
 						for (ReactOnMessage listener : reactors) {
-							listener.onMessage(MMBot.this, p);
+							try {
+								listener.onMessage(MMBot.this, p);
+							} catch (Throwable e) {
+								e.printStackTrace();
+							}
 						}
 
 					} else if (msg.getAction() == ChannelAction.typing) {
