@@ -95,6 +95,8 @@ public class SimpleBot {
 			Twitter twitter = tf.getInstance();
 			bot.onMessage(new TwitterReferences(twitter));
 		}
+		
+		bot.onMessage(new GiphyMessage());
 
 		bot.listen();
 
