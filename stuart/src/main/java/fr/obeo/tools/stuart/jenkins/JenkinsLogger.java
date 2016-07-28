@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
@@ -20,8 +21,11 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.Authenticator;
+import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Request.Builder;
 import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.Post;
@@ -49,34 +53,57 @@ public class JenkinsLogger {
 
 	private Date daysAgo;
 
+	private String username;
+
+	private String password;
+
 	public JenkinsLogger(String serverURL, Date daysAgo) {
 		this.serverURL = serverURL;
 		gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").setPrettyPrinting().create();
 		this.daysAgo = daysAgo;
 	}
 
+	public void setAuth(String username, String password) {
+		this.username = username;
+		this.password = password;
+	}
+
 	public Collection<Post> getBuildResults() {
-		return getBuildResults(Sets.<String> newLinkedHashSet());
+		return getBuildResults(Sets.<String>newLinkedHashSet(), Predicates.alwaysTrue());
 	}
 
 	public Collection<Post> getBuildResults(Set<String> alreadySent) {
+		return getBuildResults(alreadySent, Predicates.alwaysTrue());
+	}
+
+	public Collection<Post> getBuildResults(Set<String> alreadySent, Predicate<Job> jobFilter) {
 		List<Post> posts = new ArrayList<Post>();
 		String url = serverURL + "api/json?tree=jobs[name,lastBuild[building,timestamp,url]]";
-		Request request = new Request.Builder().url(url).get().build();
 		OkHttpClient client = new OkHttpClient();
+
+		Builder requestBuilder = new Request.Builder().url(url).get();
+		if (username != null && password != null) {
+			requestBuilder.header("Authorization", Credentials.basic(username, password));
+		}
+		Request request = requestBuilder.build();
 		Response response = null;
 		try {
 			response = client.newCall(request).execute();
 			String returnedJson = response.body().string();
 			ServerResult recentReviews = gson.fromJson(returnedJson, ServerResult.class);
 			for (Job j : recentReviews.getJobs()) {
-				if (j.getLastBuild() != null && !j.getLastBuild().getUrl().contains("gerrit")) {
+				if (j.getLastBuild() != null && !j.getLastBuild().getUrl().contains("gerrit") && jobFilter.apply(j)) {
 					String jURL = j.getLastBuild().getUrl() + "/api/json";
 
 					Date lastJobTime = new Date(j.getLastBuild().getTimestamp());
 					if (lastJobTime.after(daysAgo)) {
 
-						Response jobResponse = client.newCall(new Request.Builder().url(jURL).get().build()).execute();
+						requestBuilder = new Request.Builder().url(jURL).get();
+						if (username != null && password != null) {
+							requestBuilder.header("Authorization", Credentials.basic(username, password));
+						}
+
+						Response jobResponse = client.newCall(requestBuilder.build()).execute();
 						String jobJson = jobResponse.body().string();
 						BuildResult lastBuild = gson.fromJson(jobJson, BuildResult.class);
 						String postKey = lastBuild.getUrl();
@@ -97,7 +124,7 @@ public class JenkinsLogger {
 								if (totalCount > 0) {
 									testReportURLName = action.getUrlName();
 									String rootReportURL = j.getLastBuild().getUrl() + testReportURLName;
-									Request requestXMLTestReport = new Request.Builder()
+									Request requestXMLTestReport = requestBuilder
 											.url(rootReportURL + "/api/json?pretty=true").get().build();
 									TestReport rootReport = gson.fromJson(
 											client.newCall(requestXMLTestReport).execute().body().charStream(),
