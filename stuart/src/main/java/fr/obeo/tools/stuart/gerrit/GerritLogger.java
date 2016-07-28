@@ -20,7 +20,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.squareup.okhttp.Authenticator;
 import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -41,10 +40,13 @@ public class GerritLogger {
 
 	private boolean groupReviews = true;
 
-	private Authenticator authenticator;
+	private String username;
 
-	public void setAuthenticator(Authenticator authenticator) {
-		this.authenticator = authenticator;
+	private String password;
+
+	public void setAuthInfo(String username, String password) {
+		this.username = username;
+		this.password = password;
 	}
 
 	public GerritLogger(String serverURL) {
@@ -65,8 +67,8 @@ public class GerritLogger {
 		String urlPath = "/changes/?q=" + query + "&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION";
 		String url = serverURL + urlPath;
 		OkHttpClient client = new OkHttpClient();
-		if (this.authenticator != null) {
-			client.setAuthenticator(authenticator);
+		if (this.username != null && this.password != null) {
+
 			/*
 			 * gerrit rest api uses a prefix in case of authenticated request.
 			 */
@@ -76,7 +78,8 @@ public class GerritLogger {
 			client.setCookieHandler(cookieManager);
 			Response authResp;
 			try {
-
+				RequestBody body = new FormEncodingBuilder().add("username", username).add("password", password)
+						.build();
 				authResp = client.newCall(new Request.Builder().url(serverURL + "/login/").post(body).build())
 						.execute();
 			} catch (IOException e) {
