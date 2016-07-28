@@ -1,6 +1,8 @@
 package fr.obeo.tools.stuart.gerrit;
 
 import java.io.IOException;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,8 +20,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.Authenticator;
+import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import fr.obeo.tools.stuart.Dates;
@@ -36,6 +41,12 @@ public class GerritLogger {
 
 	private boolean groupReviews = true;
 
+	private Authenticator authenticator;
+
+	public void setAuthenticator(Authenticator authenticator) {
+		this.authenticator = authenticator;
+	}
+
 	public GerritLogger(String serverURL) {
 		this.serverURL = serverURL;
 		gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").setPrettyPrinting().create();
@@ -51,9 +62,30 @@ public class GerritLogger {
 		}));
 		String query = "status:open AND label:Verified=1 AND -age:" + nbDays + "d AND (" + prjString + ")";
 
-		String url = serverURL + "/changes/?q=" + query + "&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION";
-		Request request = new Request.Builder().url(url).get().build();
+		String urlPath = "/changes/?q=" + query + "&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION";
+		String url = serverURL + urlPath;
 		OkHttpClient client = new OkHttpClient();
+		if (this.authenticator != null) {
+			client.setAuthenticator(authenticator);
+			/*
+			 * gerrit rest api uses a prefix in case of authenticated request.
+			 */
+			url = serverURL + "/a" + urlPath;
+			CookieManager cookieManager = new CookieManager();
+			cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+			client.setCookieHandler(cookieManager);
+			Response authResp;
+			try {
+
+				authResp = client.newCall(new Request.Builder().url(serverURL + "/login/").post(body).build())
+						.execute();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+		Request request = new Request.Builder().url(url).get().build();
 		Response response = null;
 		try {
 			response = client.newCall(request).execute();
