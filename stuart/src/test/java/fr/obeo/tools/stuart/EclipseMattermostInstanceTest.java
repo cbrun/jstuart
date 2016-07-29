@@ -2,6 +2,7 @@ package fr.obeo.tools.stuart;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,6 +13,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
@@ -43,7 +45,7 @@ public class EclipseMattermostInstanceTest {
 			Date daysAgo = getDateXDaysAgo(15);
 
 			EmitterTrace traceFile = new EmitterTrace(
-					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
+					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel,Charsets.UTF_8) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
@@ -365,7 +367,7 @@ public class EclipseMattermostInstanceTest {
 			Date daysAgo = getDateXDaysAgo(nbDays);
 
 			EmitterTrace traceFile = new EmitterTrace(
-					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel) + "_trace.json"));
+					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel,Charsets.UTF_8) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();

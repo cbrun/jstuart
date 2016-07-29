@@ -15,6 +15,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.TextProgressMonitor;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
@@ -35,7 +36,7 @@ public class GitLogger {
 	}
 
 	public Collection<Post> getMergedCommits(Date daysAgo, String remoteURL, String webCommitURL) {
-		Collection<RevCommit> allCommits = getAllCommits(remoteURL,true);
+		Collection<RevCommit> allCommits = getAllCommits(remoteURL, true);
 
 		List<Post> posts = new ArrayList<Post>();
 		for (RevCommit commit : allCommits) {
@@ -77,9 +78,10 @@ public class GitLogger {
 		return posts;
 	}
 
-	public Collection<RevCommit> getAllCommits(String remoteURL,boolean update) {
+	public Collection<RevCommit> getAllCommits(String remoteURL, boolean update) {
 		Collection<RevCommit> allCommits = Lists.newArrayList();
-		File cloneDir = new File(this.cacheFolder.getPath() + File.separator + cloneFolderName.hashString(remoteURL));
+		File cloneDir = new File(
+				this.cacheFolder.getPath() + File.separator + cloneFolderName.hashString(remoteURL, Charsets.UTF_8));
 		try {
 			Files.createParentDirs(cloneDir);
 			Git repo = null;

@@ -87,11 +87,55 @@
   </pluginRepositories>
 
   <dependencies>
+    <!-- pulled in by jira rest client -->
     <dependency>
       <groupId>com.atlassian.jira</groupId>
-      <artifactId>jira-rest-java-client</artifactId>
-      <version>2.0.0-m2</version>
+      <artifactId>jira-rest-java-client-api</artifactId>
+      <version>2.0.0-m19</version>
     </dependency>
+    <dependency>
+      <groupId>com.atlassian.jira</groupId>
+      <artifactId>jira-rest-java-client-core</artifactId>
+      <version>2.0.0-m19</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-json</artifactId>
+      <version>1.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>1.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.3.4</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>4.3.2</version>
+      <type>jar</type>
+    </dependency>
+    <!-- end of jira -->
     <dependency>
       <groupId>eu.ralph-schuster</groupId>
       <artifactId>b4j</artifactId>
@@ -153,6 +197,15 @@
       <artifactId>args4j</artifactId>
       <version>2.33</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>19.0</version>
+    </dependency>
+    <!-- <dependency> <groupId>com.urswolfer.gerrit.client.rest</groupId> 
+      <artifactId>gerrit-rest-java-client</artifactId> <version>0.8.8</version> 
+      </dependency> -->
   </dependencies>
 
 
