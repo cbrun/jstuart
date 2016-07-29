@@ -44,15 +44,6 @@ public class JiraLogger {
 		this.password = password;
 	}
 
-	public static void main(String[] args) {
-		try {
-			new JiraLogger().jiraLog(5, Sets.newHashSet("VP", "OD"));
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	public Collection<Post> jiraLog(int nbDaysAgo, Collection<String> projects) throws MalformedURLException {
 		List<Post> posts = new ArrayList<Post>();
 		JiraRestClient jira = null;
