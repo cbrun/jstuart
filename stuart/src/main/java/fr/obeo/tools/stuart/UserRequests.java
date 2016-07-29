@@ -183,7 +183,7 @@ public class UserRequests {
 		List<StringBuffer> result = Lists.newArrayList();
 		List<UserRequest> filtered = filterByAge(complete, limitNbDays);
 		if (filtered.size() > 0) {
-			for (List<UserRequest> requests : Lists.partition(complete, 20)) {
+			for (List<UserRequest> requests : Lists.partition(filtered, 20)) {
 				StringBuffer table = new StringBuffer();
 				table.append("| Summary | reporter | last author| days ago | \n");
 				table.append("|---------------------------------------------------|\n");
