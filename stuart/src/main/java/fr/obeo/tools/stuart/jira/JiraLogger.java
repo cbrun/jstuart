@@ -55,9 +55,6 @@ public class JiraLogger {
 			} else {
 				jira = restClientFactory.createWithBasicHttpAuthentication(uri, "anonymous", "nopass");
 			}
-			jira.getProjectClient().getAllProjects().get().forEach(x -> {
-				System.out.println(x.getKey());
-			});
 
 			String projectsQL = "("
 					+ Joiner.on(" OR ").join(Iterables.transform(projects, new Function<String, String>() {
