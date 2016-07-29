@@ -127,7 +127,7 @@ public class UserRequests {
 		List<StringBuffer> result = Lists.newArrayList();
 		List<UserRequest> filtered = filterByAge(allRequests, limitNbDays);
 		if (filtered.size() > 0) {
-			for (List<UserRequest> requests : Lists.partition(allRequests, 20)) {
+			for (List<UserRequest> requests : Lists.partition(filtered, 20)) {
 				StringBuffer table = new StringBuffer();
 				table.append("| Summary | reporter | last author| delay so far | response/thread |\n");
 				table.append("|---------------------------------------------------|\n");
