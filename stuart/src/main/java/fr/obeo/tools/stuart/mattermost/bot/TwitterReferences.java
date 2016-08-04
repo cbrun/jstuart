@@ -31,7 +31,8 @@ public class TwitterReferences implements ReactOnMessage {
 			List<Status> tweets = findTweets(p.getMessage());
 			if (tweets.size() > 0) {
 				for (Status status2 : tweets) {
-					Post tPost = TwitterLogger.createPost(status2);
+					Post tPost = TwitterLogger.createPost(status2);				
+					tPost.mightBeTruncated(false);
 					bot.respond(p, MattermostPost.fromGenericPost(tPost).getText());
 				}
 
