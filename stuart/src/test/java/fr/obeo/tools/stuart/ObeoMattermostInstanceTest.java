@@ -1,6 +1,7 @@
 package fr.obeo.tools.stuart;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Collections;
@@ -22,6 +23,8 @@ import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
 import fr.obeo.tools.stuart.rss.RssLogger;
 
 public class ObeoMattermostInstanceTest {
+
+	private static final String SO_ICON = "https://veithen.github.io/images/icon-stackoverflow.svg";
 
 	private String host = "mattermost.obeo.fr";
 
@@ -97,8 +100,15 @@ public class ObeoMattermostInstanceTest {
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-
-			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/uml-designer"), daysAgo).get());
+			try {
+				posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/uml-designer"), daysAgo)
+						.setIcon(SO_ICON).get());
+			} catch (RuntimeException e) {
+				/*
+				 * we do expect such exception because there is not a single
+				 * post with uml-designer as a tag yet (08-2016)
+				 */
+			}
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
