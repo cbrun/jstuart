@@ -19,9 +19,13 @@ public class BugzillaReferences implements ReactOnMessage {
 		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
 			List<Issue> issues = bug.findBugzillaIssues(p.getMessage());
 			if (issues.size() > 0) {
-
-				for (StringBuffer resp : BugzillaLogger.getTableReport(issues)) {
-					bot.respond(p, resp.toString());
+				if (issues.size() == 1) {
+					Issue req = issues.iterator().next();
+					bot.respond(p, "[" + req.getSummary() + "](" + req.getUri() + ")");
+				} else {
+					for (StringBuffer resp : BugzillaLogger.getTableReport(issues)) {
+						bot.respond(p, resp.toString());
+					}
 				}
 
 			}
