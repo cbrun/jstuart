@@ -1,6 +1,7 @@
 package fr.obeo.tools.stuart;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,12 +19,11 @@ import fr.obeo.tools.stuart.gerrit.GerritLogger;
 import fr.obeo.tools.stuart.git.GitLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
 import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
+import fr.obeo.tools.stuart.rss.RssLogger;
 
 public class ObeoMattermostInstanceTest {
 
 	private String host = "mattermost.obeo.fr";
-
-	
 
 	public static Date getDateXDaysAgo(int nbDays) {
 		Calendar cal = Calendar.getInstance();
@@ -48,8 +48,7 @@ public class ObeoMattermostInstanceTest {
 
 			Date daysAgo = getDateXDaysAgo(nbDays);
 
-			EmitterTrace traceFile = new EmitterTrace(
-					new File(storage + "/" + host + "_eefproperties_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_eefproperties_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
@@ -57,13 +56,11 @@ public class ObeoMattermostInstanceTest {
 					"https://git.eclipse.org/r/eef/org.eclipse.eef",
 					"https://git.eclipse.org/c/eef/org.eclipse.eef.git/commit/?id="));
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
-					"https://github.com/sbegaudeau/eef.git",
-					"https://github.com/sbegaudeau/eef/commit/"));
+					"https://github.com/sbegaudeau/eef.git", "https://github.com/sbegaudeau/eef/commit/"));
 
-			posts.addAll(
-					new JenkinsLogger("https://hudson.eclipse.org/eef/", daysAgo).getBuildResults(trace.keySet()));
+			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/eef/", daysAgo).getBuildResults(trace.keySet()));
 			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
-					.getPatchsets(Sets.newHashSet("eef/org.eclipse.eef"),nbDays));
+					.getPatchsets(Sets.newHashSet("eef/org.eclipse.eef"), nbDays));
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
@@ -78,6 +75,44 @@ public class ObeoMattermostInstanceTest {
 			traceFile.save(trace);
 		} else {
 			Assert.fail("Expecting the EEF_CHANNEL environment variable to be set");
+		}
+	}
+
+	@Test
+	public void sendEventsToUMLDesignerChan() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String channel = System.getenv("UML_CHANNEL");
+		if (channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
+
+			int nbDays = 15;
+
+			Date daysAgo = getDateXDaysAgo(nbDays);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_uml_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+
+			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/uml-designer"), daysAgo).get());
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the UML_CHANNEL environment variable to be set");
 		}
 	}
 
