@@ -193,24 +193,43 @@ public class MMBot {
 
 					System.out.println(data);
 					MPost msg = gson.fromJson(data, MPost.class);
-					if (msg.getProps() != null && msg.getProps().get("post") != null) {
-
-						MPost p = gson.fromJson(msg.getProps().get("post"), MPost.class);
-						p.setTeamId(msg.getTeamId());
-						for (ReactOnMessage listener : reactors) {
-							try {
-								listener.onMessage(MMBot.this, p);
-							} catch (Throwable e) {
-								e.printStackTrace();
-							}
+					if (msg.getId() == null) {
+						/*
+						 * the json format changed with Mattermost 3.3 with a
+						 * generic "event" which might hold data.
+						 */
+						MEvent event = gson.fromJson(data, MEvent.class);
+						if (event.getData().get("post") != null) {
+							MPost p = gson.fromJson(event.getData().get("post"), MPost.class);
+							p.setTeamId(event.getTeamId());
+							p.setChannelId(event.getChannelId());
+							transmitPost(p);
 						}
-
-					} else if (msg.getAction() == ChannelAction.typing) {
-						System.out.println(msg.getUserId() + " is typîng");
 					} else {
-						System.out.println("unknown :\n" + data);
+						if (msg.getProps() != null && msg.getProps().get("post") != null) {
+
+							MPost p = gson.fromJson(msg.getProps().get("post"), MPost.class);
+							p.setTeamId(msg.getTeamId());
+							transmitPost(p);
+
+						} else if (msg.getAction() == ChannelAction.typing) {
+							System.out.println(msg.getUserId() + " is typîng");
+						} else {
+
+							System.out.println("unknown :\n" + data);
+						}
 					}
 					response.close();
+				}
+
+				public void transmitPost(MPost p) {
+					for (ReactOnMessage listener : reactors) {
+						try {
+							listener.onMessage(MMBot.this, p);
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			};
 			websocket.enqueue(listener);
