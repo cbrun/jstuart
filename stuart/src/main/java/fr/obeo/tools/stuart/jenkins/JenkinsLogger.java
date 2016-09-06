@@ -186,15 +186,15 @@ public class JenkinsLogger {
 									}
 									body += "\n";
 								}
-								String statusIcon = "https://img.shields.io/badge/build-unknown-lightgrey.svg";
+								String statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-unknown-lightgrey.svg";
 								if ("UNSTABLE".equals(lastBuild.getResult())) {
-									statusIcon = "https://img.shields.io/badge/build-unstable-yellow.svg";
+									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-unstable-yellow.svg";
 								} else if ("STABLE".equals(lastBuild.getResult())) {
-									statusIcon = "https://img.shields.io/shippable/54d119db5ab6cc13528ab183.svg";
+									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-stable.svg";
 								} else if ("FAILED".equals(lastBuild.getResult())) {
-									statusIcon = "https://img.shields.io/circleci/project/BrightFlair/PHP.Gt.svg";
+									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-unknown-lightgrey.svg";
 								} else if ("SUCCESS".equals(lastBuild.getResult())) {
-									statusIcon = "https://img.shields.io/shippable/54d119db5ab6cc13528ab183.svg";
+									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-stable.svg";
 								}
 								Post newPost = Post.createPostWithSubject(postKey,
 										" [![](" + statusIcon + ") " + lastBuild.getFullDisplayName() + "](" + postKey
