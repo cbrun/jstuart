@@ -123,7 +123,7 @@ public class UserRequests {
 			"https://media.giphy.com/media/3BlN2bxcw0l5S/giphy.gif" };
 
 	public static Collection<StringBuffer> getTableReport(List<UserRequest> allRequests, int limitNbDays,
-			Multimap<String, UserRequest> requestsByAuthor) {
+			Multimap<String, UserRequest> requestsByAuthor,boolean congratsGif) {
 		List<StringBuffer> result = Lists.newArrayList();
 		List<UserRequest> filtered = filterByAge(allRequests, limitNbDays);
 		if (filtered.size() > 0) {
@@ -154,7 +154,9 @@ public class UserRequests {
 			StringBuffer table = new StringBuffer();
 			table.append(
 					"Congrats!  **No one** has been waiting for more than " + limitNbDays + " days for an answer !\n");
+			if (congratsGif) {
 			table.append("![](" + congratsGifURL() + ")\n");
+			}
 			result.add(table);
 		}
 		if (filtered.size() > allRequests.size()) {
