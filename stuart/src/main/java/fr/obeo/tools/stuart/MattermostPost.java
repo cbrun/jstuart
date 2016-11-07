@@ -143,4 +143,9 @@ public class MattermostPost {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return username + " " + iconUrl + "\n" + text;
+	}
+
 }
