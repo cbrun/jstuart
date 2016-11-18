@@ -25,7 +25,7 @@ import com.google.common.collect.Sets;
 import fr.obeo.tools.stuart.Post;
 
 public class JiraLogger {
-	private static final String BUG_ICON = "https://cdn2.iconfinder.com/data/icons/windows-8-metro-style/128/bug.png";
+	private static final String BUG_ICON = "http://i.imgur.com/3lCiRbW.png";
 	private String baseURL = "https://support.jira.obeo.fr/";
 
 	private String username;

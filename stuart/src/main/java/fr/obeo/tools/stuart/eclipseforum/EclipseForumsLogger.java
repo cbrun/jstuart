@@ -26,7 +26,7 @@ import fr.obeo.tools.stuart.Post;
 public class EclipseForumsLogger {
 
 	private static final int MAX_REQUESTS = 100000;
-	private static final String FORUM_ICON = "https://billing.ragesw.com/images/forum_speachbubble.png";
+	private static final String FORUM_ICON = "https://i.imgur.com/w8HsmQW.png";
 	private int forumNumber;
 	private Date daysAgo;
 

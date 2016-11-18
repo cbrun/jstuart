@@ -33,7 +33,7 @@ import fr.obeo.tools.stuart.git.GitLogger;
 
 public class GerritLogger {
 
-	private static final String GERRIT_ICON = "http://static1.squarespace.com/static/525e9a22e4b0fe5f668a8903/t/557afd6de4b05d594de11f63/1434123630015/checklist?format=300w";
+	private static final String GERRIT_ICON = "https://i.imgur.com/aRoIo4q.png";
 
 	private String serverURL;
 	private Gson gson;

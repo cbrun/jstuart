@@ -33,7 +33,7 @@ import fr.obeo.tools.stuart.Post;
 
 public class GitLogger {
 
-	private static final String GIT_ICON = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Git_icon.svg/50px-Git_icon.svg.png";
+	private static final String GIT_ICON = "https://i.imgur.com/nkq5wS9.png";
 	private File cacheFolder;
 
 	private HashFunction cloneFolderName = Hashing.sha256();

@@ -46,7 +46,7 @@ public class JenkinsLogger {
 
 	private static final int MAX_FAILED_TESTS = 20;
 
-	private static final String JENKINS_ICON = "https://www.urbaninsight.com/files/pkg.png";
+	private static final String JENKINS_ICON = "https://i.imgur.com/OMD63Ns.png";
 
 	private String serverURL;
 	private Gson gson;
@@ -186,15 +186,15 @@ public class JenkinsLogger {
 									}
 									body += "\n";
 								}
-								String statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-unknown-lightgrey.svg";
+								String statusIcon = "https://i.imgur.com/LfNQATL.png";
 								if ("UNSTABLE".equals(lastBuild.getResult())) {
-									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-unstable-yellow.svg";
+									statusIcon = "https://i.imgur.com/ODJohQh.png";
 								} else if ("STABLE".equals(lastBuild.getResult())) {
-									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-stable.svg";
+									statusIcon = "https://i.imgur.com/OgGlGdI.png";
 								} else if ("FAILED".equals(lastBuild.getResult())) {
-									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-unknown-lightgrey.svg";
+									statusIcon = "https://i.imgur.com/LfNQATL.png";
 								} else if ("SUCCESS".equals(lastBuild.getResult())) {
-									statusIcon = "https://raw.githubusercontent.com/cbrun/jstuart/master/resources/build-stable.svg";
+									statusIcon = "https://i.imgur.com/OgGlGdI.png";
 								}
 								Post newPost = Post.createPostWithSubject(postKey,
 										" [![](" + statusIcon + ") " + lastBuild.getFullDisplayName() + "](" + postKey

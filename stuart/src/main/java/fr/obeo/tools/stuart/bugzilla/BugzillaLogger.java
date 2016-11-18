@@ -25,7 +25,7 @@ import fr.obeo.tools.stuart.Dates;
 import fr.obeo.tools.stuart.Post;
 
 public class BugzillaLogger {
-	private static final String BUG_ICON = "https://cdn2.iconfinder.com/data/icons/windows-8-metro-style/128/bug.png";
+	private static final String BUG_ICON = "https://i.imgur.com/3lCiRbW.png";
 	private String baseURL = "https://bugs.eclipse.org/bugs";
 	private Set<String> authorsToIgnore = Sets.newLinkedHashSet();
 
