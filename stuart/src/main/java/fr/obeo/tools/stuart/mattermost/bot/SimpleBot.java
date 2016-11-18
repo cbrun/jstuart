@@ -72,16 +72,16 @@ public class SimpleBot {
 			return;
 		}
 
-		OkHttpClient client = new OkHttpClient();
 
+		OkHttpClient client = new OkHttpClient();
 		final MMBot bot = MMBot.logIn(client, this.mattermostServer, this.login, this.pwd);
 
 		for (String bugzilla : bugzillas) {
-			bot.onMessage(new BugzillaReferences(bugzilla));
+			bot.onMessage(new RespondWithBugzillaReferences(bugzilla));
 		}
 
 		for (String gerrit : gerrits) {
-			bot.onMessage(new GerritReferences(gerrit));
+			bot.onMessage(new RespondWithGerritReferences(gerrit));
 		}
 
 		if (twitterAccessToken != null && twitterAccessTokenSecret != null && twitterConsumerKey != null
@@ -93,10 +93,10 @@ public class SimpleBot {
 					.setOAuthAccessTokenSecret(this.twitterAccessTokenSecret);
 			TwitterFactory tf = new TwitterFactory(cb.build());
 			Twitter twitter = tf.getInstance();
-			bot.onMessage(new TwitterReferences(twitter));
+			bot.onMessage(new RespondWithTwitterReferences(twitter));
 		}
 		
-		bot.onMessage(new GiphyMessage());
+		bot.onMessage(new RespondWithGiphyAnimation());
 
 		bot.listen();
 

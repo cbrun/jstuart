@@ -201,10 +201,22 @@ public class MMBot {
 						MEvent event = gson.fromJson(data, MEvent.class);
 						if (event.getData().get("post") != null) {
 							MPost p = gson.fromJson(event.getData().get("post"), MPost.class);
-							p.setTeamId(event.getTeamId());
-							p.setChannelId(event.getChannelId());
+							if (p.getTeamId() == null) {
+								p.setTeamId(event.getTeamId());
+							}
+							/*
+							 * with 3.5 we get the channel ID directly with the
+							 * post whereas previously we got it in the event
+							 * itself.
+							 */
+							if (p.getChannelId() == null) {
+								p.setChannelId(event.getChannelId());
+							}
 							transmitPost(p);
+						} else if (event.getData().get("message") != null) {
+							System.out.println("MMBot.listen().new BotSocketListener() {...}.onMessage()");
 						}
+
 					} else {
 						if (msg.getProps() != null && msg.getProps().get("post") != null) {
 
@@ -231,6 +243,7 @@ public class MMBot {
 						}
 					}
 				}
+
 			};
 			websocket.enqueue(listener);
 		}
