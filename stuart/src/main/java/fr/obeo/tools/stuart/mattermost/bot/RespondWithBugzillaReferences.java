@@ -3,8 +3,12 @@ package fr.obeo.tools.stuart.mattermost.bot;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.api.client.util.Lists;
+
+import b4j.core.Comment;
 import b4j.core.Issue;
 import fr.obeo.tools.stuart.bugzilla.BugzillaLogger;
+import fr.obeo.tools.stuart.bugzilla.BugzillaLogger.CommentWithIssue;
 
 public class RespondWithBugzillaReferences implements ReactOnMessage {
 
@@ -17,8 +21,11 @@ public class RespondWithBugzillaReferences implements ReactOnMessage {
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
 		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
-			List<Issue> issues = bug.findBugzillaIssues(p.getMessage());
-			if (issues.size() > 0) {
+			List<Issue> issues = Lists.newArrayList();
+			List<CommentWithIssue> comments = Lists.newArrayList();
+
+			bug.findBugzillaIssues(p.getMessage(), issues, comments);
+			if (issues.size() > 0 || comments.size() > 0) {
 				if (issues.size() == 1) {
 					Issue req = issues.iterator().next();
 					bot.respond(p, "[" + req.getSummary() + "](" + req.getUri() + ")");
@@ -26,6 +33,14 @@ public class RespondWithBugzillaReferences implements ReactOnMessage {
 					for (StringBuffer resp : BugzillaLogger.getTableReport(issues)) {
 						bot.respond(p, resp.toString());
 					}
+				}
+				String c = "";
+				for (CommentWithIssue comment : comments) {
+					c += "> " + comment.c.getTheText() + "\n[-> " + comment.i.getSummary() + "](" + comment.i.getUri()
+							+ "#c" + comment.commentNumber + ")\n";
+				}
+				if (comments.size() > 0) {
+					bot.respond(p, c);
 				}
 
 			}
