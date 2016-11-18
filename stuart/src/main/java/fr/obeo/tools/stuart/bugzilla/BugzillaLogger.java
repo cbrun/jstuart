@@ -155,13 +155,13 @@ public class BugzillaLogger {
 		 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=497734
 		 * 
 		 */
-		Pattern bugURL = Pattern.compile(this.baseURL + "/show_bug.cgi\\?id=(\\d+)#?c?(\\d+)");
+		Pattern bugURL = Pattern.compile(this.baseURL + "/show_bug.cgi\\?id=(\\d+)(#c(\\d+))?");
 		if (bugURL.matcher(content).find()) {
 			Matcher matcher = bugURL.matcher(content);
 			while (matcher.find()) {
 				String found = matcher.group(1);
 				BugOrCommentRef fromId = BugOrCommentRef.fromId(found);
-				fromId.commentNumber = matcher.group(2);
+				fromId.commentNumber = matcher.group(3);
 				bugIds.add(fromId);
 			}
 		}
