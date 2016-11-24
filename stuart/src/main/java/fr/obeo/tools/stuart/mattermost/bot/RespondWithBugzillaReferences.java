@@ -1,11 +1,9 @@
 package fr.obeo.tools.stuart.mattermost.bot;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.api.client.util.Lists;
-
-import b4j.core.Comment;
 import b4j.core.Issue;
 import fr.obeo.tools.stuart.bugzilla.BugzillaLogger;
 import fr.obeo.tools.stuart.bugzilla.BugzillaLogger.CommentWithIssue;
@@ -21,8 +19,8 @@ public class RespondWithBugzillaReferences implements ReactOnMessage {
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
 		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
-			List<Issue> issues = Lists.newArrayList();
-			List<CommentWithIssue> comments = Lists.newArrayList();
+			List<Issue> issues = new ArrayList<Issue>();
+			List<CommentWithIssue> comments = new ArrayList<CommentWithIssue>();
 
 			bug.findBugzillaIssues(p.getMessage(), issues, comments);
 			if (issues.size() > 0 || comments.size() > 0) {
