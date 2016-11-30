@@ -125,6 +125,46 @@ public class ObeoMattermostInstanceTest {
 			Assert.fail("Expecting the UML_CHANNEL environment variable to be set");
 		}
 	}
+	
+	@Test
+	public void sendEventsToM2DocChan() throws Exception {
+
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String channel = System.getenv("M2DOC_CHANNEL");
+		if (channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
+
+			int nbDays = 10;
+
+			Date daysAgo = getDateXDaysAgo(nbDays);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_m2docproperties_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
+					"https://github.com/ObeoNetwork/M2Doc.git", "https://github.com/ObeoNetwork/M2Doc.git/commit/"));
+			
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the M2DOC_CHANNEL environment variable to be set");
+		}
+	}
 
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
 		if (!trace.containsKey(post.getKey())) {
