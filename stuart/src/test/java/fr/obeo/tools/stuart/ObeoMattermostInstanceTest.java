@@ -147,7 +147,7 @@ public class ObeoMattermostInstanceTest {
 
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
-					"https://github.com/ObeoNetwork/M2Doc.git", "https://github.com/ObeoNetwork/M2Doc.git/commit/"));
+					"https://github.com/ObeoNetwork/M2Doc.git", "https://github.com/ObeoNetwork/M2Doc/commits/"));
 			
 
 			Collections.sort(posts, new Comparator<Post>() {
