@@ -120,6 +120,54 @@ public class EclipseMattermostInstanceTest {
 		traceFile.evictOldEvents(trace, 60);
 		traceFile.save(trace);
 	}
+	
+	/** Sends events to the webtools channel */
+	@Test
+	public void sendEventsToVirgoChan() throws Exception {
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		// channels
+		String webtoolsChannel = System.getenv("VIRGO-CHANNEL");
+
+		MattermostEmitter virgoEmitter = new MattermostEmitter("https", host, webtoolsChannel);
+
+		Date daysAgo = getDateXDaysAgo(3);
+		EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_virgo" + "_trace.json"));
+		Map<String, Date> trace = traceFile.load();
+
+		List<Post> posts = Lists.newArrayList();
+		posts.addAll(new EclipseForumsLogger(159, daysAgo).forumLog());		
+
+		posts.addAll(
+				new RssLogger(new URL("https://dev.eclipse.org/mhonarc/lists/virgo-dev/maillist.rss"), daysAgo).get());
+		
+		
+		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo", daysAgo)
+				.getBuildResults());
+				
+
+		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
+				.bugzillaLog(3, Sets.newHashSet("Virgo")));
+				
+
+		Collections.sort(posts, new Comparator<Post>() {
+			public int compare(Post m1, Post m2) {
+				return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+			}
+		});
+
+		for (Post post : posts) {
+			send(virgoEmitter, trace, post);
+		}
+
+		traceFile.evictOldEvents(trace, 60);
+		traceFile.save(trace);
+	}
+
+	
 
 	@Test
 	public void sendEventsToAERIChannel() throws Exception {
@@ -364,12 +412,12 @@ public class EclipseMattermostInstanceTest {
 
 			int nbDays = 3;
 
-			Date daysAgo = getDateXDaysAgo(nbDays);
 
 			EmitterTrace traceFile = new EmitterTrace(
 					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel,Charsets.UTF_8) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
+			Date daysAgo = getDateXDaysAgo(nbDays);
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://git.eclipse.org/r/sirius/org.eclipse.sirius",
