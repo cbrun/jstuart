@@ -145,7 +145,7 @@ public class EclipseMattermostInstanceTest {
 				new RssLogger(new URL("https://dev.eclipse.org/mhonarc/lists/virgo-dev/maillist.rss"), daysAgo).get());
 		
 		
-		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo", daysAgo)
+		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo/", daysAgo)
 				.getBuildResults());
 				
 
