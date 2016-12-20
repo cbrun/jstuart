@@ -130,7 +130,7 @@ public class EclipseMattermostInstanceTest {
 		}
 
 		// channels
-		String webtoolsChannel = System.getenv("VIRGO-CHANNEL");
+		String webtoolsChannel = System.getenv("VIRGO_CHANNEL");
 
 		MattermostEmitter virgoEmitter = new MattermostEmitter("https", host, webtoolsChannel);
 
