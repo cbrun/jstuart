@@ -204,6 +204,9 @@ public class MMBot {
 							if (p.getTeamId() == null) {
 								p.setTeamId(event.getTeamId());
 							}
+							if (event.getData().get("team_id") != null && p.getTeamId() == null) {
+								p.setTeamId(event.getData().get("team_id"));
+							}
 							/*
 							 * with 3.5 we get the channel ID directly with the
 							 * post whereas previously we got it in the event
