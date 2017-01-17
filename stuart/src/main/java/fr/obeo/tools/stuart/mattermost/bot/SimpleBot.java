@@ -97,6 +97,7 @@ public class SimpleBot {
 		}
 		
 		bot.onMessage(new RespondWithGiphyAnimation());
+		bot.onMessage(new RespondWithPullRequestsReferences());
 
 		bot.listen();
 
