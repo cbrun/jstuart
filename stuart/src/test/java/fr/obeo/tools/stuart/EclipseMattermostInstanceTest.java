@@ -44,8 +44,8 @@ public class EclipseMattermostInstanceTest {
 
 			Date daysAgo = getDateXDaysAgo(15);
 
-			EmitterTrace traceFile = new EmitterTrace(
-					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel,Charsets.UTF_8) + "_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(new File(
+					storage + "/" + host + "_" + Hashing.sha256().hashString(channel, Charsets.UTF_8) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
@@ -105,7 +105,7 @@ public class EclipseMattermostInstanceTest {
 
 		// log git commits
 		posts.addAll(new GerritLogger("https://git.eclipse.org/r").groupReviews(false)
-				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "webtools.sourceediting", "webtools.releng"),1));
+				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "webtools.sourceediting", "webtools.releng"), 1));
 
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
@@ -120,7 +120,7 @@ public class EclipseMattermostInstanceTest {
 		traceFile.evictOldEvents(trace, 60);
 		traceFile.save(trace);
 	}
-	
+
 	/** Sends events to the webtools channel */
 	@Test
 	public void sendEventsToVirgoChan() throws Exception {
@@ -130,28 +130,28 @@ public class EclipseMattermostInstanceTest {
 		}
 
 		// channels
-		String webtoolsChannel = System.getenv("VIRGO_CHANNEL");
+		String virgoLogChannel = System.getenv("VIRGO_CHANNEL");
 
-		MattermostEmitter virgoEmitter = new MattermostEmitter("https", host, webtoolsChannel);
+		String virgoMainChannel = System.getenv("VIRGO_MAIN_CHANNEL");
 
+		MattermostEmitter virgoMainEmitter = new MattermostEmitter("https", host, virgoMainChannel);
 		Date daysAgo = getDateXDaysAgo(3);
 		EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_virgo" + "_trace.json"));
 		Map<String, Date> trace = traceFile.load();
 
-		List<Post> posts = Lists.newArrayList();
-		posts.addAll(new EclipseForumsLogger(159, daysAgo).forumLog());		
+		for (Post post : new EclipseForumsLogger(159, daysAgo).forumLog()) {
+			send(virgoMainEmitter, trace, post);
+		}
 
+		List<Post> posts = Lists.newArrayList();
+		MattermostEmitter virgoLogEmitter = new MattermostEmitter("https", host, virgoLogChannel);
 		posts.addAll(
 				new RssLogger(new URL("https://dev.eclipse.org/mhonarc/lists/virgo-dev/maillist.rss"), daysAgo).get());
-		
-		
-		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo/", daysAgo)
-				.getBuildResults());
-				
+
+		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo/", daysAgo).getBuildResults());
 
 		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 				.bugzillaLog(3, Sets.newHashSet("Virgo")));
-				
 
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
@@ -160,14 +160,12 @@ public class EclipseMattermostInstanceTest {
 		});
 
 		for (Post post : posts) {
-			send(virgoEmitter, trace, post);
+			send(virgoLogEmitter, trace, post);
 		}
 
 		traceFile.evictOldEvents(trace, 60);
 		traceFile.save(trace);
 	}
-
-	
 
 	@Test
 	public void sendEventsToAERIChannel() throws Exception {
@@ -206,7 +204,7 @@ public class EclipseMattermostInstanceTest {
 				.bugzillaLog(3, Sets.newHashSet("EPP"), Sets.newHashSet("Error Reporting and Logging ")));
 
 		posts.addAll(new GerritLogger("https://git.eclipse.org/r").groupReviews(false)
-				.getPatchsets(Sets.newHashSet("epp/org.eclipse.epp.logging"),1));
+				.getPatchsets(Sets.newHashSet("epp/org.eclipse.epp.logging"), 1));
 
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
@@ -287,7 +285,7 @@ public class EclipseMattermostInstanceTest {
 							"platform/eclipse.platform.runtime", "platform/eclipse.platform.swt",
 							"platform/eclipse.platform.team", "platform/eclipse.platform.text",
 							"platform/eclipse.platform.ua", "platform/eclipse.platform.ui",
-							"platform/eclipse.platform.tools"),1));
+							"platform/eclipse.platform.tools"), 1));
 
 			MattermostEmitter patchesEmitter = new MattermostEmitter("https", host, patch_Channel);
 			for (Post post : patches) {
@@ -412,9 +410,8 @@ public class EclipseMattermostInstanceTest {
 
 			int nbDays = 3;
 
-
-			EmitterTrace traceFile = new EmitterTrace(
-					new File(storage + "/" + host + "_" + Hashing.sha256().hashString(channel,Charsets.UTF_8) + "_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(new File(
+					storage + "/" + host + "_" + Hashing.sha256().hashString(channel, Charsets.UTF_8) + "_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			Date daysAgo = getDateXDaysAgo(nbDays);
@@ -427,7 +424,7 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(
 					new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
 			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
-					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius"),nbDays));
+					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius"), nbDays));
 			posts.addAll(
 					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 							.bugzillaLog(3, Sets.newHashSet("Sirius")));
