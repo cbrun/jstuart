@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.FieldNamingPolicy;
@@ -25,6 +26,7 @@ import com.squareup.okhttp.Request.Builder;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.ws.WebSocket;
 import com.squareup.okhttp.ws.WebSocketCall;
 
 import fr.obeo.tools.stuart.mattermost.bot.internal.BotSocketListener;
@@ -89,6 +91,15 @@ public class MMBot {
 
 				}
 			}));
+			/*
+			 * retrieve the initial load informations
+			 * 
+			 * 
+			 */
+			MInitialLoad init = bot.getResource(host + "api/v3/users/initial_load", MInitialLoad.class);
+			if (init.getTeams().iterator().hasNext() && Strings.isNullOrEmpty(u.getTeamId())) {
+				u.setTeamId(init.getTeams().iterator().next().getId());
+			}
 			return bot;
 		}
 		return null;
@@ -206,6 +217,9 @@ public class MMBot {
 							}
 							if (event.getData().get("team_id") != null && p.getTeamId() == null) {
 								p.setTeamId(event.getData().get("team_id"));
+							}
+							if (Strings.isNullOrEmpty(p.getTeamId())) {
+								p.setTeamId(u.getTeamId());
 							}
 							/*
 							 * with 3.5 we get the channel ID directly with the
