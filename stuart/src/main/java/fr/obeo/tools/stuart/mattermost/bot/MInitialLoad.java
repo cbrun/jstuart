@@ -2,7 +2,8 @@ package fr.obeo.tools.stuart.mattermost.bot;
 
 import java.util.List;
 
-import com.google.api.client.util.Lists;
+import com.google.common.collect.Lists;
+
 
 public class MInitialLoad {
 	
