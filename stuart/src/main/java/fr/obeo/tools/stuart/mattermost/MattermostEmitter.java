@@ -62,7 +62,8 @@ public class MattermostEmitter {
 		}
 
 		for (MattermostPost post : toSend) {
-			RequestBody body = new FormEncodingBuilder().add("payload", gson.toJson(post)).build();
+			String payload = gson.toJson(post);
+			RequestBody body = new FormEncodingBuilder().add("payload", payload).build();
 
 			HttpUrl url = new HttpUrl.Builder().scheme(scheme).host(host).addPathSegment("hooks")
 					.addPathSegment(channel).build();
@@ -73,7 +74,7 @@ public class MattermostEmitter {
 				Call call = client.newCall(request);
 				response = call.execute();
 				if (!response.isSuccessful()) {
-					throw new IOException("Unexpected code " + response + " canceled ?:" + call.isCanceled());
+					throw new IOException("Unexpected code " + response + " canceled ?:" + call.isCanceled() + " payload:\n" + payload + "\n");
 				}
 				System.out.println(response.message());
 				response.body().close();
