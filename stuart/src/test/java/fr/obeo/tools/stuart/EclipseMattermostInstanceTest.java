@@ -94,10 +94,10 @@ public class EclipseMattermostInstanceTest {
 
 		// log stackoverflow posts with given keywords
 		posts.addAll(
-				new RssLogger(new URL("http://stackoverflow.com/feeds/tag/webtools"), daysAgo).setIcon(SO_ICON).get());
-		posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-wtp"), daysAgo).setIcon(SO_ICON)
+				new RssLogger(new URL("https://stackoverflow.com/feeds/tag/webtools"), daysAgo).setIcon(SO_ICON).get());
+		posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-wtp"), daysAgo).setIcon(SO_ICON)
 				.get());
-		posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/jsdt"), daysAgo).setIcon(SO_ICON).get());
+		posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/jsdt"), daysAgo).setIcon(SO_ICON).get());
 
 		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 				.bugzillaLog(3, Sets.newHashSet("JSDT", "WTP Source Editing", "WTP Java EE Tools", "WTP Common Tools",
@@ -252,16 +252,16 @@ public class EclipseMattermostInstanceTest {
 				}
 			});
 
-			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-plugin"), daysAgo)
+			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-plugin"), daysAgo)
 					.setIcon(SO_ICON).get());
-			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-rcp"), daysAgo)
+			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-rcp"), daysAgo)
 					.setIcon(SO_ICON).get());
 			posts.addAll(
-					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/swt"), daysAgo).setIcon(SO_ICON).get());
+					new RssLogger(new URL("https://stackoverflow.com/feeds/tag/swt"), daysAgo).setIcon(SO_ICON).get());
 			posts.addAll(
-					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/jface"), daysAgo).setIcon(SO_ICON).get());
+					new RssLogger(new URL("https://stackoverflow.com/feeds/tag/jface"), daysAgo).setIcon(SO_ICON).get());
 			posts.addAll(
-					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/e4"), daysAgo).setIcon(SO_ICON).get());
+					new RssLogger(new URL("https://stackoverflow.com/feeds/tag/e4"), daysAgo).setIcon(SO_ICON).get());
 
 			for (Post post : posts) {
 				send(qaEmitter, trace, post);
@@ -319,8 +319,8 @@ public class EclipseMattermostInstanceTest {
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new EclipseForumsLogger(80, daysAgo).forumLog());
 			posts.addAll(
-					new RssLogger(new URL("http://stackoverflow.com/feeds/tag/cdt"), daysAgo).setIcon(SO_ICON).get());
-			posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/eclipse-cdt"), daysAgo)
+					new RssLogger(new URL("https://stackoverflow.com/feeds/tag/cdt"), daysAgo).setIcon(SO_ICON).get());
+			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-cdt"), daysAgo)
 					.setIcon(SO_ICON).get());
 
 			Collections.sort(posts, new Comparator<Post>() {

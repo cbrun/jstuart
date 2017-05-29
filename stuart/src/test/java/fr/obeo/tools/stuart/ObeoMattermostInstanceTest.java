@@ -101,7 +101,7 @@ public class ObeoMattermostInstanceTest {
 
 			List<Post> posts = Lists.newArrayList();
 			try {
-				posts.addAll(new RssLogger(new URL("http://stackoverflow.com/feeds/tag/uml-designer"), daysAgo)
+				posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/uml-designer"), daysAgo)
 						.setIcon(SO_ICON).get());
 			} catch (RuntimeException e) {
 				/*
