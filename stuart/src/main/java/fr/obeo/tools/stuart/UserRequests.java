@@ -94,7 +94,7 @@ public class UserRequests {
 		});
 	}
 
-	public static void sortByNbThreads(List<UserRequest> forumIssues, Multimap<String, UserRequest> requestsByAuthor) {
+	public static void sortByNbThreads(final List<UserRequest> forumIssues, final Multimap<String, UserRequest> requestsByAuthor) {
 		Collections.sort(forumIssues, new Comparator<UserRequest>() {
 			public int compare(UserRequest m1, UserRequest m2) {
 
@@ -170,7 +170,7 @@ public class UserRequests {
 		return result;
 	}
 
-	public static List<UserRequest> filterByAge(Collection<UserRequest> allRequests, int limitNbDays) {
+	public static List<UserRequest> filterByAge(Collection<UserRequest> allRequests, final int limitNbDays) {
 		return Lists.newArrayList(Iterables.filter(allRequests, new Predicate<UserRequest>() {
 
 			@Override

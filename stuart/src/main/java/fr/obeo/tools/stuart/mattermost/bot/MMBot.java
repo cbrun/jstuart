@@ -72,7 +72,7 @@ public class MMBot {
 			cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 			client.setCookieHandler(cookieManager);
 
-			MMBot bot = new MMBot(token, u, host, client, gson);
+			final MMBot bot = new MMBot(token, u, host, client, gson);
 			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
 				@Override
