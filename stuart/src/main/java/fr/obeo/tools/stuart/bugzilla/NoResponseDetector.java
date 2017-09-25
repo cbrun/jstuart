@@ -59,15 +59,18 @@ public class NoResponseDetector {
 		Multimap<String, Answer> delaysInAnswering = LinkedHashMultimap.create();
 		Iterator<Issue> openedIssues = searchOpenedIssues();
 		while (openedIssues.hasNext()) {
-			IssueWithAnswer issue = new IssueWithAnswer(openedIssues.next());
+			Issue bugzIssue = openedIssues.next();
+			IssueWithAnswer issue = new IssueWithAnswer(bugzIssue);
 
 			if (!teamMembers.contains(issue.getIssue().getReporter().getName())) {
 				/*
 				 * reported by a user
 				 */
 				Date lastQuestion = issue.getIssue().getCreationTimestamp();
+				boolean teamAnsweredAtLeastOnce = false;
 				for (Comment comment : Iterables.filter(issue.getIssue().getComments(), notGenie)) {
 					if (teamMembers.contains(comment.getAuthor().getName())) {
+						teamAnsweredAtLeastOnce = true;
 						Date answeredOn = comment.getCreationTimestamp();
 						Answer answer = new Answer(lastQuestion, answeredOn, comment);
 						if (answer.getNbHoursBeforeAnswer() < LIMIT_DELAY_HOURS) {
@@ -81,8 +84,11 @@ public class NoResponseDetector {
 
 				boolean reporterAutoAsign = issue.getIssue().getReporter().getName()
 						.equals(issue.getIssue().getAssignee().getName());
+				Object r = bugzIssue.get("keywords");
+				boolean isTriaged = r instanceof String && ((String) r).indexOf("triaged") != -1;
 				if (!reporterAutoAsign && issue.getIssue().getStatus().isOpen()
-						&& !teamMembers.contains(issue.getLastAuthor().getName())) {
+						&& !teamMembers.contains(issue.getLastAuthor().getName())
+						&& !(teamAnsweredAtLeastOnce && isTriaged)) {
 					result.add(issue);
 				}
 			}
