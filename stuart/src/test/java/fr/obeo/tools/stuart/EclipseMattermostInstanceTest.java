@@ -318,8 +318,6 @@ public class EclipseMattermostInstanceTest {
 
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new EclipseForumsLogger(80, daysAgo).forumLog());
-			posts.addAll(
-					new RssLogger(new URL("https://stackoverflow.com/feeds/tag/cdt"), daysAgo).setIcon(SO_ICON).get());
 			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-cdt"), daysAgo)
 					.setIcon(SO_ICON).get());
 
