@@ -1,7 +1,6 @@
 package fr.obeo.tools.stuart;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Collections;
@@ -16,6 +15,7 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import fr.obeo.tools.stuart.eclipseforum.PolarsysForumsLogger;
 import fr.obeo.tools.stuart.gerrit.GerritLogger;
 import fr.obeo.tools.stuart.git.GitLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
@@ -148,7 +148,9 @@ public class ObeoMattermostInstanceTest {
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://github.com/ObeoNetwork/M2Doc.git", "https://github.com/ObeoNetwork/M2Doc/commit/"));
-			
+			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/m2doc"), daysAgo).setIcon(SO_ICON)
+					.get());
+			posts.addAll(new PolarsysForumsLogger("m2doc", daysAgo).forumLog());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
