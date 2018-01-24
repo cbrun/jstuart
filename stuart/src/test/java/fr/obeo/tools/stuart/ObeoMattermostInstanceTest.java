@@ -150,7 +150,7 @@ public class ObeoMattermostInstanceTest {
 					"https://github.com/ObeoNetwork/M2Doc.git", "https://github.com/ObeoNetwork/M2Doc/commit/"));
 			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/m2doc"), daysAgo).setIcon(SO_ICON)
 					.get());
-			posts.addAll(new PolarsysForumsLogger("m2doc", daysAgo).forumLog());
+			//posts.addAll(new PolarsysForumsLogger("m2doc", daysAgo).forumLog());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
