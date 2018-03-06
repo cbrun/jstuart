@@ -23,7 +23,7 @@ import com.rometools.rome.io.XmlReader;
 
 import fr.obeo.tools.stuart.Post;
 
-public class PolarsysForumsLogger {
+public class PolarsysForumsLogger implements ForumLogger {
 
 	private static final int MAX_REQUESTS = 100000;
 	private static final String FORUM_ICON = "https://i.imgur.com/w8HsmQW.png";
@@ -33,6 +33,7 @@ public class PolarsysForumsLogger {
 
 	private String baseURL = "https://polarsys.org/forums/";
 	private String keyword;
+	private int forumNumber = -1;
 
 	public PolarsysForumsLogger(String keyword, Date daysAgo) {
 		super();
@@ -54,8 +55,13 @@ public class PolarsysForumsLogger {
 		for (int i = 0; i < MAX_REQUESTS && !foundAnOld && nbSuccessiveFailures < 5; i++) {
 			URL feedUrl = null;
 			try {
-				feedUrl = new URL(baseURL + "feed.php?mode=m&l=1&basic=1" + "&field=all&srch=" + keyword + "&n="
-						+ requestSize + "&o=" + i * requestSize);
+				if (forumNumber != -1) {
+					feedUrl = new URL(baseURL + "feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&field=all&srch="
+							+ keyword + "&n=" + requestSize + "&o=" + i * requestSize);
+				} else {
+					feedUrl = new URL(baseURL + "feed.php?mode=m&l=1&basic=1" + "&field=all&srch=" + keyword + "&n="
+							+ requestSize + "&o=" + i * requestSize);
+				}
 
 				System.out.println(feedUrl);
 				SyndFeed feed = input.build(new XmlReader(feedUrl));
@@ -144,6 +150,13 @@ public class PolarsysForumsLogger {
 	public PolarsysForumsLogger setSilentFail(boolean val) {
 		this.silentFail = val;
 		return this;
+	}
+
+	@Override
+	public Collection<Post> collectPosts(int forumNumber, Date daysAgo) {
+		this.forumNumber = forumNumber;
+		this.daysAgo = daysAgo;
+		return forumLog();
 	}
 
 }

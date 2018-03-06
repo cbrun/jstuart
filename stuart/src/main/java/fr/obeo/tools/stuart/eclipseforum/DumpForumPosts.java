@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,12 +31,17 @@ public class DumpForumPosts {
 
 	private static Gson gson = new GsonBuilder().setDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz").setPrettyPrinting()
 			.create();
+	private ForumLogger postSupplier;
 
-	public static List<Post> updateOnProject(int forumID, String prjName) throws IOException {
+	public DumpForumPosts(ForumLogger postSupplier) {
+		this.postSupplier = postSupplier;
+	}
+
+	public List<Post> updateOnProject(int forumID, String prjName) throws IOException {
 		return updateOnProject(forumID, prjName, Lists.newArrayList());
 	}
 
-	public static List<Post> updateOnProject(int forumID, String prjName, List<Post> newPosts2) throws IOException {
+	public List<Post> updateOnProject(int forumID, String prjName, List<Post> newPosts2) throws IOException {
 		List<Post> alreadyThere = getPosts(prjName);
 		Date mostRecent = null;
 		Map<String, Post> postByKey = Maps.newLinkedHashMap();
@@ -54,7 +60,7 @@ public class DumpForumPosts {
 			mostRecent = Dates.getDateXDaysAgo(3650);
 		}
 		System.out.println("[" + prjName + "] old posts:" + postByKey.size());
-		Collection<Post> newPosts = new EclipseForumsLogger(forumID, mostRecent).forumLog();
+		Collection<Post> newPosts = postSupplier.collectPosts(forumID, mostRecent);
 		newPosts2.addAll(newPosts);
 		System.out.println("[" + prjName + "] new posts:" + newPosts.size() + " before:" + postByKey.values().size());
 		for (Post post : newPosts) {
@@ -71,7 +77,7 @@ public class DumpForumPosts {
 
 	}
 
-	private static void dumpOneProject(int nbWeeks, int forumID, String prjName) throws IOException {
+	private void dumpOneProject(int nbWeeks, int forumID, String prjName) throws IOException {
 
 		Date date = new Date();
 		Calendar c = Calendar.getInstance();
@@ -92,12 +98,12 @@ public class DumpForumPosts {
 
 		System.err.println(f.format(daysAgo));
 
-		Collection<Post> posts = new EclipseForumsLogger(forumID, daysAgo).forumLog();
+		Collection<Post> posts = new EclipseForumsLogger().collectPosts(forumID, daysAgo);
 
 		savePosts(prjName, posts);
 	}
 
-	public static void savePosts(String prjName, Collection<Post> posts) throws IOException {
+	public void savePosts(String prjName, Collection<Post> posts) throws IOException {
 		File dataFile = getPostsDataFile(prjName);
 		Files.createParentDirs(dataFile);
 
@@ -110,17 +116,17 @@ public class DumpForumPosts {
 		}
 	}
 
-	private static File getPostsDataFile(String prjName) {
+	private File getPostsDataFile(String prjName) {
 		String outFolder = System.getProperty("user.dir") + "/results/";
 		File dataFile = new File(outFolder + prjName + ".json");
 		return dataFile;
 	}
 
-	public static Collection<Post> getSentimentsPosts(String prjName) {
+	public Collection<Post> getSentimentsPosts(String prjName) {
 		return getPosts(prjName + "-sentiments");
 	}
 
-	public static List<Post> getPosts(String prjName) {
+	public List<Post> getPosts(String prjName) {
 		File dataFile = getPostsDataFile(prjName);
 		try {
 			return gson.fromJson(new InputStreamReader(new FileInputStream(dataFile), "UTF-8"),

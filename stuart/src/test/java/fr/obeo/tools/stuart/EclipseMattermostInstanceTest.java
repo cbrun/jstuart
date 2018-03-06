@@ -89,8 +89,8 @@ public class EclipseMattermostInstanceTest {
 
 		List<Post> posts = Lists.newArrayList();
 		// forum WTP and Webtools incubator
-		posts.addAll(new EclipseForumsLogger(88, daysAgo).forumLog());
-		posts.addAll(new EclipseForumsLogger(114, daysAgo).forumLog());
+		posts.addAll(new EclipseForumsLogger().collectPosts(88, daysAgo));
+		posts.addAll((new EclipseForumsLogger().collectPosts(114, daysAgo)));
 
 		// log stackoverflow posts with given keywords
 		posts.addAll(
@@ -139,7 +139,7 @@ public class EclipseMattermostInstanceTest {
 		EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_virgo" + "_trace.json"));
 		Map<String, Date> trace = traceFile.load();
 
-		for (Post post : new EclipseForumsLogger(159, daysAgo).forumLog()) {
+		for (Post post : new EclipseForumsLogger().collectPosts(159, daysAgo)) {
 			send(virgoMainEmitter, trace, post);
 		}
 
@@ -188,7 +188,7 @@ public class EclipseMattermostInstanceTest {
 		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/packaging/job/epp-logging.head/", daysAgo)
 				.getBuildResults());
 
-		for (Post post : new EclipseForumsLogger(69, daysAgo).forumLog()) {
+		for (Post post : new EclipseForumsLogger().collectPosts(69, daysAgo)) {
 
 			if (post.getSubject() != null && post.getSubject().contains("[aeri]")) {
 				posts.add(post);
@@ -239,12 +239,12 @@ public class EclipseMattermostInstanceTest {
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-			posts.addAll(new EclipseForumsLogger(11, daysAgo).forumLog());
-			posts.addAll(new EclipseForumsLogger(116, daysAgo).forumLog());
-			posts.addAll(new EclipseForumsLogger(106, daysAgo).forumLog());
-			posts.addAll(new EclipseForumsLogger(12, daysAgo).forumLog());
-			posts.addAll(new EclipseForumsLogger(100, daysAgo).forumLog());
-			posts.addAll(new EclipseForumsLogger(15, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger().collectPosts(11, daysAgo));
+			posts.addAll(new EclipseForumsLogger().collectPosts(116, daysAgo));
+			posts.addAll(new EclipseForumsLogger().collectPosts(106, daysAgo));
+			posts.addAll(new EclipseForumsLogger().collectPosts(12, daysAgo));
+			posts.addAll(new EclipseForumsLogger().collectPosts(100, daysAgo));
+			posts.addAll(new EclipseForumsLogger().collectPosts(15, daysAgo));
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
@@ -317,7 +317,7 @@ public class EclipseMattermostInstanceTest {
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-			posts.addAll(new EclipseForumsLogger(80, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger().collectPosts(80, daysAgo));
 			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-cdt"), daysAgo)
 					.setIcon(SO_ICON).get());
 
@@ -360,7 +360,7 @@ public class EclipseMattermostInstanceTest {
 							.bugzillaLog(3, Sets.newHashSet("Package-Drone")));
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://github.com/eclipse/packagedrone.git", "https://github.com/eclipse/packagedrone/commit/"));
-			posts.addAll(new EclipseForumsLogger(318, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger().collectPosts(318, daysAgo));
 			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/package-drone/", daysAgo).getBuildResults());
 
 			Collections.sort(posts, new Comparator<Post>() {
@@ -417,7 +417,7 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://git.eclipse.org/r/sirius/org.eclipse.sirius",
 					"https://git.eclipse.org/c/sirius/org.eclipse.sirius.git/commit/?id="));
-			posts.addAll(new EclipseForumsLogger(262, daysAgo).forumLog());
+			posts.addAll(new EclipseForumsLogger().collectPosts(262, daysAgo));
 
 			posts.addAll(
 					new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
@@ -461,7 +461,7 @@ public class EclipseMattermostInstanceTest {
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-			posts.addAll(new EclipseForumsLogger(20, daysAgo).setBaseURL("https://polarsys.org/forums/").forumLog());
+			posts.addAll(new EclipseForumsLogger().setBaseURL("https://polarsys.org/forums/").collectPosts(20, daysAgo));
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {

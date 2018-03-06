@@ -7,11 +7,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Document.OutputSettings;
+import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 
 import com.google.common.base.Splitter;
@@ -23,21 +24,19 @@ import com.rometools.rome.io.XmlReader;
 
 import fr.obeo.tools.stuart.Post;
 
-public class EclipseForumsLogger {
+public class EclipseForumsLogger implements ForumLogger {
 
 	private static final int MAX_REQUESTS = 100000;
 	private static final String FORUM_ICON = "https://i.imgur.com/w8HsmQW.png";
-	private int forumNumber;
+	private int forumNumber = -1;
 	private Date daysAgo;
 
 	private boolean silentFail = true;
 
 	private String baseURL = "http://www.eclipse.org/forums/";
 
-	public EclipseForumsLogger(int forumNumber, Date daysAgo) {
+	public EclipseForumsLogger() {
 		super();
-		this.forumNumber = forumNumber;
-		this.daysAgo = daysAgo;
 	}
 
 	public EclipseForumsLogger setBaseURL(String newURL) {
@@ -144,6 +143,13 @@ public class EclipseForumsLogger {
 	public EclipseForumsLogger setSilentFail(boolean val) {
 		this.silentFail = val;
 		return this;
+	}
+
+	@Override
+	public Collection<Post> collectPosts(int forumNumber, Date daysAgo) {
+		this.forumNumber = forumNumber;
+		this.daysAgo = daysAgo;
+		return forumLog();
 	}
 
 }
