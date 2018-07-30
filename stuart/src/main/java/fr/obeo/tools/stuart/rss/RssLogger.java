@@ -1,7 +1,6 @@
 package fr.obeo.tools.stuart.rss;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,6 +15,7 @@ import org.jsoup.safety.Whitelist;
 import com.google.common.base.Splitter;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
@@ -44,7 +44,14 @@ public class RssLogger {
 		boolean foundAnOld = false;
 		for (int i = 0; i < 1 && !foundAnOld; i++) {
 			try {
-				SyndFeed feed = input.build(new XmlReader(feedUrl));
+				SyndFeed feed = null;
+				try (XmlReader xmlReader = new XmlReader(feedUrl)) {
+					feed = input.build(xmlReader);
+				}
+				catch(IOException e) {
+					// problem reading the stream or URL
+					feed = new SyndFeedImpl();
+				}
 				Date publishedDate =feed.getPublishedDate();				
 				for (SyndEntry entry : feed.getEntries()) {
 					 publishedDate = entry.getPublishedDate();
@@ -83,13 +90,9 @@ public class RssLogger {
 					}
 
 				}
-			} catch (MalformedURLException e) {
-				throw new RuntimeException(e);
 			} catch (IllegalArgumentException e) {
 				throw new RuntimeException(e);
 			} catch (FeedException e) {
-				throw new RuntimeException(e);
-			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
