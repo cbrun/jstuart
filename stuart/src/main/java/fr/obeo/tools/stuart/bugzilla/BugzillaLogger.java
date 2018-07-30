@@ -43,12 +43,12 @@ public class BugzillaLogger {
 	}
 
 	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products) throws MalformedURLException {
-		return bugzillaLog(nbDaysAgo, products, Collections.EMPTY_SET, Collections.EMPTY_SET);
+		return bugzillaLog(nbDaysAgo, Collections.EMPTY_SET, products, Collections.EMPTY_SET, Collections.EMPTY_SET);
 	}
 
 	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products, Collection<String> components)
 			throws MalformedURLException {
-		return bugzillaLog(nbDaysAgo, products, components, Collections.EMPTY_SET);
+		return bugzillaLog(nbDaysAgo, Collections.EMPTY_SET, products, components, Collections.EMPTY_SET);
 	}
 
 	public Issue find(String key) {
@@ -70,7 +70,7 @@ public class BugzillaLogger {
 		return found;
 	}
 
-	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> products, Collection<String> components,
+	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> classifications, Collection<String> products, Collection<String> components,
 			Collection<String> keywords) throws MalformedURLException {
 		List<Post> posts = new ArrayList<Post>();
 		BugzillaHttpSession session = new BugzillaHttpSession();
@@ -81,6 +81,9 @@ public class BugzillaLogger {
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.DATE, -nbDaysAgo);
 			Date daysAgo = cal.getTime();
+			for (String classification : classifications) {
+				searchData.add("classification", classification);
+			}
 			for (String productName : products) {
 				searchData.add("product", productName);
 			}
