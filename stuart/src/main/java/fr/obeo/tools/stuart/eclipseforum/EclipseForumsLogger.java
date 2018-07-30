@@ -56,7 +56,7 @@ public class EclipseForumsLogger implements ForumLogger {
 				feedUrl = new URL(baseURL + "feed.php?mode=m&l=1&basic=1&frm=" + forumNumber + "&n=" + requestSize
 						+ "&o=" + i * requestSize);
 
-				System.out.println(feedUrl);
+				System.out.println("Read forum: " + feedUrl);
 				SyndFeed feed = input.build(new XmlReader(feedUrl));
 				for (SyndEntry entry : feed.getEntries()) {
 					if (entry.getPublishedDate().after(daysAgo)) {

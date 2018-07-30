@@ -2,8 +2,8 @@ package fr.obeo.tools.stuart;
 
 import java.io.File;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -72,40 +72,44 @@ public class EclipseMattermostInstanceTest {
 
 	/** Sends events to the webtools channel */
 	@Test
-	public void sendEventsToWebtoolsChans() throws Exception {
+	public void sendEventsToWebtoolsChannels() throws Exception {
 		String storage = System.getenv("WORKSPACE");
 		if (storage == null) {
 			storage = ".";
 		}
-
 		// channels
 		String webtoolsChannel = System.getenv("WEBTOOLS-BOTS-CHANNEL");
+		if (webtoolsChannel == null) {
+			webtoolsChannel = "webtools-bots";
+		}
 
 		MattermostEmitter webToolsEmitter = new MattermostEmitter("https", host, webtoolsChannel);
 
-		Date daysAgo = getDateXDaysAgo(3);
+		int daysAgo = 3;
+		Date dateAgo = getDateXDaysAgo(daysAgo);
 		EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_webtools" + "_trace.json"));
 		Map<String, Date> trace = traceFile.load();
 
 		List<Post> posts = Lists.newArrayList();
 		// forum WTP and Webtools incubator
-		posts.addAll(new EclipseForumsLogger().collectPosts(88, daysAgo));
-		posts.addAll((new EclipseForumsLogger().collectPosts(114, daysAgo)));
+		posts.addAll(new EclipseForumsLogger().collectPosts(88, dateAgo));
+		posts.addAll(new EclipseForumsLogger().collectPosts(114, dateAgo));
+		posts.addAll(new EclipseForumsLogger().collectPosts(251, dateAgo));
 
-		// log stackoverflow posts with given keywords
-		posts.addAll(
-				new RssLogger(new URL("https://stackoverflow.com/feeds/tag/webtools"), daysAgo).setIcon(SO_ICON).get());
-		posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/eclipse-wtp"), daysAgo).setIcon(SO_ICON)
-				.get());
-		posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/jsdt"), daysAgo).setIcon(SO_ICON).get());
+		// log stackoverflow posts with given tags
+		String[] soTags = new String[] {"webtools","eclipse-wtp","jsdt","eclipse-tomcat","eclipse-jsp","eclipse-jsdt","eclipse+tomcat*"};
+		for (String tag: soTags) {
+			Collection<Post> feedLogger = new RssLogger(new URL("https://stackoverflow.com/feeds/tag/" + tag), dateAgo).setIcon(SO_ICON).get();
+			posts.addAll(
+					feedLogger);
+		}
 
 		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
-				.bugzillaLog(3, Sets.newHashSet("JSDT", "WTP Source Editing", "WTP Java EE Tools", "WTP Common Tools",
-						"Web Tools", "Java Server Faces")));
+				.bugzillaLog(daysAgo, Sets.newHashSet("WebTools"), Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST));
 
 		// log git commits
 		posts.addAll(new GerritLogger("https://git.eclipse.org/r").groupReviews(false)
-				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "webtools.sourceediting", "webtools.releng"), 1));
+				.getPatchsets(Sets.newHashSet("jsdt/webtools.jsdt", "sourceediting/webtools.sourceediting", "webtools-common/webtools.common", "servertools/webtools.servertools", "webtools/webtools.releng", "jeetools/webtools.javaee"), 1));
 
 		Collections.sort(posts, new Comparator<Post>() {
 			public int compare(Post m1, Post m2) {
@@ -121,7 +125,7 @@ public class EclipseMattermostInstanceTest {
 		traceFile.save(trace);
 	}
 
-	/** Sends events to the webtools channel */
+	/** Sends events to the virgo channel */
 	@Test
 	public void sendEventsToVirgoChan() throws Exception {
 		String storage = System.getenv("WORKSPACE");
@@ -484,7 +488,7 @@ public class EclipseMattermostInstanceTest {
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
 		if (!trace.containsKey(post.getKey())) {
 			try {
-				System.err.println("Sending :" + post.getKey());
+				System.err.println("Sending : " + post.getKey());
 				emitter.accept(MattermostPost.fromGenericPost(post));
 				trace.put(post.getKey(), new Date());
 				Thread.sleep(500);
