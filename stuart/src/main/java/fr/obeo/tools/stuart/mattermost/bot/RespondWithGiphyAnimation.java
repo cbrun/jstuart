@@ -36,7 +36,7 @@ public class RespondWithGiphyAnimation implements ReactOnMessage {
 
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
-		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
+		if (!p.isFromWebhook() && isNotFromBotOrIsDiagnostic(bot, p)) {
 			if (p.getMessage() != null && p.getMessage().trim().startsWith("gif:")) {
 				String searchTerms = p.getMessage().trim().substring(4);
 				if (searchTerms != null && searchTerms.trim().length() > 0) {

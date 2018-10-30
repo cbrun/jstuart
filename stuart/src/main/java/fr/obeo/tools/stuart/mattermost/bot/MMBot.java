@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,11 +56,13 @@ class LoginMsg {
 
 public class MMBot {
 
+	private static final String API_VERSION = "v4";
+
 	public static MMBot logIn(OkHttpClient client, String host, String userMail, String pwd) throws IOException {
 		Gson gson = new GsonBuilder().disableHtmlEscaping()
 				.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting().create();
 		String body = gson.toJson(new LoginMsg(userMail, pwd));
-		String url = host + "api/v3/users/login";
+		String url = host + "api/" + API_VERSION + "/users/login";
 		Request request = new Request.Builder().url(url)
 				.post(RequestBody.create(MediaType.parse("application/json"), body)).build();
 		Response response = client.newCall(request).execute();
@@ -82,8 +87,7 @@ public class MMBot {
 							bot.logOut();
 						} catch (IOException e) {
 							/*
-							 * could not log out but the JVM is being shot down
-							 * anyway.
+							 * could not log out but the JVM is being shot down anyway.
 							 */
 						}
 					}
@@ -95,9 +99,17 @@ public class MMBot {
 			 * 
 			 * 
 			 */
-			MInitialLoad init = bot.getResource(host + "api/v3/users/initial_load", MInitialLoad.class);
-			if (init.getTeams().iterator().hasNext() && Strings.isNullOrEmpty(u.getTeamId())) {
-				u.setTeamId(init.getTeams().iterator().next().getId());
+			MInitialLoad init = bot.getResource(host + "api/" + API_VERSION + "/users/initial_load",
+					MInitialLoad.class);
+			if (init == null) {
+				for (MTeam t : bot.getTeams()) {
+					u.setTeamId(t.getId());
+				}
+
+			} else {
+				if (init.getTeams().iterator().hasNext() && Strings.isNullOrEmpty(u.getTeamId())) {
+					u.setTeamId(init.getTeams().iterator().next().getId());
+				}
 			}
 			return bot;
 		}
@@ -160,6 +172,8 @@ public class MMBot {
 		// builder.addHeader("X-Requested-With", "XMLHttpRequest");
 		builder.addHeader("Authorization", " Bearer " + this.token);
 		builder.addHeader("Cookie", "MMTOKEN=" + this.token);
+		builder.addHeader("Cookie", "MMAUTHTOKEN=" + this.token);
+		builder.addHeader("Cookie", "MMUSERID=" + this.u.getId());
 		return builder;
 	}
 
@@ -176,14 +190,14 @@ public class MMBot {
 	public void listen() {
 
 		/*
-		 * we might be called by the websocket listener in case of failure in
-		 * order to reconnect.
+		 * we might be called by the websocket listener in case of failure in order to
+		 * reconnect.
 		 */
 		if (!stop.get()) {
 			// Create request for remote resource.
 			// HTTPS => wss, HTTP => WS
-			String wsURL = this.host.replace("https", "wss").replace("http", "ws")
-					+ "api/v3/users/websocket?session_token_index=0&1";
+			String wsURL = this.host.replace("https", "wss").replace("http", "ws") + "api/" + API_VERSION
+					+ "/websocket";
 			System.out.println(wsURL);
 			Request request = getRequest(wsURL);
 
@@ -205,8 +219,8 @@ public class MMBot {
 					MPost msg = gson.fromJson(data, MPost.class);
 					if (msg.getId() == null) {
 						/*
-						 * the json format changed with Mattermost 3.3 with a
-						 * generic "event" which might hold data.
+						 * the json format changed with Mattermost 3.3 with a generic "event" which
+						 * might hold data.
 						 */
 						MEvent event = gson.fromJson(data, MEvent.class);
 						if (event.getData().get("post") != null) {
@@ -221,9 +235,8 @@ public class MMBot {
 								p.setTeamId(u.getTeamId());
 							}
 							/*
-							 * with 3.5 we get the channel ID directly with the
-							 * post whereas previously we got it in the event
-							 * itself.
+							 * with 3.5 we get the channel ID directly with the post whereas previously we
+							 * got it in the event itself.
 							 */
 							if (p.getChannelId() == null) {
 								p.setChannelId(event.getChannelId());
@@ -279,6 +292,19 @@ public class MMBot {
 		reactors.add(r);
 	}
 
+	public MPost respond(MPost p, String message, List<String> fileIds) throws IOException {
+		MPost toSend = new MPost();
+		toSend.setChannelId(p.getChannelId());
+		toSend.setCreateAt(p.getCreateAt() + 100);
+		toSend.setUserId(this.u.getId());
+		toSend.setMessage(message);
+		toSend.setTeamId(p.getTeamId());
+		toSend.setParentId(p.getId());
+		toSend.setRootId(p.getId());
+		toSend.setFileIds(fileIds);
+		return sendPost(toSend);
+	}
+
 	public MPost respond(MPost p, String message) throws IOException {
 		MPost toSend = new MPost();
 		toSend.setChannelId(p.getChannelId());
@@ -288,6 +314,7 @@ public class MMBot {
 		toSend.setTeamId(p.getTeamId());
 		toSend.setParentId(p.getId());
 		toSend.setRootId(p.getId());
+		toSend.setFileIds(Collections.EMPTY_LIST);
 		return sendPost(toSend);
 	}
 
@@ -307,7 +334,8 @@ public class MMBot {
 	}
 
 	public List<MChannel> getChannels(String teamId) throws IOException {
-		ChannelsWrapper r = getResource(host + "api/v3/teams/" + teamId + "/channels/", ChannelsWrapper.class);
+		ChannelsWrapper r = getResource(host + "api/" + API_VERSION + "/teams/" + teamId + "/channels/",
+				ChannelsWrapper.class);
 		if (r != null && r.getChannels() != null) {
 			return r.getChannels();
 		}
@@ -315,7 +343,7 @@ public class MMBot {
 	}
 
 	public MChannel getChannel(String teamId, String channelId) throws IOException {
-		String url = host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/";
+		String url = host + "api/" + API_VERSION + "/teams/" + teamId + "/channels/" + channelId + "/";
 		Response response = client.newCall(getRequest(url)).execute();
 		try (ResponseBody body = response.body()) {
 			if (response.isSuccessful()) {
@@ -328,14 +356,14 @@ public class MMBot {
 		return null;
 	}
 
-	public Map<String, MTeam> getTeams() throws IOException {
-		return getResource(host + "api/v3/teams/all", new TypeToken<Map<String, MTeam>>() {
+	public Collection<MTeam> getTeams() throws IOException {
+		return getResource(host + "api/" + API_VERSION + "/users/me/teams", new TypeToken<Collection<MTeam>>() {
 		}.getType());
 	}
 
 	public Map<String, MPost> getPostsSince(String teamId, String channelId, long since) throws IOException {
 		MessagesWrapper r = getResource(
-				host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/posts/since/" + since,
+				host + "api/" + API_VERSION + "/teams/" + teamId + "/channels/" + channelId + "/posts/since/" + since,
 				MessagesWrapper.class);
 		if (r != null && r.getPosts() != null) {
 			return r.getPosts();
@@ -344,9 +372,8 @@ public class MMBot {
 	}
 
 	public Map<String, MPost> getPosts(String teamId, String channelId, int offset, int limit) throws IOException {
-		MessagesWrapper r = getResource(
-				host + "api/v3/teams/" + teamId + "/channels/" + channelId + "/posts/page/" + offset + "/" + limit,
-				MessagesWrapper.class);
+		MessagesWrapper r = getResource(host + "api/" + API_VERSION + "/teams/" + teamId + "/channels/" + channelId
+				+ "/posts/page/" + offset + "/" + limit, MessagesWrapper.class);
 		if (r.getPosts() != null) {
 			return r.getPosts();
 		}
@@ -354,8 +381,7 @@ public class MMBot {
 	}
 
 	public MPost sendPost(MPost toSend) throws IOException {
-		String url = host + "api/v3/teams/" + toSend.getTeamId() + "/channels/" + toSend.getChannelId()
-				+ "/posts/create";
+		String url = host + "api/" + API_VERSION + "/posts";
 		String dataToSend = gson.toJson(toSend);
 		Request r = auth(new Request.Builder()).url(url)
 				.post(RequestBody.create(MediaType.parse("application/json"), dataToSend)).build();
@@ -378,7 +404,7 @@ public class MMBot {
 	}
 
 	public void update(MPost msg, String message) throws IOException {
-		String url = host + "api/v3/teams/" + msg.getTeamId() + "/channels/" + msg.getChannelId() + "/posts/update";
+		String url = host + "api/" + API_VERSION + "/posts/" + msg.getId() + "/patch";
 		MPost toSend = new MPost();
 		toSend.setChannelId(msg.getChannelId());
 		toSend.setId(msg.getId());
@@ -386,17 +412,18 @@ public class MMBot {
 
 		String dataToSend = gson.toJson(toSend);
 		Request r = auth(new Request.Builder()).url(url)
-				.post(RequestBody.create(MediaType.parse("application/json"), dataToSend)).build();
+				.put(RequestBody.create(MediaType.parse("application/json"), dataToSend)).build();
 		Response response = client.newCall(r).execute();
 		response.body().close();
 	}
 
 	public MFileUpload uploadFile(String teamId, String channelId, File file) throws IOException {
-		String url = host + "api/v3/teams/" + teamId + "/files/upload";
+		String url = host + "api/" + API_VERSION + "/files";
 		MultipartBuilder bodyBuilder = new MultipartBuilder().type(MediaType.parse("multipart/form-data"))
 				.addFormDataPart("channel_id", channelId).addFormDataPart("files", file.getName(),
 						RequestBody.create(MediaType.parse("application/octet-stream"), file));
-		Request r = auth(new Request.Builder()).url(url).post(bodyBuilder.build()).build();
+		RequestBody formBody = bodyBuilder.build();
+		Request r = auth(new Request.Builder()).url(url).post(formBody).build();
 		Response response = client.newCall(r).execute();
 		try (ResponseBody body = response.body()) {
 			if (response.isSuccessful()) {

@@ -5,19 +5,20 @@ import java.util.List;
 
 public class MFileUpload {
 
-	private List<String> filenames = new ArrayList();
+	private List<MFileInfos> fileInfos = new ArrayList();
 
-	public List<String> getFilenames() {
-		return filenames;
+	public List<MFileInfos> getFileInfos() {
+		return fileInfos;
 	}
 
-	public void setFilenames(List<String> filenames) {
-		this.filenames = filenames;
+
+	public void setFileInfos(List<MFileInfos> fileInfos) {
+		this.fileInfos = fileInfos;
 	}
 
 	@Override
 	public String toString() {
-		return "FileUploadMsg [filenames=" + filenames + "]";
+		return "MFileUpload [fileInfos=" + fileInfos + "]";
 	}
 
 }

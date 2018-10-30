@@ -24,7 +24,7 @@ public class RespondWithPullRequestsReferences implements ReactOnMessage {
 
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
-		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
+		if (!p.isFromWebhook() && isNotFromBotOrIsDiagnostic(bot, p)) {
 
 			List<String> pullRequests = findPullRequests(p.getMessage());
 			if (pullRequests.size() > 0) {

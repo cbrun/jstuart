@@ -53,12 +53,12 @@ public class MPost {
 		this.hashtags = hashtags;
 	}
 
-	public List<String> getFilenames() {
-		return filenames;
+	public List<String> getFileIds() {
+		return fileIds;
 	}
 
-	public void setFilenames(List<String> filenames) {
-		this.filenames = filenames;
+	public void setFileIds(List<String> filenames) {
+		this.fileIds = filenames;
 	}
 
 	private long updateAt;
@@ -67,7 +67,7 @@ public class MPost {
 
 	private String hashtags;
 
-	private List<String> filenames = Lists.newArrayList();
+	private List<String> fileIds = Lists.newArrayList();
 
 	private Map<String, String> props;
 
@@ -170,7 +170,7 @@ public class MPost {
 	@Override
 	public String toString() {
 		return "PostFromServer [id=" + id + ", message=" + message + ", channelId=" + channelId + ", userId=" + userId
-				+ ", type=" + type + ", hashtags=" + hashtags + ", props=" + props + ", filenames=" + filenames
+				+ ", type=" + type + ", hashtags=" + hashtags + ", props=" + props + ", filenames=" + fileIds
 				+ ", originalId=" + originalId + ", parentId=" + parentId + ", rootId=" + rootId + ", teamId=" + teamId
 				+ ", pendingPostId=" + pendingPostId + ", updateAt=" + updateAt + ", deleteAt=" + deleteAt
 				+ ", createAt=" + createAt + "]";
@@ -188,6 +188,16 @@ public class MPost {
 
 	public void setAction(ChannelAction action) {
 		this.action = action;
+	}
+	
+	public static MPost createFrom(MPost original,String message) {
+		MPost newOne = new MPost();
+		newOne.setChannelId(original.getChannelId());
+		newOne.setUserId(original.getUserId());
+		newOne.setTeamId(original.getTeamId());
+		newOne.setMessage(message);
+		return newOne;
+		
 	}
 }
 

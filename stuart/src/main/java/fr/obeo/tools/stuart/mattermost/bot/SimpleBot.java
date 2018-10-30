@@ -98,6 +98,7 @@ public class SimpleBot {
 		
 		bot.onMessage(new RespondWithGiphyAnimation());
 		bot.onMessage(new RespondWithPullRequestsReferences());
+		bot.onMessage(new RespondSelfDiagnostic());
 
 		bot.listen();
 

@@ -70,8 +70,8 @@ public class BugzillaLogger {
 		return found;
 	}
 
-	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> classifications, Collection<String> products, Collection<String> components,
-			Collection<String> keywords) throws MalformedURLException {
+	public Collection<Post> bugzillaLog(int nbDaysAgo, Collection<String> classifications, Collection<String> products,
+			Collection<String> components, Collection<String> keywords) throws MalformedURLException {
 		List<Post> posts = new ArrayList<Post>();
 		BugzillaHttpSession session = new BugzillaHttpSession();
 		session.setBaseUrl(new URL(this.baseURL));
@@ -181,7 +181,7 @@ public class BugzillaLogger {
 		return bugIds;
 	}
 
-	private static class BugOrCommentRef {
+	public static class BugOrCommentRef {
 
 		public String id;
 
@@ -232,15 +232,18 @@ public class BugzillaLogger {
 				session.setBugzillaBugClass(DefaultIssue.class);
 
 				if (session.open()) {
-					for (BugOrCommentRef key : potentialIds) {
 
-						Issue found = session.getIssue(key.id);
-						if (found != null && found.getReporter() != null) {
+					for (BugOrCommentRef key : potentialIds) {
+						DefaultSearchData searchData = new DefaultSearchData();
+						searchData.add("bug_id", key.id);
+
+						Iterable<Issue> result = session.searchBugs(searchData, null);
+						for (Issue issue : result) {
 							Comment c = null;
 							int commentNumber = key.getCommentNumber();
 							if (commentNumber != -1) {
 								int i = 0;
-								Iterator<Comment> it = found.getComments().iterator();
+								Iterator<Comment> it = issue.getComments().iterator();
 								while (it.hasNext() && c == null) {
 									Comment cur = it.next();
 									if (i == commentNumber) {
@@ -250,10 +253,17 @@ public class BugzillaLogger {
 								}
 							}
 							if (c != null) {
-								comments.add(CommentWithIssue.from(c, found,commentNumber));
+								comments.add(CommentWithIssue.from(c, issue, commentNumber));
 							} else {
-								bugs.add(found);
+								bugs.add(issue);
 							}
+						}
+					}
+
+					for (BugOrCommentRef key : potentialIds) {
+
+						Issue found = session.getIssue(key.id);
+						if (found != null && found.getReporter() != null) {
 						}
 					}
 				}

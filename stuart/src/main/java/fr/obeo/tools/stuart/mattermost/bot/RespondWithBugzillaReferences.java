@@ -18,7 +18,7 @@ public class RespondWithBugzillaReferences implements ReactOnMessage {
 
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
-		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
+		if (!p.isFromWebhook() && isNotFromBotOrIsDiagnostic(bot, p)) {
 			List<Issue> issues = new ArrayList<Issue>();
 			List<CommentWithIssue> comments = new ArrayList<CommentWithIssue>();
 

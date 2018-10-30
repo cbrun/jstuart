@@ -27,7 +27,7 @@ public class RespondWithTwitterReferences implements ReactOnMessage {
 
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
-		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
+		if (!p.isFromWebhook() && isNotFromBotOrIsDiagnostic(bot, p)) {
 			List<Status> tweets = findTweets(p.getMessage());
 			if (tweets.size() > 0) {
 				for (Status status2 : tweets) {
@@ -39,6 +39,8 @@ public class RespondWithTwitterReferences implements ReactOnMessage {
 			}
 		}
 	}
+
+
 
 	private List<Status> findTweets(String content) {
 

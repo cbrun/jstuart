@@ -19,7 +19,7 @@ public class RespondWithGerritReferences implements ReactOnMessage {
 
 	@Override
 	public void onMessage(MMBot bot, MPost p) throws IOException {
-		if (!p.isFromWebhook() && !bot.getUser().getId().equals(p.getUserId())) {
+		if (!p.isFromWebhook() && isNotFromBotOrIsDiagnostic(bot, p)) {
 			List<PatchSet> patchsets = gerrit.findGerritPatchsets(p.getMessage());
 			if (patchsets.size() > 0) {
 				if (patchsets.size() == 1) {
