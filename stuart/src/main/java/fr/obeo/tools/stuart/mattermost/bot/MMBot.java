@@ -167,13 +167,7 @@ public class MMBot {
 	}
 
 	private Builder auth(Builder builder) {
-		// builder.addHeader("X-Version-Id", "1.4.0.1454499231");
-		// builder.addHeader("X-MM-TokenIndex", "0");
-		// builder.addHeader("X-Requested-With", "XMLHttpRequest");
 		builder.addHeader("Authorization", " Bearer " + this.token);
-		builder.addHeader("Cookie", "MMTOKEN=" + this.token);
-		builder.addHeader("Cookie", "MMAUTHTOKEN=" + this.token);
-		builder.addHeader("Cookie", "MMUSERID=" + this.u.getId());
 		return builder;
 	}
 
@@ -295,7 +289,8 @@ public class MMBot {
 	public MPost respond(MPost p, String message, List<String> fileIds) throws IOException {
 		MPost toSend = new MPost();
 		toSend.setChannelId(p.getChannelId());
-		toSend.setCreateAt(p.getCreateAt() + 100);
+		toSend.setCreateAt(0);
+		toSend.setUpdateAt(p.getCreateAt() + 100);
 		toSend.setUserId(this.u.getId());
 		toSend.setMessage(message);
 		toSend.setTeamId(p.getTeamId());
@@ -308,7 +303,8 @@ public class MMBot {
 	public MPost respond(MPost p, String message) throws IOException {
 		MPost toSend = new MPost();
 		toSend.setChannelId(p.getChannelId());
-		toSend.setCreateAt(p.getCreateAt() + 100);
+		toSend.setCreateAt(0);
+		toSend.setUpdateAt(p.getCreateAt() + 100);
 		toSend.setUserId(this.u.getId());
 		toSend.setMessage(message);
 		toSend.setTeamId(p.getTeamId());
