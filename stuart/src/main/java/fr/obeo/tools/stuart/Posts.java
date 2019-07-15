@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -60,7 +61,8 @@ public class Posts {
 			header.createCell(3).setCellValue("Creation Date");
 			header.createCell(4).setCellValue("URL");
 			header.createCell(5).setCellValue("Thread ID");
-			header.createCell(6).setCellValue("Content");
+			header.createCell(6).setCellValue("First post?");
+			header.createCell(7).setCellValue("Content");
 
 			// author; repo; last_update; first_update; nb_commits; url
 			// CellStyle cs = wb.createCellStyle();
@@ -71,10 +73,28 @@ public class Posts {
 			hlink_font.setUnderline(Font.U_SINGLE);
 			hlink_font.setColor(IndexedColors.BLUE.getIndex());
 			hlink_style.setFont(hlink_font);
-			
+
 			CellStyle dateStyle = wb.createCellStyle();
 			dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy-MM-dd HH:mm:ss"));
-			
+
+			Multimap<String, Post> postsByAuthors = HashMultimap.create();
+			for (Post h : posts) {
+				postsByAuthors.put(h.getAuthor(), h);
+			}
+			Set<Post> oldestPostsForItsAuthor = Sets.newLinkedHashSet();
+			for (String author : postsByAuthors.keySet()) {
+				if (postsByAuthors.get(author).iterator().hasNext()) {
+					Post oldest = postsByAuthors.get(author).iterator().next();
+					for (Post p : postsByAuthors.get(author)) {
+						if (p.getCreatedAt().before(oldest.getCreatedAt())) {
+							oldest = p;
+						}
+					}
+					oldestPostsForItsAuthor.add(oldest);
+				}
+
+			}
+
 			for (Post h : posts) {
 				nbRow++;
 				// Create a row and put some cells in it. Rows are 0 based.
@@ -88,7 +108,7 @@ public class Posts {
 				row.createCell(2).setCellValue(h.getSubject());
 
 				Cell lastUpdateC = row.createCell(3);
-				
+
 				lastUpdateC.setCellStyle(dateStyle);
 				lastUpdateC.setCellValue(h.getCreatedAt());
 
@@ -96,13 +116,18 @@ public class Posts {
 				Hyperlink link = createHelper.createHyperlink(Hyperlink.LINK_URL);
 				link.setAddress(h.getKey());
 				hrefCell.setHyperlink(link);
-			
+
 				hrefCell.setCellStyle(hlink_style);
 				hrefCell.setCellValue(h.getKey());
 
 				row.createCell(5).setCellValue(h.getThreadID());
+				if (oldestPostsForItsAuthor.contains(h)) {
+					row.createCell(6).setCellValue("1");
+				} else {
+					row.createCell(6).setCellValue("0");
+				}
 
-				Cell firstUpdateC = row.createCell(6);
+				Cell firstUpdateC = row.createCell(7);
 				if (h.getMarkdownBody().length() <= 3000) {
 					firstUpdateC.setCellValue(h.getMarkdownBody());
 				} else {
