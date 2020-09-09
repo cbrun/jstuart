@@ -5,6 +5,9 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 public class Post {
 
 	private String key;
@@ -28,7 +31,52 @@ public class Post {
 
 	private boolean isQuote = true;
 
+	private String projectName = null;
+
 	private String threadID;
+
+	private String fullHTMLBody;
+
+	private String simpleHTMLBody;
+
+	public String getSimpleHTMLBody() {
+		return simpleHTMLBody;
+	}
+
+	public void setSimpleHTMLBody(String simpleHTMLBody) {
+		this.simpleHTMLBody = simpleHTMLBody;
+	}
+
+	private Collection<PostAttachment> attachments;
+
+	private String originalPostID;
+
+	public String getOriginalPostID() {
+		return originalPostID;
+	}
+
+	public void setOriginalPostID(String originalPostID) {
+		this.originalPostID = originalPostID;
+	}
+
+	public Collection<PostAttachment> getAttachments() {
+		if (attachments == null) {
+			attachments = Lists.newArrayList();
+		}
+		return attachments;
+	}
+
+	public void setAttachments(Collection<PostAttachment> attachments) {
+		this.attachments = attachments;
+	}
+
+	public String getFullHTMLBody() {
+		return fullHTMLBody;
+	}
+
+	public void setFullHTMLBody(String fullHTMLBody) {
+		this.fullHTMLBody = fullHTMLBody;
+	}
 
 	public String getThreadID() {
 		return threadID;
@@ -44,8 +92,7 @@ public class Post {
 
 	/**
 	 * 
-	 * @param key
-	 *            must be different for two differents posts. An URL or URI is a
+	 * @param key must be different for two differents posts. An URL or URI is a
 	 *            good option here.
 	 */
 	public Post(String key) {
@@ -93,6 +140,14 @@ public class Post {
 
 	public Collection<String> getMediaURLs() {
 		return mediaURLs;
+	}
+
+	public String getProjectName() {
+		return projectName;
+	}
+
+	public void setProjectName(String projectName) {
+		this.projectName = projectName;
 	}
 
 	public Post addURLs(String... urls) {

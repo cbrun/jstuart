@@ -7,15 +7,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
+import org.jsoup.select.Elements;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
@@ -23,6 +25,7 @@ import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 
 import fr.obeo.tools.stuart.Post;
+import fr.obeo.tools.stuart.PostAttachment;
 
 public class EclipseForumsLogger implements ForumLogger {
 
@@ -33,6 +36,8 @@ public class EclipseForumsLogger implements ForumLogger {
 
 	private boolean silentFail = true;
 
+	private boolean forceDownload = false;
+
 	private String baseURL = "http://www.eclipse.org/forums/";
 
 	public EclipseForumsLogger() {
@@ -42,6 +47,10 @@ public class EclipseForumsLogger implements ForumLogger {
 	public EclipseForumsLogger setBaseURL(String newURL) {
 		this.baseURL = newURL;
 		return this;
+	}
+
+	public void setForceDownload(boolean forceDownload) {
+		this.forceDownload = forceDownload;
 	}
 
 	public Collection<Post> forumLog() {
@@ -59,7 +68,9 @@ public class EclipseForumsLogger implements ForumLogger {
 				System.out.println("Read forum: " + feedUrl);
 				SyndFeed feed = input.build(new XmlReader(feedUrl));
 				for (SyndEntry entry : feed.getEntries()) {
-					if (entry.getPublishedDate().after(daysAgo)) {
+					if (entry.getPublishedDate().after(daysAgo)
+							|| "https://www.eclipse.org/forums/index.php/mv/msg/1101916/1820540/#msg_1820540"
+									.equals(entry.getUri())) {
 						String html = entry.getDescription().getValue();
 						Document doc = Jsoup.parse(html);
 						doc.getElementsByClass("pre").remove();
@@ -82,17 +93,25 @@ public class EclipseForumsLogger implements ForumLogger {
 								.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
 										entry.getAuthor(), FORUM_ICON, entry.getPublishedDate())
 								.addURLs(entry.getUri());
-						Element img = Jsoup.parse(html).getElementsByTag("img").first();
-						if (img != null && img.attr("src") != null) {
-							String href = img.attr("src");
-							if (!href.startsWith("http")) {
-								href = "https://www.eclipse.org/forums/" + href;
+
+						newPost.setSimpleHTMLBody(html);
+
+						Elements imgs = Jsoup.parse(html).getElementsByTag("img");
+						for (Element img : imgs) {
+							if (img != null && img.attr("src") != null) {
+								String href = img.attr("src");
+								if (!href.startsWith("http")) {
+									href = "https://www.eclipse.org/forums/" + href;
+								}
+								newPost.addMediaURLs(href);
 							}
-							newPost.addMediaURLs(href);
 						}
+
 						posts.add(newPost);
 					} else {
-						foundAnOld = true;
+						if (!forceDownload) {
+							foundAnOld = true;
+						}
 					}
 
 				}

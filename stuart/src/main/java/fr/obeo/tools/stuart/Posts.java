@@ -20,7 +20,10 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -55,14 +58,18 @@ public class Posts {
 
 			int nbRow = 0;
 			Row header = sheet.createRow(nbRow);
-			header.createCell(0).setCellValue("Author");
-			header.createCell(1).setCellValue("InTeam?");
-			header.createCell(2).setCellValue("Subject");
-			header.createCell(3).setCellValue("Creation Date");
-			header.createCell(4).setCellValue("URL");
-			header.createCell(5).setCellValue("Thread ID");
-			header.createCell(6).setCellValue("First post?");
-			header.createCell(7).setCellValue("Content");
+			header.createCell(0).setCellValue("Project Name");
+			header.createCell(1).setCellValue("Author");
+			header.createCell(2).setCellValue("InTeam?");
+			header.createCell(3).setCellValue("Subject");
+			header.createCell(4).setCellValue("Creation Date");
+			header.createCell(5).setCellValue("URL");
+			header.createCell(6).setCellValue("Thread ID");
+			header.createCell(7).setCellValue("First post?");
+			header.createCell(8).setCellValue("Content");
+			header.createCell(9).setCellValue("Simple HTML");
+			header.createCell(10).setCellValue("Attachments");
+			header.createCell(11).setCellValue("MsgID");
 
 			// author; repo; last_update; first_update; nb_commits; url
 			// CellStyle cs = wb.createCellStyle();
@@ -101,18 +108,22 @@ public class Posts {
 				Row row = sheet.createRow(nbRow);
 
 				// Create a cell and put a value in it.
-				Cell authorCell = row.createCell(0);
+
+				Cell projectName = row.createCell(0);
+				projectName.setCellValue(h.getProjectName());
+
+				Cell authorCell = row.createCell(1);
 				authorCell.setCellValue(h.getAuthor());
 
-				row.createCell(1).setCellValue(teamAuthors.contains(h.getAuthor()));
-				row.createCell(2).setCellValue(h.getSubject());
+				row.createCell(2).setCellValue(teamAuthors.contains(h.getAuthor()));
+				row.createCell(3).setCellValue(h.getSubject());
 
-				Cell lastUpdateC = row.createCell(3);
+				Cell lastUpdateC = row.createCell(4);
 
 				lastUpdateC.setCellStyle(dateStyle);
 				lastUpdateC.setCellValue(h.getCreatedAt());
 
-				Cell hrefCell = row.createCell(4);
+				Cell hrefCell = row.createCell(5);
 				Hyperlink link = createHelper.createHyperlink(Hyperlink.LINK_URL);
 				link.setAddress(h.getKey());
 				hrefCell.setHyperlink(link);
@@ -120,20 +131,39 @@ public class Posts {
 				hrefCell.setCellStyle(hlink_style);
 				hrefCell.setCellValue(h.getKey());
 
-				row.createCell(5).setCellValue(h.getThreadID());
+				row.createCell(6).setCellValue(h.getThreadID());
+
 				if (oldestPostsForItsAuthor.contains(h)) {
-					row.createCell(6).setCellValue("1");
+					row.createCell(7).setCellValue("1");
 				} else {
-					row.createCell(6).setCellValue("0");
+					row.createCell(7).setCellValue("0");
 				}
 
-				Cell firstUpdateC = row.createCell(7);
-				if (h.getMarkdownBody().length() <= 3000) {
+				Cell firstUpdateC = row.createCell(8);
+				if (h.getMarkdownBody().length() <= 32760) {
 					firstUpdateC.setCellValue(h.getMarkdownBody());
 				} else {
-					firstUpdateC.setCellValue("...");
+					firstUpdateC.setCellValue(h.getMarkdownBody().substring(0, 32760));
+					System.err.println("Text truncated for post " + h.getKey());					
 				}
+				Cell htmlContent = row.createCell(9);
+				htmlContent.setCellValue(h.getSimpleHTMLBody());
+
+				Cell attachments = row.createCell(10);
+				String att = Joiner.on('\n')
+						.join(Iterables.transform(h.getAttachments(), new Function<PostAttachment, String>() {
+
+							@Override
+							public String apply(PostAttachment input) {
+								return input.getLocalFileName();
+							}
+						}));
+				attachments.setCellValue(att);
+
 				lastCellReference = new CellReference(row.getRowNum(), firstUpdateC.getColumnIndex()).formatAsString();
+
+				Cell msgID = row.createCell(11);
+				msgID.setCellValue(h.getOriginalPostID());
 
 			}
 			System.out.println("nb rows" + nbRow);
@@ -145,6 +175,9 @@ public class Posts {
 			sheet.autoSizeColumn(4); // adjust width of the second column
 			sheet.autoSizeColumn(5); // adjust width of the second column
 			sheet.autoSizeColumn(6); // adjust width of the second column
+			sheet.autoSizeColumn(7); // adjust width of the second column
+			sheet.autoSizeColumn(8); // adjust width of the second column
+			sheet.autoSizeColumn(9); // adjust width of the second column
 
 			sheet.setAutoFilter(CellRangeAddress.valueOf("A1:" + lastCellReference));
 
