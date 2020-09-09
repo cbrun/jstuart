@@ -147,7 +147,13 @@ public class Posts {
 					System.err.println("Text truncated for post " + h.getKey());					
 				}
 				Cell htmlContent = row.createCell(9);
-				htmlContent.setCellValue(h.getSimpleHTMLBody());
+				if (h.getMarkdownBody().length() <= 32760) {
+					htmlContent.setCellValue(h.getSimpleHTMLBody());					
+				} else {
+					htmlContent.setCellValue(h.getSimpleHTMLBody().substring(0, 32760));					
+					System.err.println("Text truncated for post " + h.getKey());					
+				}
+				
 
 				Cell attachments = row.createCell(10);
 				String att = Joiner.on('\n')
