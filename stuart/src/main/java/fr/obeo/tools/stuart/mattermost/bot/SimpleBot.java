@@ -75,30 +75,32 @@ public class SimpleBot {
 
 		OkHttpClient client = new OkHttpClient();
 		final MMBot bot = MMBot.logIn(client, this.mattermostServer, this.login, this.pwd);
-
-		for (String bugzilla : bugzillas) {
-			bot.onMessage(new RespondWithBugzillaReferences(bugzilla));
-		}
-
-		for (String gerrit : gerrits) {
-			bot.onMessage(new RespondWithGerritReferences(gerrit));
-		}
-
-		if (twitterAccessToken != null && twitterAccessTokenSecret != null && twitterConsumerKey != null
-				&& twitterConsumerSecret != null) {
-			ConfigurationBuilder cb = new ConfigurationBuilder();
-
-			cb.setOAuthConsumerKey(this.twitterConsumerKey).setOAuthConsumerSecret(this.twitterConsumerSecret)
-					.setOAuthAccessToken(this.twitterAccessToken)
-					.setOAuthAccessTokenSecret(this.twitterAccessTokenSecret);
-			TwitterFactory tf = new TwitterFactory(cb.build());
-			Twitter twitter = tf.getInstance();
-			bot.onMessage(new RespondWithTwitterReferences(twitter));
-		}
 		
-		bot.onMessage(new RespondWithGiphyAnimation());
-		bot.onMessage(new RespondWithPullRequestsReferences());
-		bot.onMessage(new RespondSelfDiagnostic());
+		bot.onMessage(new RespondForSharedTasksBotChannel());
+
+//		for (String bugzilla : bugzillas) {
+//			bot.onMessage(new RespondWithBugzillaReferences(bugzilla));
+//		}
+//
+//		for (String gerrit : gerrits) {
+//			bot.onMessage(new RespondWithGerritReferences(gerrit));
+//		}
+//
+//		if (twitterAccessToken != null && twitterAccessTokenSecret != null && twitterConsumerKey != null
+//				&& twitterConsumerSecret != null) {
+//			ConfigurationBuilder cb = new ConfigurationBuilder();
+//
+//			cb.setOAuthConsumerKey(this.twitterConsumerKey).setOAuthConsumerSecret(this.twitterConsumerSecret)
+//					.setOAuthAccessToken(this.twitterAccessToken)
+//					.setOAuthAccessTokenSecret(this.twitterAccessTokenSecret);
+//			TwitterFactory tf = new TwitterFactory(cb.build());
+//			Twitter twitter = tf.getInstance();
+//			bot.onMessage(new RespondWithTwitterReferences(twitter));
+//		}
+//		
+//		bot.onMessage(new RespondWithGiphyAnimation());
+//		bot.onMessage(new RespondWithPullRequestsReferences());
+//		bot.onMessage(new RespondSelfDiagnostic());
 
 		bot.listen();
 
