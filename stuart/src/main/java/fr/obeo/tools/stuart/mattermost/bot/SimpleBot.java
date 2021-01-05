@@ -41,8 +41,10 @@ public class SimpleBot {
 	private String twitterAccessToken = null;
 
 	@Option(name = "-twitter-access-token-secret", usage = "The access token secret to hit the twitter APIs.")
-
 	private String twitterAccessTokenSecret = null;
+
+	@Option(name = "-shared-tasks-sheet-id", usage = "The ID of the Google Spreadsheet used for the shared tasks, e.g. https://docs.google.com/spreadsheets/d/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/edit#gid=0")
+	private String sharedTasksSheetId = null;
 
 	public void doMain(String[] args) throws IOException {
 
@@ -72,12 +74,12 @@ public class SimpleBot {
 			return;
 		}
 
-
 		OkHttpClient client = new OkHttpClient();
 		final MMBot bot = MMBot.logIn(client, this.mattermostServer, this.login, this.pwd);
-		
-		bot.onMessage(new RespondForSharedTasksBotChannel());
 
+		bot.onMessage(new RespondForSharedTasks(sharedTasksSheetId));
+
+		// TODO: uncommented while we develop.
 //		for (String bugzilla : bugzillas) {
 //			bot.onMessage(new RespondWithBugzillaReferences(bugzilla));
 //		}
@@ -101,15 +103,14 @@ public class SimpleBot {
 //		bot.onMessage(new RespondWithGiphyAnimation());
 //		bot.onMessage(new RespondWithPullRequestsReferences());
 //		bot.onMessage(new RespondSelfDiagnostic());
+		////
 
 		bot.listen();
 
 	}
 
 	public static void main(String[] args) {
-		
-		
-		
+
 		try {
 			new SimpleBot().doMain(args);
 		} catch (IOException e) {
