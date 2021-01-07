@@ -1,22 +1,16 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
 
-import com.google.api.services.sheets.v4.model.AddSheetRequest;
-import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
-import com.google.api.services.sheets.v4.model.Request;
-import com.google.api.services.sheets.v4.model.SheetProperties;
-import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.Sheet;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
  * {@link SharedTasksCommand} implementation for creating a new task in a
@@ -42,65 +36,56 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 
 	@Override
 	public void execute(CommandExecutionContext context) throws CommandExecutionException {
-		// TODO: implement
-		// 1. First check whether there already exists a task with the name for this
-		// channel
-		// 2. Create a new sheet for that task.
-		// 3. Display confirmation message and invitation for people to add themselves
-		// to the task.
-
 		try {
-			int previousNumberOfSheets = getNumberOfSheets(context.getSharedTasksSheetId());
-			createNewSheet(context.getSharedTasksSheetId(), "new sheet");
-			int newNumberOfSheets = getNumberOfSheets(context.getSharedTasksSheetId());
-			context.getBot().respond(context.getPost(), previousNumberOfSheets + " -> " + newNumberOfSheets);
-		} catch (GoogleException | IOException exception) {
+			Sheet taskSheet = SharedTasksGoogleUtils.getSheetForTask(context.getSharedTasksSheetId(),
+					this.getTaskName(), this.getChannelId());
+			if (taskSheet != null) {
+				taskAlreadyExists(context);
+			} else {
+				createSheetForTask(context);
+			}
+		} catch (GoogleException exception) {
 			throw new CommandExecutionException(exception);
 		}
 	}
 
-	// Example to retrieve the number of sheets in the spreadsheet.
-	private static int getNumberOfSheets(String spreadsheetId) throws GoogleException {
+	/**
+	 * Behavior to execute when the task we wanted to create already exists.
+	 * 
+	 * @param context the (non-{@code null}) {@link CommandExecutionContext}.
+	 * @throws CommandExecutionException
+	 */
+	private void taskAlreadyExists(CommandExecutionContext context) throws CommandExecutionException {
 		try {
-			Spreadsheet spreadsheetDocument = GoogleUtils.getSheetsService().spreadsheets().get(spreadsheetId)
-					.execute();
-			return spreadsheetDocument.getSheets().size();
-		} catch (IOException | GeneralSecurityException exception) {
-			throw new GoogleException("There was an unexpected issue while retrieving the number of sheets", exception);
+			context.getBot().respond(context.getPost(),
+					"Cannot create task \"" + this.getTaskName() + "\" because it already exists.");
+		} catch (IOException exception) {
+			throw new CommandExecutionException(
+					"There was an issue while responding to the creation of a task that already exists.", exception);
 		}
 	}
 
-	// Example to create a new sheet in the spreadsheet.
-	private static void createNewSheet(String spreadsheetId, String sheetName) throws GoogleException {
-		// Create a new AddSheetRequest
-		AddSheetRequest addSheetRequest = new AddSheetRequest();
-		SheetProperties sheetProperties = new SheetProperties();
-
-		// Add the sheetName to the sheetProperties
-		addSheetRequest.setProperties(sheetProperties);
-		addSheetRequest.setProperties(sheetProperties.setTitle(sheetName));
-
-		// Create batchUpdateSpreadsheetRequest
-		BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-
-		// Create requestList and set it on the batchUpdateSpreadsheetRequest
-		List<Request> requestsList = new ArrayList<Request>();
-		batchUpdateSpreadsheetRequest.setRequests(requestsList);
-
-		// Create a new request with containing the addSheetRequest and add it to the
-		// requestList
-		Request request = new Request();
-		request.setAddSheet(addSheetRequest);
-		requestsList.add(request);
-
-		// Add the requestList to the batchUpdateSpreadsheetRequest
-		batchUpdateSpreadsheetRequest.setRequests(requestsList);
+	/**
+	 * Behavior to execute to create a new sheet that will be used for the
+	 * newly-created task.
+	 * 
+	 * @param context the (non-{@code null}) {@link CommandExecutionContext}.
+	 * @throws CommandExecutionException
+	 */
+	private void createSheetForTask(CommandExecutionContext context) throws CommandExecutionException {
 		try {
-			// Call the sheets API to execute the batchUpdate
-			GoogleUtils.getSheetsService().spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest)
-					.execute();
-		} catch (IOException | GeneralSecurityException exception) {
-			throw new GoogleException("There was an unexpected issue while creating a new sheet", exception);
+			SharedTasksGoogleUtils.createNewSheet(context.getSharedTasksSheetId(),
+					SharedTasksGoogleUtils.getSheetTitleForTask(this.getTaskName(), this.getChannelId()));
+			String successMessage = "Successfully created task \"" + this.getTaskName()
+					+ "\". To register yourself for this task, type command \""
+					+ SharedTasksCommandFactory.COMMAND_STARTER + this.getTaskName() + " "
+					+ SharedTasksCommandFactory.VERB_ADDME + "\".";
+			context.getBot().respond(context.getPost(), successMessage);
+		} catch (IOException | GoogleException exception) {
+			throw new CommandExecutionException(
+					"There was an issue while creating a new sheet for task \"" + this.getTaskName() + "\" in channel "
+							+ this.getChannelId() + " in spreadsheet " + context.getSharedTasksSheetId() + ".",
+					exception);
 		}
 	}
 }

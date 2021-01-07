@@ -17,26 +17,41 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RerollCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.StatusCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.TodoCommand;
 
+/**
+ * Factory that can parse a Mattermost post to create the corresponding
+ * {@link SharedTasksCommand}.
+ * 
+ * @author flatombe
+ *
+ */
 public class SharedTasksCommandFactory {
 
 	/**
 	 * For now we do IRC-style commands.
 	 */
-	private final static String COMMAND_STARTER = "!";
+	public final static String COMMAND_STARTER = "!";
 
-	private static final String VERB_STATUS = "Status";
-	private static final String VERB_CREATE = "Create";
-	private static final String VERB_ADDME = "AddMe";
-	private static final String VERB_REMOVEME = "RemoveMe";
-	private static final String VERB_TODO = "Todo";
-	private static final String VERB_REROLL = "Reroll";
-	private static final String VERB_DONE = "Done";
-	private static final List<String> ALL_VERBS = Stream
+	public static final String VERB_STATUS = "Status";
+	public static final String VERB_CREATE = "Create";
+	public static final String VERB_ADDME = "AddMe";
+	public static final String VERB_REMOVEME = "RemoveMe";
+	public static final String VERB_TODO = "Todo";
+	public static final String VERB_REROLL = "Reroll";
+	public static final String VERB_DONE = "Done";
+	public static final List<String> ALL_VERBS = Stream
 			.of(VERB_STATUS, VERB_CREATE, VERB_ADDME, VERB_REMOVEME, VERB_TODO, VERB_REROLL, VERB_DONE)
 			.collect(Collectors.toList());
 
 	private static final String KEYWORD_TASKS = "tasks";
 
+	/**
+	 * Attemps to parse a {@link MPost Mattermost post} into a
+	 * {@link SharedTasksCommand}.
+	 * 
+	 * @param mattermostPost the (non-{@code null}) {@link MPost} to parse.
+	 * @return the corresponding {@link SharedTasksCommand}, or {@code null} if it
+	 *         could not be parsed as one.
+	 */
 	public static SharedTasksCommand tryToParsePostIntoCommand(MPost mattermostPost) {
 		String userMessage = mattermostPost.getMessage();
 		if (userMessage.startsWith(COMMAND_STARTER)) {
@@ -102,6 +117,7 @@ public class SharedTasksCommandFactory {
 				} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
 					return new RerollCommand(commandText, taskName, channelId);
 				} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
+					// There may optionally be a user designated after the verb.
 					final String doneUserId;
 					if (trimmedCoreArguments.size() >= 3) {
 						String userSpecification = trimmedCoreArguments.get(2);
