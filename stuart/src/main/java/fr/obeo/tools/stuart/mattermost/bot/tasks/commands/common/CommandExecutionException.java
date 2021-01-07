@@ -1,4 +1,4 @@
-package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
+package fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common;
 
 /**
  * {@link Exception} implementation for when something when wrong during the

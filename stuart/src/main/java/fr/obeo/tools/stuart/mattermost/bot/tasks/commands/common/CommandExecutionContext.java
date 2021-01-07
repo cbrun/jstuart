@@ -1,4 +1,4 @@
-package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
+package fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common;
 
 import fr.obeo.tools.stuart.mattermost.bot.MMBot;
 import fr.obeo.tools.stuart.mattermost.bot.MPost;

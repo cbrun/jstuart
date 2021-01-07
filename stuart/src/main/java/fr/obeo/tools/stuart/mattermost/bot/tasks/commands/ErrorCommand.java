@@ -1,6 +1,11 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
+import java.util.Objects;
+
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 
 /**
  * {@link SharedTasksCommand} implementation for when we could not parse text
@@ -13,9 +18,15 @@ public class ErrorCommand extends SharedTasksCommand {
 
 	private final String errorMessage;
 
-	public ErrorCommand(String text, String errorMessage) {
-		super(text);
-		this.errorMessage = errorMessage;
+	/**
+	 * Creates a new {@link ErrorCommand}.
+	 * 
+	 * @param commandText  the (non-{@code null}) textual form of the command.
+	 * @param errorMessage the (non-{@code null}) additional error message.
+	 */
+	public ErrorCommand(String commandText, String errorMessage) {
+		super(commandText);
+		this.errorMessage = Objects.requireNonNull(errorMessage);
 	}
 
 	@Override

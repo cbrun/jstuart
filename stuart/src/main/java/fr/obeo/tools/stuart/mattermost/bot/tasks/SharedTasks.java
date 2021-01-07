@@ -5,9 +5,10 @@ import java.util.Objects;
 
 import fr.obeo.tools.stuart.mattermost.bot.MMBot;
 import fr.obeo.tools.stuart.mattermost.bot.MPost;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.CommandExecutionContext;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 
 /**
  * Main entry point of the functionality to create and perform so-called "tasks"
@@ -17,11 +18,6 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.SharedTasksCommand;
  *
  */
 public class SharedTasks {
-
-	/**
-	 * For now we do IRC-style commands.
-	 */
-	private final static String COMMAND_STARTER = "!";
 
 	/**
 	 * The ID of the Google spreadsheet to use. It can be found in the URL of the
@@ -43,14 +39,13 @@ public class SharedTasks {
 	/**
 	 * Handles a message posted on a channel we are monitoring.
 	 * 
-	 * @param bot
-	 * @param post
+	 * @param bot  our {@link MMBot}.
+	 * @param post the {@link MPost} that may be a task-related command.
 	 * @throws IOException
 	 */
 	public void handle(MMBot bot, MPost post) throws IOException {
-		String userMessage = post.getMessage();
-		if (userMessage.startsWith(COMMAND_STARTER)) {
-			SharedTasksCommand command = SharedTasksCommand.parseFrom(userMessage.substring(COMMAND_STARTER.length()));
+		SharedTasksCommand command = SharedTasksCommandFactory.tryToParsePostIntoCommand(post);
+		if (command != null) {
 			try {
 				command.execute(new CommandExecutionContext(bot, post, this.sharedTasksSheetId));
 			} catch (CommandExecutionException exception) {
@@ -58,5 +53,6 @@ public class SharedTasks {
 						exception);
 			}
 		}
+		// Otherwise the post was not a valid command message so we just ignore it.
 	}
 }

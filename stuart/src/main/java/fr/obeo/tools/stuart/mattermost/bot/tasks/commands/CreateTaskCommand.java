@@ -11,22 +11,44 @@ import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
 
 /**
- * {@link SharedTasksCommand} implementation for creating a new task.
+ * {@link SharedTasksCommand} implementation for creating a new task in a
+ * channel.
  * 
  * @author flatombe
  *
  */
-public class CreateTaskCommand extends SharedTasksCommand {
+public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 
-	public CreateTaskCommand(String commandText) {
-		super(commandText);
+	/**
+	 * Creates a new {@link CreatedTaskCommand}.
+	 * 
+	 * @param commandText         the (non-{@code null}) textual form of the
+	 *                            command.
+	 * @param taskName            the (non-{@code null}) name of the task to create.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel concerned by this command.
+	 */
+	public CreateTaskCommand(String commandText, String taskName, String mattermostChannelId) {
+		super(commandText, taskName, mattermostChannelId);
 	}
 
+	@Override
 	public void execute(CommandExecutionContext context) throws CommandExecutionException {
+		// TODO: implement
+		// 1. First check whether there already exists a task with the name for this
+		// channel
+		// 2. Create a new sheet for that task.
+		// 3. Display confirmation message and invitation for people to add themselves
+		// to the task.
+
 		try {
 			int previousNumberOfSheets = getNumberOfSheets(context.getSharedTasksSheetId());
 			createNewSheet(context.getSharedTasksSheetId(), "new sheet");
