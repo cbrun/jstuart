@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.api.services.sheets.v4.model.AppendValuesResponse;
-import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
@@ -14,7 +13,6 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
@@ -45,24 +43,15 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		Sheet taskSheet = this.getExistingTaskSheetElseRespondWithMessage(commandExecutionContext);
-		if (taskSheet != null) {
-			List<String> registeredUserIds;
-			try {
-				registeredUserIds = SharedTasksGoogleUtils.getAllRegisteredUserIds(
-						commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
-				if (registeredUserIds.contains(this.getUserId())) {
-					userIsAlreadyRegistered(commandExecutionContext);
-				} else {
-					registerUser(commandExecutionContext);
-				}
-			} catch (GoogleException exception) {
-				throw new CommandExecutionException(
-						"There was an issue while retrieving the users registered for task \"" + this.getTaskName()
-								+ "\".",
-						exception);
+		List<String> registeredUserIds = this.getAllRegisteredUserIds(commandExecutionContext);
+		if (registeredUserIds != null) {
+			if (registeredUserIds.contains(this.getUserId())) {
+				userIsAlreadyRegistered(commandExecutionContext);
+			} else {
+				registerUser(commandExecutionContext);
 			}
 		}
+		// Else we already responded with a message that the task does not exist.
 	}
 
 	/**
@@ -101,7 +90,7 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 		String range = SharedTasksGoogleUtils.getAllUsersRangeForTask(this.getTaskName(), this.getChannelId());
 		try {
 			AppendValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
-					.append(commandExecutionContext.getSharedTasksSheetId(), range, body).setValueInputOption("RAW")
+					.append(commandExecutionContext.getSharedTasksSheetId(), range, body).setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW)
 					.execute();
 			String successMessage = "Successfully registered user for task \"" + this.getTaskName() + "\".";
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);

@@ -1,6 +1,7 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.google.api.services.sheets.v4.model.Sheet;
 
@@ -103,6 +104,37 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 			return null;
 		} else {
 			return taskSheet;
+		}
+	}
+
+	/**
+	 * Provides the IDs of all the registered users for the tasks concerned by this
+	 * command (if the task exists).
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @return the {@link List} of the IDs of all the registered users for the task
+	 *         concerned by this command, or {@code null} if the task does not
+	 *         exist.
+	 * @throws CommandExecutionException
+	 */
+	protected List<String> getAllRegisteredUserIds(CommandExecutionContext commandExecutionContext)
+			throws CommandExecutionException {
+		Sheet taskSheet = this.getExistingTaskSheetElseRespondWithMessage(commandExecutionContext);
+		if (taskSheet != null) {
+			List<String> registeredUserIds;
+			try {
+				registeredUserIds = SharedTasksGoogleUtils.getAllRegisteredUserIds(
+						commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
+				return registeredUserIds;
+			} catch (GoogleException exception) {
+				throw new CommandExecutionException(
+						"There was an issue while retrieving the users registered for task \"" + this.getTaskName()
+								+ "\".",
+						exception);
+			}
+		} else {
+			return null;
 		}
 	}
 }

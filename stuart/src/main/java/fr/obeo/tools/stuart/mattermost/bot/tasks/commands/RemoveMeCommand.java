@@ -1,9 +1,15 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
+import java.io.IOException;
+import java.util.List;
+
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
  * {@link SharedTasksCommand} implementation for a user to remove themselves
@@ -32,11 +38,57 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		// TODO: implement
-		// 1. Find the sheet corresponding to the task.
-		// 2. Check that the user is indeed registered for the task.
-		// 3. Remove the user from the task.
-		// 4. Consolidate the table by removing blank lines if necessary.
+		List<String> registeredUserIds = this.getAllRegisteredUserIds(commandExecutionContext);
+		if (registeredUserIds != null) {
+			if (!registeredUserIds.contains(this.getUserId())) {
+				userIsNotRegistered(commandExecutionContext);
+			} else {
+				unregisterUser(commandExecutionContext);
+			}
+		}
+		// Else we already responded with a message that the task does not exist.
+	}
+
+	/**
+	 * Behavior to execute when the user who wants to unregister themselves from the
+	 * task is actually not registered.
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @throws CommandExecutionException
+	 */
+	private void userIsNotRegistered(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
+		String message = "Failed user unregistration. You are not already registered for task \"" + this.getTaskName()
+				+ "\". To register yourself, use command \"" + SharedTasksCommandFactory.COMMAND_STARTER
+				+ this.getTaskName() + SharedTasksCommandFactory.COMMAND_SEPARATOR
+				+ SharedTasksCommandFactory.VERB_ADDME + "\".";
+		try {
+			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
+		} catch (IOException exception) {
+			throw new CommandExecutionException(
+					"There was an issue while responding to a user who is not registered to a task.", exception);
+		}
+	}
+
+	/**
+	 * Behavior to execute when the user who wants to unregister themselves from the
+	 * task is already registered.
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @throws CommandExecutionException
+	 */
+	private void unregisterUser(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
+		try {
+			SharedTasksGoogleUtils.removeRegisteredUser(commandExecutionContext.getSharedTasksSheetId(),
+					this.getTaskName(), this.getChannelId(), this.getUserId());
+
+			String successMessage = "Successfully unregistered user from task \"" + this.getTaskName() + "\".";
+			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);
+		} catch (GoogleException | IOException exception) {
+			throw new CommandExecutionException("There was an issue while unregistering user \"" + this.getUserId()
+					+ "\" to task \"" + this.getTaskName() + "\".", exception);
+		}
 	}
 
 }

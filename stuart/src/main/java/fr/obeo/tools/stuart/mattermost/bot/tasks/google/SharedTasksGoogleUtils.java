@@ -16,6 +16,7 @@ import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.SharedTasks;
@@ -28,6 +29,8 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.SharedTasks;
  *
  */
 public class SharedTasksGoogleUtils {
+
+	public static final String VALUE_INPUT_OPTION_RAW = "RAW";
 
 	/**
 	 * Provides the {@link Sheet} from the given spreadsheet used for the given task
@@ -133,6 +136,8 @@ public class SharedTasksGoogleUtils {
 			ValueRange result = GoogleUtils.getSheetsService().spreadsheets().values().get(spreadsheetId, range)
 					.execute();
 			if (result.getValues() != null) {
+				// If the cast fail it means that was an issue while inserting a user ID in the
+				// first column, as we should only handle strings.
 				return result.getValues().stream().map(value -> (String) value.get(0)).collect(Collectors.toList());
 			} else {
 				return new ArrayList<>();
@@ -156,5 +161,51 @@ public class SharedTasksGoogleUtils {
 	public static String getAllUsersRangeForTask(String taskName, String mattermostChannelId) {
 		// User IDs are stored in the first column of the sheet.
 		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + "A:A";
+	}
+
+	/**
+	 * Unregisters a user from a task.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @param userId              the (non-{@code null}) ID of the Mattermost user
+	 *                            to unregister from the task.
+	 * @throws GoogleException
+	 */
+	public static void removeRegisteredUser(String spreadsheetId, String taskName, String mattermostChannelId,
+			String userId) throws GoogleException {
+		String range = getAllUsersRangeForTask(taskName, mattermostChannelId);
+		try {
+			ValueRange registeredUsersValueRange = GoogleUtils.getSheetsService().spreadsheets().values()
+					.get(spreadsheetId, range).execute();
+			List<List<Object>> currentValues = registeredUsersValueRange.getValues();
+			if (currentValues != null) {
+				// We remove the row corresponding to the user who is unregistering.
+				List<List<Object>> newValues = currentValues.stream()
+						.filter(row -> !row.isEmpty() && !row.get(0).equals(userId)).collect(Collectors.toList());
+				// Add an empty row at the end so that the row that previously held the last
+				// value is blanked.
+				newValues.add(Collections.singletonList(""));
+
+				// Sanitary check.
+				if (newValues.size() != currentValues.size()) {
+					throw new IllegalStateException("Removing user \"" + userId + "\" from task \"" + taskName
+							+ "\" should have removed exactly one line, but it looks like it actually removed "
+							+ (newValues.size() - 1 - currentValues.size()) + " lines.");
+				}
+				ValueRange body = new ValueRange().setValues(newValues);
+				UpdateValuesResponse updateResult = GoogleUtils.getSheetsService().spreadsheets().values()
+						.update(spreadsheetId, range, body).setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
+			} else {
+				throw new IllegalStateException("Cannot remove user \"" + userId + "\" from task \"" + taskName
+						+ "\" because they are not registered for this task.");
+			}
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
 	}
 }
