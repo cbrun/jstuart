@@ -1,7 +1,9 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import com.google.api.services.sheets.v4.model.Sheet;
 
@@ -108,7 +110,7 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 	}
 
 	/**
-	 * Provides the IDs of all the registered users for the tasks concerned by this
+	 * Provides the IDs of all the registered users for the task concerned by this
 	 * command (if the task exists).
 	 * 
 	 * @param commandExecutionContext the (non-{@code null})
@@ -127,6 +129,36 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 				registeredUserIds = SharedTasksGoogleUtils.getAllRegisteredUserIds(
 						commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
 				return registeredUserIds;
+			} catch (GoogleException exception) {
+				throw new CommandExecutionException(
+						"There was an issue while retrieving the users registered for task \"" + this.getTaskName()
+								+ "\".",
+						exception);
+			}
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Provides the map of all registered users (identified via their Mattermost ID)
+	 * for the task concerned by this command and their associated timestamp which
+	 * represents the last time they performed this task.
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @return the {@link Map} of the registered user IDs and their associated
+	 *         {@link Instant timestamp}, or {@code null} if the task does not
+	 *         exist.
+	 * @throws CommandExecutionException
+	 */
+	protected Map<String, Instant> getAllRegisteredUsersAndTheirTimestamps(
+			CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
+		Sheet taskSheet = this.getExistingTaskSheetElseRespondWithMessage(commandExecutionContext);
+		if (taskSheet != null) {
+			try {
+				return SharedTasksGoogleUtils.getAllRegisteredUsersAndTheirTimestamps(
+						commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
 			} catch (GoogleException exception) {
 				throw new CommandExecutionException(
 						"There was an issue while retrieving the users registered for task \"" + this.getTaskName()
