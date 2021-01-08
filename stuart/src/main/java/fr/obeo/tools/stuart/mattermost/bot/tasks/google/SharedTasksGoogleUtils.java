@@ -2,9 +2,12 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.google;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
@@ -13,6 +16,7 @@ import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.ValueRange;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.SharedTasks;
 
@@ -105,5 +109,52 @@ public class SharedTasksGoogleUtils {
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException("There was an unexpected issue while creating a new sheet", exception);
 		}
+	}
+
+	/**
+	 * Provides all the IDs of the Mattermost users registered for a task.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the (non-{@code null}) {@link List} of all the IDs of the Mattermost
+	 *         users registered for the task.
+	 * @throws GoogleException
+	 */
+	public static List<String> getAllRegisteredUserIds(String spreadsheetId, String taskName,
+			String mattermostChannelId) throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		String range = getAllUsersRangeForTask(taskName, mattermostChannelId);
+		try {
+			ValueRange result = GoogleUtils.getSheetsService().spreadsheets().values().get(spreadsheetId, range)
+					.execute();
+			if (result.getValues() != null) {
+				return result.getValues().stream().map(value -> (String) value.get(0)).collect(Collectors.toList());
+			} else {
+				return new ArrayList<>();
+			}
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
+	}
+
+	/**
+	 * Provides the Google spreadsheet "range" that contains all users registered
+	 * for a task.
+	 * 
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the range, e.g. "SheetName!X:Y" that holds all the users registered
+	 *         for the task.
+	 */
+	public static String getAllUsersRangeForTask(String taskName, String mattermostChannelId) {
+		// User IDs are stored in the first column of the sheet.
+		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + "A:A";
 	}
 }

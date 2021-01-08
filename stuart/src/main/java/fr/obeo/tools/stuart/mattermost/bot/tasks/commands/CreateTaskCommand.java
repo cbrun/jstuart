@@ -36,16 +36,11 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 
 	@Override
 	public void execute(CommandExecutionContext context) throws CommandExecutionException {
-		try {
-			Sheet taskSheet = SharedTasksGoogleUtils.getSheetForTask(context.getSharedTasksSheetId(),
-					this.getTaskName(), this.getChannelId());
-			if (taskSheet != null) {
-				taskAlreadyExists(context);
-			} else {
-				createSheetForTask(context);
-			}
-		} catch (GoogleException exception) {
-			throw new CommandExecutionException(exception);
+		Sheet taskSheet = getTaskSheet(context);
+		if (taskSheet != null) {
+			taskAlreadyExists(context);
+		} else {
+			createSheetForTask(context);
 		}
 	}
 
@@ -58,7 +53,7 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 	private void taskAlreadyExists(CommandExecutionContext context) throws CommandExecutionException {
 		try {
 			context.getBot().respond(context.getPost(),
-					"Cannot create task \"" + this.getTaskName() + "\" because it already exists.");
+					"Failed task creation. Task \"" + this.getTaskName() + "\" already exists.");
 		} catch (IOException exception) {
 			throw new CommandExecutionException(
 					"There was an issue while responding to the creation of a task that already exists.", exception);
@@ -78,8 +73,8 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 					SharedTasksGoogleUtils.getSheetTitleForTask(this.getTaskName(), this.getChannelId()));
 			String successMessage = "Successfully created task \"" + this.getTaskName()
 					+ "\". To register yourself for this task, type command \""
-					+ SharedTasksCommandFactory.COMMAND_STARTER + this.getTaskName() + " "
-					+ SharedTasksCommandFactory.VERB_ADDME + "\".";
+					+ SharedTasksCommandFactory.COMMAND_STARTER + this.getTaskName()
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + SharedTasksCommandFactory.VERB_ADDME + "\".";
 			context.getBot().respond(context.getPost(), successMessage);
 		} catch (IOException | GoogleException exception) {
 			throw new CommandExecutionException(

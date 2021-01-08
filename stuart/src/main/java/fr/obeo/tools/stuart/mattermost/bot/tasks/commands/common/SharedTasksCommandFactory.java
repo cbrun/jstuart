@@ -31,6 +31,8 @@ public class SharedTasksCommandFactory {
 	 */
 	public final static String COMMAND_STARTER = "!";
 
+	public final static String COMMAND_SEPARATOR = " ";
+
 	public static final String VERB_STATUS = "Status";
 	public static final String VERB_CREATE = "Create";
 	public static final String VERB_ADDME = "AddMe";
@@ -79,7 +81,7 @@ public class SharedTasksCommandFactory {
 		Objects.requireNonNull(channelId);
 		Objects.requireNonNull(userId);
 
-		List<String> trimmedArguments = Arrays.asList(commandText.trim().split(" ")).stream().map(String::trim)
+		List<String> trimmedArguments = Arrays.asList(commandText.trim().split(SharedTasksCommandFactory.COMMAND_SEPARATOR)).stream().map(String::trim)
 				.collect(Collectors.toList());
 		if (trimmedArguments.isEmpty()) {
 			return new ErrorCommand(commandText, "Empty text cannot be parsed as a command");
