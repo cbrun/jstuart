@@ -6,7 +6,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,6 +24,8 @@ import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.SharedTasks;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 
 /**
  * Utilities related to how we use a Google spreadsheet as the persistence layer
@@ -166,6 +170,9 @@ public class SharedTasksGoogleUtils {
 	 *         for the task.
 	 */
 	public static String getAllUsersRangeForTask(String taskName, String mattermostChannelId) {
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
 		// User IDs are stored in the first column of the sheet.
 		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + USER_ID__COLUMN + ":" + USER_ID__COLUMN;
 	}
@@ -207,6 +214,27 @@ public class SharedTasksGoogleUtils {
 	}
 
 	/**
+	 * Provides the Google spreadsheet "range" that contains all users registered
+	 * for a task and their associated timestamp.
+	 * 
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the range, e.g. "SheetName!X:Y" that holds all the users registered
+	 *         for the task and their associated timestamp.
+	 */
+	public static String getAllUsersAndTimestampsRangeForTask(String taskName, String mattermostChannelId) {
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		// User IDs are stored in the first column of the sheet.
+		// User timestamps are stored in the second column of the sheet.
+		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + USER_ID__COLUMN + ":"
+				+ LAST_TIME_STAMP__COLUMN;
+	}
+
+	/**
+	 * Unregisters a user from a task.
 	 * 
 	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
 	 *                            document.
@@ -219,6 +247,11 @@ public class SharedTasksGoogleUtils {
 	 */
 	public static void removeRegisteredUser(String spreadsheetId, String taskName, String mattermostChannelId,
 			String userId) throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+		Objects.requireNonNull(userId);
+
 		String range = getAllUsersRangeForTask(taskName, mattermostChannelId);
 		try {
 			ValueRange registeredUsersValueRange = GoogleUtils.getSheetsService().spreadsheets().values()
@@ -306,4 +339,46 @@ public class SharedTasksGoogleUtils {
 		}
 	}
 
+	/**
+	 * Provides the map of all registered users (identified via their Mattermost ID)
+	 * for the task and their associated timestamp which represents the last time
+	 * they performed this task.
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @return the {@link Map} of the registered user IDs and their associated
+	 *         {@link Instant timestamp}, or {@code null} if the task does not
+	 *         exist.
+	 * @throws CommandExecutionException
+	 */
+	public static Map<String, Instant> getAllRegisteredUsersAndTheirTimestamps(String spreadsheetId, String taskName,
+			String mattermostChannelId) throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		String range = getAllUsersAndTimestampsRangeForTask(taskName, mattermostChannelId);
+		try {
+			ValueRange result = GoogleUtils.getSheetsService().spreadsheets().values().get(spreadsheetId, range)
+					.execute();
+			if (result.getValues() != null) {
+				// If the casts fail it means that was an issue while inserting a user ID or
+				// timestamp in the
+				// first column, as we should only insert strings.
+				return result.getValues().stream().collect(Collectors.toMap(row -> (String) row.get(0), row -> {
+					if (row.size() > 2) {
+						return Instant.parse((String) row.get(1));
+					} else {
+						// No timestamp yet for this user.
+						return null;
+					}
+				}));
+			} else {
+				return new HashMap<>();
+			}
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
+	}
 }
