@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,8 +82,9 @@ public class SharedTasksCommandFactory {
 		Objects.requireNonNull(channelId);
 		Objects.requireNonNull(userId);
 
-		List<String> trimmedArguments = Arrays.asList(commandText.trim().split(SharedTasksCommandFactory.COMMAND_SEPARATOR)).stream().map(String::trim)
-				.collect(Collectors.toList());
+		List<String> trimmedArguments = Arrays
+				.asList(commandText.trim().split(SharedTasksCommandFactory.COMMAND_SEPARATOR)).stream()
+				.map(String::trim).collect(Collectors.toList());
 		if (trimmedArguments.isEmpty()) {
 			return new ErrorCommand(commandText, "Empty text cannot be parsed as a command");
 		} else {
@@ -96,44 +98,56 @@ public class SharedTasksCommandFactory {
 
 	private static SharedTasksCommand parseFrom(String commandText, List<String> trimmedCoreArguments, String channelId,
 			String userId) {
-		if (!(trimmedCoreArguments.size() >= 2)) {
-			return new ErrorCommand(commandText, "There should be at least a task name and a verb.");
-		} else {
+
+		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
+		if (!errorMessage.isPresent()) {
 			String taskName = trimmedCoreArguments.get(0);
-			List<String> issues = getIssuesWithTaskName(taskName);
-			if (!issues.isEmpty()) {
-				return new ErrorCommand(commandText, "Invalid task name: \"" + taskName + "\": "
-						+ issues.stream().collect(Collectors.joining("; ", "", ".")));
-			} else {
-				String verbLiteral = trimmedCoreArguments.get(1);
-				if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
-					return new StatusCommand(commandText, taskName, channelId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
-					return new CreateTaskCommand(commandText, taskName, channelId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
-					return new AddMeCommand(commandText, taskName, channelId, userId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
-					return new RemoveMeCommand(commandText, taskName, channelId, userId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
-					return new TodoCommand(commandText, taskName, channelId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
-					return new RerollCommand(commandText, taskName, channelId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
-					// There may optionally be a user designated after the verb.
-					final String doneUserId;
-					if (trimmedCoreArguments.size() >= 3) {
-						String userSpecification = trimmedCoreArguments.get(2);
-						// TODO interpret text to find user ID from the channel
-						doneUserId = userSpecification;
-					} else {
-						doneUserId = userId;
-					}
-					return new DoneCommand(commandText, taskName, channelId, doneUserId);
+			String verbLiteral = trimmedCoreArguments.get(1);
+			if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
+				return new StatusCommand(commandText, taskName, channelId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
+				return new CreateTaskCommand(commandText, taskName, channelId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
+				return new AddMeCommand(commandText, taskName, channelId, userId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
+				return new RemoveMeCommand(commandText, taskName, channelId, userId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
+				return new TodoCommand(commandText, taskName, channelId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
+				return new RerollCommand(commandText, taskName, channelId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
+				// There may optionally be a user designated after the verb.
+				final String doneUserId;
+				if (trimmedCoreArguments.size() >= 3) {
+					String userSpecification = trimmedCoreArguments.get(2);
+					// TODO interpret text to find user ID from the channel
+					doneUserId = userSpecification;
 				} else {
-					return new ErrorCommand(commandText, "Unknown action: \"" + verbLiteral + "\".");
+					doneUserId = userId;
 				}
+				return new DoneCommand(commandText, taskName, channelId, doneUserId);
 			}
 		}
+
+		return new ErrorCommand(commandText, errorMessage.get());
+	}
+
+	private static Optional<String> getIssuesWithCommand(List<String> trimmedCoreArguments) {
+		List<String> issues = new ArrayList<>();
+
+		if (!(trimmedCoreArguments.size() >= 2)) {
+			issues.add("There should be at least a task name and a verb.");
+		} else {
+			String verbName = trimmedCoreArguments.get(1);
+			issues.addAll(getIssuesWithVerbName(verbName));
+		}
+		if (trimmedCoreArguments.size() >= 1) {
+			String taskName = trimmedCoreArguments.get(0);
+			issues.addAll(getIssuesWithTaskName(taskName));
+		}
+
+		String errorMessage = issues.stream().collect(Collectors.joining("\n"));
+		return issues.isEmpty() ? Optional.empty() : Optional.of(errorMessage);
 	}
 
 	private static List<String> getIssuesWithTaskName(String taskName) {
@@ -142,6 +156,17 @@ public class SharedTasksCommandFactory {
 		List<String> issues = new ArrayList<>();
 		if (taskName.equalsIgnoreCase(KEYWORD_TASKS)) {
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
+		}
+
+		return issues;
+	}
+
+	private static List<String> getIssuesWithVerbName(String taskName) {
+		List<String> issues = new ArrayList<>();
+		boolean correctVerb = ALL_VERBS.stream().filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst()
+				.isPresent();
+		if (!correctVerb) {
+			issues.add("\"" + taskName + "\" is an not a valid verb. Please choose among " + ALL_VERBS);
 		}
 
 		return issues;
