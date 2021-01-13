@@ -44,7 +44,8 @@ public class RespondForSharedTasks implements ReactOnMessage {
 		if (!p.isFromWebhook() && isNotFromBotOrIsDiagnostic(bot, p)) {
 			if (this.sharedTasks != null) {
 				// TODO: temporary during development
-				if (p.getChannelId().equals(TEST_BOT_CHANNEL_ID) && p.getUserId().equals(DEVELOPER_USER_ID)) {
+//				if (p.getChannelId().equals(TEST_BOT_CHANNEL_ID) && p.getUserId().equals(DEVELOPER_USER_ID)) {
+				if (p.getChannelId().equals(TEST_BOT_CHANNEL_ID) ) {
 					this.sharedTasks.handle(bot, p);
 				}
 			}

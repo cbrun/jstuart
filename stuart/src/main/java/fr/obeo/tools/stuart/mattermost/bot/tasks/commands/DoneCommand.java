@@ -1,15 +1,19 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
+import java.io.IOException;
+
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
  * {@link SharedTasksCommand} implementation to indicate that a task has been
  * done.
  * 
- * @author flatombe
+ * @author lfasani
  *
  */
 public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
@@ -32,10 +36,16 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		// TODO: implement
-		// 1. If the user that did the task is not registered for that task, thank them
-		// and suggest they add themselves using command "addme".
-		// 2. Otherwise simply mark in the sheet that the user has done the task.
-	}
+		try {
+			SharedTasksGoogleUtils.doTask(commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(),
+					this.getChannelId(), this.getUserId());
 
+			String successMessage = "The task \"" + this.getTaskName() + "\" has been successfully done by \""
+					+ this.getUserId() + "\".";
+			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);
+		} catch (GoogleException | IOException exception) {
+			throw new CommandExecutionException("There was an issue while setting task \"" + this.getTaskName()
+					+ "\" as done by user \"" + this.getUserId() + "\".", exception);
+		}
+	}
 }

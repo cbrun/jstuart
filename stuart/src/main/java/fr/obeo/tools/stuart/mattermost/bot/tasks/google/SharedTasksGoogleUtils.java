@@ -2,7 +2,9 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.google;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +33,11 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.SharedTasks;
 public class SharedTasksGoogleUtils {
 
 	public static final String VALUE_INPUT_OPTION_RAW = "RAW";
+	public static final String USER_ID__COLUMN = "A";
+	public static final String LAST_TIME_STAMP__COLUMN = "B";
+	public static final String AFFECTED_USER_ID__COLUMN = "C";
+	public static final String RECORD_USER_ID__COLUMN = "D";
+	public static final String RECORD_TIME_STAMP__COLUMN = "E";
 
 	/**
 	 * Provides the {@link Sheet} from the given spreadsheet used for the given task
@@ -160,11 +167,46 @@ public class SharedTasksGoogleUtils {
 	 */
 	public static String getAllUsersRangeForTask(String taskName, String mattermostChannelId) {
 		// User IDs are stored in the first column of the sheet.
-		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + "A:A";
+		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + USER_ID__COLUMN + ":" + USER_ID__COLUMN;
 	}
 
 	/**
-	 * Unregisters a user from a task.
+	 * Provides the Google spreadsheet "range" that contains all the affected users
+	 * to the "task".
+	 * 
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the range, e.g. "SheetName!X:Y" that holds all the affected users.
+	 */
+	public static String getAffectedUsersRange(String taskName, String mattermostChannelId) {
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + AFFECTED_USER_ID__COLUMN + ":"
+				+ AFFECTED_USER_ID__COLUMN;
+	}
+
+	/**
+	 * Provides the Google spreadsheet "range" that contains all the task
+	 * realizations that is all the users with the associated task realization
+	 * timeStamp.
+	 * 
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the range, e.g. "SheetName!X:Y" that holds all the tasks realization
+	 *         records.
+	 */
+	public static String getTaskRealizationRecordsRange(String taskName, String mattermostChannelId) {
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + RECORD_USER_ID__COLUMN + ":"
+				+ RECORD_TIME_STAMP__COLUMN;
+	}
+
+	/**
 	 * 
 	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
 	 *                            document.
@@ -208,4 +250,60 @@ public class SharedTasksGoogleUtils {
 					+ spreadsheetId + "\".", exception);
 		}
 	}
+
+	/**
+	 * Set a task as done.</br>
+	 * - It will add a new record in the history.</br>
+	 * - It will also reset the affected users to this task.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @param userId              the (non-{@code null}) ID of the Mattermost user
+	 *                            to unregister from the task.
+	 * @throws GoogleException
+	 */
+	public static void doTask(String spreadsheetId, String taskName, String mattermostChannelId, String userId)
+			throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+		Objects.requireNonNull(userId);
+
+		// Update the records
+		String range = getTaskRealizationRecordsRange(taskName, mattermostChannelId);
+		try {
+			ValueRange registeredUsersValueRange = GoogleUtils.getSheetsService().spreadsheets().values()
+					.get(spreadsheetId, range).execute();
+			List<List<Object>> currentValues = registeredUsersValueRange.getValues();
+			if (currentValues == null) {
+				currentValues = new ArrayList<>();
+			}
+			// Add a record in the list of rows
+			currentValues.add(Arrays.asList(userId, Instant.now().toString()));
+			ValueRange body = new ValueRange().setValues(currentValues);
+			GoogleUtils.getSheetsService().spreadsheets().values().update(spreadsheetId, range, body)
+					.setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
+
+		// Reset the affected users
+		range = getAffectedUsersRange(taskName, mattermostChannelId);
+		try {
+			List<List<Object>> emptyValues = new ArrayList<>();
+			emptyValues.add(Arrays.asList(""));
+
+			ValueRange body = new ValueRange().setValues(emptyValues);
+			GoogleUtils.getSheetsService().spreadsheets().values().update(spreadsheetId, range, body)
+					.setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while resetting range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
+	}
+
 }
