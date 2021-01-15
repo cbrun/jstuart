@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
+import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
 import com.google.api.services.sheets.v4.model.Request;
@@ -178,23 +179,6 @@ public class SharedTasksGoogleUtils {
 	}
 
 	/**
-	 * Provides the Google spreadsheet "range" that contains all the affected users
-	 * to the "task".
-	 * 
-	 * @param taskName            the (non-{@code null}) name of the task.
-	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
-	 *                            channel.
-	 * @return the range, e.g. "SheetName!X:Y" that holds all the affected users.
-	 */
-	public static String getAffectedUsersRange(String taskName, String mattermostChannelId) {
-		Objects.requireNonNull(taskName);
-		Objects.requireNonNull(mattermostChannelId);
-
-		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + AFFECTED_USER_ID__COLUMN + ":"
-				+ AFFECTED_USER_ID__COLUMN;
-	}
-
-	/**
 	 * Provides the Google spreadsheet "range" that contains all the task
 	 * realizations that is all the users with the associated task realization
 	 * timeStamp.
@@ -231,6 +215,92 @@ public class SharedTasksGoogleUtils {
 		// User timestamps are stored in the second column of the sheet.
 		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + USER_ID__COLUMN + ":"
 				+ LAST_TIME_STAMP__COLUMN;
+	}
+
+	/**
+	 * Provides the Google spreadsheet "range" that contains all users who have been
+	 * assigned the task since the last time the task has been done.
+	 * 
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the range, e.g. "SheetName!X:Y" that holds all the users who have
+	 *         been assigned the task since it was last done.
+	 */
+	public static String getAllAssignedUsersSinceLastDoneRangeForTask(String taskName, String mattermostChannelId) {
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		// When the task is assigned to a user, their ID is added in the third column.
+		// The third column is cleared upon a "done".
+		return getSheetTitleForTask(taskName, mattermostChannelId) + "!" + AFFECTED_USER_ID__COLUMN + ":"
+				+ AFFECTED_USER_ID__COLUMN;
+	}
+
+	/**
+	 * 
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @throws GoogleException
+	 */
+	public static List<String> getAllAssignedUsersSinceLastDoneForTask(String spreadsheetId, String taskName,
+			String mattermostChannelId) throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		String range = getAllAssignedUsersSinceLastDoneRangeForTask(taskName, mattermostChannelId);
+		try {
+			ValueRange result = GoogleUtils.getSheetsService().spreadsheets().values().get(spreadsheetId, range)
+					.execute();
+			if (result.getValues() != null) {
+				// If the cast fail it means that was an issue while inserting a user ID in the
+				// column, as we should only handle strings.
+				return result.getValues().stream().map(value -> (String) value.get(0)).collect(Collectors.toList());
+			} else {
+				return new ArrayList<>();
+			}
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
+	}
+
+	/**
+	 * Assigns a task to a user.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @param userId              the (non-{@code null}) ID of the Mattermost user
+	 *                            to assign the task to.
+	 * @throws GoogleException
+	 */
+	public static void assignTaskToUser(String spreadsheetId, String taskName, String mattermostChannelId,
+			String userId) throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+		Objects.requireNonNull(userId);
+
+		List<List<Object>> valuesToAppend = Arrays.asList(Arrays.asList(userId));
+		ValueRange body = new ValueRange().setValues(valuesToAppend);
+		String range = SharedTasksGoogleUtils.getAllAssignedUsersSinceLastDoneRangeForTask(taskName,
+				mattermostChannelId);
+		try {
+			AppendValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
+					.append(spreadsheetId, range, body)
+					.setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException(
+					"There was an issue while appending " + valuesToAppend + " to range \"" + range + "\".", exception);
+		}
 	}
 
 	/**
@@ -298,7 +368,7 @@ public class SharedTasksGoogleUtils {
 	 *                            to unregister from the task.
 	 * @throws GoogleException
 	 */
-	public static void doTask(String spreadsheetId, String taskName, String mattermostChannelId, String userId)
+	public static void markTaskAsDone(String spreadsheetId, String taskName, String mattermostChannelId, String userId)
 			throws GoogleException {
 		Objects.requireNonNull(spreadsheetId);
 		Objects.requireNonNull(taskName);
@@ -325,7 +395,7 @@ public class SharedTasksGoogleUtils {
 		}
 
 		// Reset the affected users
-		range = getAffectedUsersRange(taskName, mattermostChannelId);
+		range = getAllAssignedUsersSinceLastDoneRangeForTask(taskName, mattermostChannelId);
 		try {
 			List<List<Object>> emptyValues = new ArrayList<>();
 			emptyValues.add(Arrays.asList(""));
@@ -365,14 +435,20 @@ public class SharedTasksGoogleUtils {
 				// If the casts fail it means that was an issue while inserting a user ID or
 				// timestamp in the
 				// first column, as we should only insert strings.
-				return result.getValues().stream().collect(Collectors.toMap(row -> (String) row.get(0), row -> {
-					if (row.size() > 2) {
-						return Instant.parse((String) row.get(1));
-					} else {
-						// No timestamp yet for this user.
-						return null;
-					}
-				}));
+				return result.getValues().stream().collect(HashMap::new, (map, row) -> {
+					String userId = (String) row.get(0);
+					Instant timestamp = (row.size() > 2) ? Instant.parse((String) row.get(1)) : null;
+					map.put(userId, timestamp);
+				}, HashMap::putAll);
+
+//				Collectors.toMap(row -> (String) row.get(0), row -> {
+//					if (row.size() > 2) {
+//						return Instant.parse((String) row.get(1));
+//					} else {
+//						// No timestamp yet for this user.
+//						return null;
+//					}
+//				}));
 			} else {
 				return new HashMap<>();
 			}

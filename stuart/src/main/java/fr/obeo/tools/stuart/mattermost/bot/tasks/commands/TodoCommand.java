@@ -2,9 +2,11 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
@@ -12,6 +14,8 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
  * {@link SharedTasksCommand} implementation that indicates that a task of a
@@ -39,10 +43,6 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		// TODO: implement
-		// 1. Find the sheet for the task.
-		// 2. Determine a user to assign the task to.
-		// 3. Notify the user and mark it on the sheet.
 		Map<String, Instant> usersAndTheirTimestamp = this
 				.getAllRegisteredUsersAndTheirTimestamps(commandExecutionContext);
 		if (usersAndTheirTimestamp != null) {
@@ -58,31 +58,96 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 							"There was an issue while responding for a task that has no registered users.", exception);
 				}
 			} else {
-				String selectedUserId;
-				// First try among those who have no timestamp
-				List<String> newbiesId = usersAndTheirTimestamp.entrySet().stream()
-						.filter(entry -> entry.getValue() == null).map(Map.Entry::getKey).collect(Collectors.toList());
-				if (!newbiesId.isEmpty()) {
-					selectedUserId = newbiesId.get(0);
-				} else {
-					// Else find the oldest timestamp
-					selectedUserId = usersAndTheirTimestamp.entrySet().stream()
-							.max(Comparator.comparing(entry -> entry.getValue())).get().getKey();
-				}
-				// TODO: mark the selected user ID in the third column at the first non-blank
-				// row.
-
-				// TODO: find how to do userID <-> username association
-				String message = "Task has been affected to user " + selectedUserId;
+				// There is at least one user registered for the task.
 				try {
-					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
-				} catch (IOException exception) {
-					throw new CommandExecutionException("There was an issue while notifying a user for a task.",
+					List<String> pastAssignedUsers = SharedTasksGoogleUtils.getAllAssignedUsersSinceLastDoneForTask(
+							commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
+					String userIdToAssignTheTaskTo = determineNextUserToAssignTheTaskTo(usersAndTheirTimestamp,
+							pastAssignedUsers);
+					assignTaskToUser(commandExecutionContext, this.getTaskName(), this.getChannelId(),
+							userIdToAssignTheTaskTo);
+				} catch (GoogleException exception) {
+					throw new CommandExecutionException(
+							"There was an issue while retrieving the users assigned to task \"" + this.getTaskName()
+									+ "\" since it was last done.",
 							exception);
 				}
 			}
 		}
 		// else it has already been handled because the task does not exist.
+	}
+
+	/**
+	 * Selects the user to whom the task will be assigned.
+	 * 
+	 * @param usersAndTheirTimestamp the (non-{@code null}) {@link Map} of the
+	 *                               registered user IDs and their timestamps.
+	 * @param pastAssignedUsers      the (non-{@code null}) {@link List} of user IDs
+	 *                               to whom the task has been assigned since it was
+	 *                               lastt done.
+	 * @return the user ID to whom the task must be assigned.
+	 */
+	private static String determineNextUserToAssignTheTaskTo(Map<String, Instant> usersAndTheirTimestamp,
+			List<String> pastAssignedUsers) {
+		String selectedUserId;
+
+		// First try among those who have no timestamp and have not been assigned the
+		// task already.
+		List<String> newbiesId = usersAndTheirTimestamp.entrySet().stream()
+				.filter(entry -> !pastAssignedUsers.contains(entry.getKey())).filter(entry -> entry.getValue() == null)
+				.map(Map.Entry::getKey).collect(Collectors.toList());
+		if (!newbiesId.isEmpty()) {
+			selectedUserId = newbiesId.get(0);
+		} else {
+			// Else find the user with the oldest timestamp and to whom the task has not
+			// been assigned already.
+			Optional<String> unassignedUserIdWithOldestTimestamp = usersAndTheirTimestamp.entrySet().stream()
+					.filter(entry -> !pastAssignedUsers.contains(entry.getKey()))
+					.max(Comparator.comparing(entry -> entry.getValue())).map(entry -> entry.getKey());
+			if (unassignedUserIdWithOldestTimestamp.isPresent()) {
+				selectedUserId = unassignedUserIdWithOldestTimestamp.get();
+			} else {
+				// Could not find a newbie to whom the task has not been assigned, or a user to
+				// whom the task has not been assigned.
+				// So we try one more time to assign the task to someone to whom the task has
+				// already been assigned.
+				// Although in practice this should not happen too often.
+				return determineNextUserToAssignTheTaskTo(usersAndTheirTimestamp, Collections.emptyList());
+			}
+		}
+		return selectedUserId;
+	}
+
+	/**
+	 * Assigns a task to a user.
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @param taskName                the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId     the (non-{@code null}) ID of the Mattermost
+	 *                                channel.
+	 * @param userIdToAssignTheTaskTo the (non-{@code null}) ID of the Mattermost
+	 *                                user to assign the task to.
+	 * @throws CommandExecutionException
+	 */
+	private static void assignTaskToUser(CommandExecutionContext commandExecutionContext, String taskName,
+			String mattermostChannelId, String userIdToAssignTheTaskTo) throws CommandExecutionException {
+		try {
+			SharedTasksGoogleUtils.assignTaskToUser(commandExecutionContext.getSharedTasksSheetId(), taskName,
+					mattermostChannelId, userIdToAssignTheTaskTo);
+		} catch (GoogleException exception) {
+			throw new CommandExecutionException("There was an issue while assigning task \"" + taskName
+					+ "\" to user \"" + userIdToAssignTheTaskTo + "\".", exception);
+		}
+
+		// TODO: find how to do userID <-> username association
+		String message = "Task has been affected to the user with ID: " + userIdToAssignTheTaskTo;
+		try {
+			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
+		} catch (IOException exception) {
+			throw new CommandExecutionException("There was an issue while responding for task \"" + taskName
+					+ "\" being assigned to user \"" + userIdToAssignTheTaskTo + "\".", exception);
+		}
 	}
 
 }

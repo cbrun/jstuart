@@ -37,7 +37,7 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
 		try {
-			SharedTasksGoogleUtils.doTask(commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(),
+			SharedTasksGoogleUtils.markTaskAsDone(commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(),
 					this.getChannelId(), this.getUserId());
 
 			String successMessage = "The task \"" + this.getTaskName() + "\" has been successfully done by \""
