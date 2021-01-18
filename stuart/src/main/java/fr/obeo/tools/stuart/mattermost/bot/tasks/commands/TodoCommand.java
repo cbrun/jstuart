@@ -59,19 +59,11 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 				}
 			} else {
 				// There is at least one user registered for the task.
-				try {
-					List<String> pastAssignedUsers = SharedTasksGoogleUtils.getAllAssignedUsersSinceLastDoneForTask(
-							commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
-					String userIdToAssignTheTaskTo = determineNextUserToAssignTheTaskTo(usersAndTheirTimestamp,
-							pastAssignedUsers);
-					assignTaskToUser(commandExecutionContext, this.getTaskName(), this.getChannelId(),
-							userIdToAssignTheTaskTo);
-				} catch (GoogleException exception) {
-					throw new CommandExecutionException(
-							"There was an issue while retrieving the users assigned to task \"" + this.getTaskName()
-									+ "\" since it was last done.",
-							exception);
-				}
+				List<String> pastAssignedUsers = getPastAssignedUserIds(commandExecutionContext);
+				String userIdToAssignTheTaskTo = determineNextUserToAssignTheTaskTo(usersAndTheirTimestamp,
+						pastAssignedUsers);
+				assignTaskToUser(commandExecutionContext, this.getTaskName(), this.getChannelId(),
+						userIdToAssignTheTaskTo);
 			}
 		}
 		// else it has already been handled because the task does not exist.

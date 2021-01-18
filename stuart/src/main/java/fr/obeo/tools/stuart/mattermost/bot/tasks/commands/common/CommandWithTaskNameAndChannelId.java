@@ -169,4 +169,27 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 			return null;
 		}
 	}
+
+	/**
+	 * Provides the IDs of the Mattermost users to whom this task has been assigned
+	 * since the last time it was done.
+	 * 
+	 * @param commandExecutionContext the (non-{@code null})
+	 *                                {@link CommandExecutionContext}.
+	 * @return the (non-{@code null}) {@link List} of the Mattermost user IDs to
+	 *         whom the task has been assigned since it was last done. It may hold
+	 *         duplicates.
+	 * @throws CommandExecutionException
+	 */
+	protected List<String> getPastAssignedUserIds(CommandExecutionContext commandExecutionContext)
+			throws CommandExecutionException {
+		try {
+			List<String> pastAssignedUsers = SharedTasksGoogleUtils.getAllAssignedUsersSinceLastDoneForTask(
+					commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(), this.getChannelId());
+			return pastAssignedUsers;
+		} catch (GoogleException exception) {
+			throw new CommandExecutionException("There was an issue while retrieving the users assigned to task \""
+					+ this.getTaskName() + "\" since it was last done.", exception);
+		}
+	}
 }

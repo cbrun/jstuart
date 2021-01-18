@@ -238,13 +238,17 @@ public class SharedTasksGoogleUtils {
 	}
 
 	/**
-	 * 
+	 * Provides the IDs of the Mattermost users to whom a task has been assigned
+	 * since it was last done.
 	 * 
 	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
 	 *                            document.
 	 * @param taskName            the (non-{@code null}) name of the task.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel.
+	 * @return the (non-{@code null}) {@link List} of the Mattermost user IDs to
+	 *         whom the task has been assigned since it was last done. It may hold
+	 *         duplicates.
 	 * @throws GoogleException
 	 */
 	public static List<String> getAllAssignedUsersSinceLastDoneForTask(String spreadsheetId, String taskName,
@@ -355,6 +359,46 @@ public class SharedTasksGoogleUtils {
 	}
 
 	/**
+	 * Provides the realization history of a task.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the (non-{@code null}) {@link Map} of all the realizations of the
+	 *         task, indexed by the {@link Instant} of when the task was done, and
+	 *         associated to the Mattermost user ID of the person who performed the
+	 *         task. This person is not necessarily registered for the task.
+	 * @throws GoogleException
+	 */
+	public static Map<Instant, String> getTaskRealizationHistory(String spreadsheetId, String taskName,
+			String mattermostChannelId) throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(taskName);
+		Objects.requireNonNull(mattermostChannelId);
+
+		String range = getTaskRealizationRecordsRange(taskName, mattermostChannelId);
+		try {
+			ValueRange result = GoogleUtils.getSheetsService().spreadsheets().values().get(spreadsheetId, range)
+					.execute();
+			if (result.getValues() != null) {
+				// If the casts fail it means that the sheet is in an unexpected state.
+				return result.getValues().stream().collect(HashMap::new, (map, row) -> {
+					Instant timestamp = (row.size() > 1) ? Instant.parse((String) row.get(1)) : null;
+					String userId = (String) row.get(0);
+					map.put(timestamp, userId);
+				}, HashMap::putAll);
+			} else {
+				return new HashMap<>();
+			}
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
+		}
+	}
+
+	/**
 	 * Set a task as done.</br>
 	 * - It will add a new record in the history.</br>
 	 * - It will also reset the affected users to this task.
@@ -437,18 +481,9 @@ public class SharedTasksGoogleUtils {
 				// first column, as we should only insert strings.
 				return result.getValues().stream().collect(HashMap::new, (map, row) -> {
 					String userId = (String) row.get(0);
-					Instant timestamp = (row.size() > 2) ? Instant.parse((String) row.get(1)) : null;
+					Instant timestamp = (row.size() > 1) ? Instant.parse((String) row.get(1)) : null;
 					map.put(userId, timestamp);
 				}, HashMap::putAll);
-
-//				Collectors.toMap(row -> (String) row.get(0), row -> {
-//					if (row.size() > 2) {
-//						return Instant.parse((String) row.get(1));
-//					} else {
-//						// No timestamp yet for this user.
-//						return null;
-//					}
-//				}));
 			} else {
 				return new HashMap<>();
 			}
