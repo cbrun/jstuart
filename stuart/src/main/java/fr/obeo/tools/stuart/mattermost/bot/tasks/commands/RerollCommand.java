@@ -1,8 +1,5 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 
 /**
@@ -12,7 +9,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
  * @author flatombe
  *
  */
-public class RerollCommand extends CommandWithTaskNameAndChannelId {
+public class RerollCommand extends TodoCommand {
 
 	/**
 	 * Creates a new {@link RerollCommand}.
@@ -26,14 +23,6 @@ public class RerollCommand extends CommandWithTaskNameAndChannelId {
 	 */
 	public RerollCommand(String commandText, String taskName, String mattermostChannelId) {
 		super(commandText, taskName, mattermostChannelId);
-	}
-
-	@Override
-	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		// TODO: implement
-		// 1. Find the sheet corresponding to the task to reroll.
-		// 2. Find a user like in TodoCommand, but it must not be one of the users
-		// designated since the task has last been done.
 	}
 
 }
