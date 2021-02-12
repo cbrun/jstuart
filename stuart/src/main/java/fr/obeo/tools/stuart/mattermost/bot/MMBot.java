@@ -5,14 +5,15 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -34,6 +35,8 @@ import com.squareup.okhttp.ws.WebSocketCall;
 import fr.obeo.tools.stuart.mattermost.bot.internal.BotSocketListener;
 import fr.obeo.tools.stuart.mattermost.bot.internal.ChannelsWrapper;
 import fr.obeo.tools.stuart.mattermost.bot.internal.MessagesWrapper;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUserGetUsersByIdsParam;
 
 class LoginMsg {
 
@@ -372,6 +375,30 @@ public class MMBot {
 				+ "/posts/page/" + offset + "/" + limit, MessagesWrapper.class);
 		if (r.getPosts() != null) {
 			return r.getPosts();
+		}
+		return Maps.newLinkedHashMap();
+	}
+
+	public Map<String, MUser> getUsers(List<String> userIds) throws IOException {
+		MUserGetUsersByIdsParam mUserGetUsersByIdsParam = new MUserGetUsersByIdsParam();
+		mUserGetUsersByIdsParam.setUserIds(userIds);
+		String json = mUserGetUsersByIdsParam.getJson();
+
+		Request request = new Request.Builder().url(host + "api/" + API_VERSION + "/users/ids")
+				.header("Authorization", " Bearer " + this.token).addHeader("Cookie", "MMTOKEN=" + this.token)
+				.post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+
+		Response response = client.newCall(request).execute();
+		try (ResponseBody body = response.body()) {
+			if (response.isSuccessful()) {
+				String bodyString = body.string();
+				MUser[] users = gson.fromJson(bodyString, MUser[].class);
+				Map<String, MUser> usersFromId = Arrays.asList(users).stream()
+						.collect(Collectors.toMap(user -> user.getId(), user -> user));
+				if (usersFromId != null) {
+					return usersFromId;
+				}
+			}
 		}
 		return Maps.newLinkedHashMap();
 	}
