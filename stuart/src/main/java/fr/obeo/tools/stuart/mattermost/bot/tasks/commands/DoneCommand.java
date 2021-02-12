@@ -8,6 +8,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTask
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 /**
  * {@link SharedTasksCommand} implementation to indicate that a task has been
@@ -40,8 +41,9 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 			SharedTasksGoogleUtils.markTaskAsDone(commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(),
 					this.getChannelId(), this.getUserId());
 
-			String successMessage = "The task \"" + this.getTaskName() + "\" has been successfully done by \""
-					+ this.getUserId() + "\".";
+			MUser doneByUser = this.getMattermostUser(commandExecutionContext);
+			String successMessage = "Task \"" + this.getTaskName() + "\" marked as done by " + doneByUser.getUsername()
+					+ ".";
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);
 		} catch (GoogleException | IOException exception) {
 			throw new CommandExecutionException("There was an issue while setting task \"" + this.getTaskName()

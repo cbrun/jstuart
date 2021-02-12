@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import fr.obeo.tools.stuart.mattermost.MattermostSyntax;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
@@ -16,6 +17,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 /**
  * {@link SharedTasksCommand} implementation that indicates that a task of a
@@ -122,7 +124,7 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 	 *                                user to assign the task to.
 	 * @throws CommandExecutionException
 	 */
-	private static void assignTaskToUser(CommandExecutionContext commandExecutionContext, String taskName,
+	private void assignTaskToUser(CommandExecutionContext commandExecutionContext, String taskName,
 			String mattermostChannelId, String userIdToAssignTheTaskTo) throws CommandExecutionException {
 		try {
 			SharedTasksGoogleUtils.assignTaskToUser(commandExecutionContext.getSharedTasksSheetId(), taskName,
@@ -132,14 +134,18 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 					+ "\" to user \"" + userIdToAssignTheTaskTo + "\".", exception);
 		}
 
-		// TODO: find how to do userID <-> username association
-		String message = "Task has been affected to the user with ID: " + userIdToAssignTheTaskTo;
+		MUser matterMostUserToAssignTheTaskTo = this
+				.getUsersById(commandExecutionContext, Collections.singletonList(userIdToAssignTheTaskTo))
+				.get(userIdToAssignTheTaskTo);
+		String message = "Task \"" + taskName + "\" has been affected to " + MattermostSyntax.HIGHLIGHT
+				+ matterMostUserToAssignTheTaskTo.getUsername() + ".";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
 		} catch (IOException exception) {
 			throw new CommandExecutionException("There was an issue while responding for task \"" + taskName
 					+ "\" being assigned to user \"" + userIdToAssignTheTaskTo + "\".", exception);
 		}
+
 	}
 
 }

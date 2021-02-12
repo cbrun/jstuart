@@ -58,10 +58,11 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	 * @throws CommandExecutionException
 	 */
 	private void userIsNotRegistered(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		String message = "Failed user unregistration. You are not already registered for task \"" + this.getTaskName()
-				+ "\". To register yourself, use command \"" + SharedTasksCommandFactory.COMMAND_STARTER
-				+ this.getTaskName() + SharedTasksCommandFactory.COMMAND_SEPARATOR
-				+ SharedTasksCommandFactory.VERB_ADDME + "\".";
+		String message = "Failed user unregistretion from task \"" + this.getTaskName()
+				+ "\" because you were not registered for this task in the first place. To register yourself, use command \""
+				+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
+						.apply(this.getTaskName())
+				+ "\".";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
 		} catch (IOException exception) {
@@ -83,7 +84,9 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 			SharedTasksGoogleUtils.removeRegisteredUser(commandExecutionContext.getSharedTasksSheetId(),
 					this.getTaskName(), this.getChannelId(), this.getUserId());
 
-			String successMessage = "Successfully unregistered user from task \"" + this.getTaskName() + "\".";
+			String successMessage = "Successfully unregistered "
+					+ this.getMattermostUser(commandExecutionContext).getUsername() + " from task \""
+					+ this.getTaskName() + "\".";
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);
 		} catch (GoogleException | IOException exception) {
 			throw new CommandExecutionException("There was an issue while unregistering user \"" + this.getUserId()

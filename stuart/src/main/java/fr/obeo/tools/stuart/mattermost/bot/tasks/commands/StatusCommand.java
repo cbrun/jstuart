@@ -2,6 +2,7 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTask
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 /**
  * {@link SharedTasksCommand} implementation for displaying the current status
@@ -49,10 +51,14 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 
 				// The most recent users to whom the task has been assigned.
 				List<String> pastAssignedUserIds = getPastAssignedUserIds(commandExecutionContext);
-				// TODO map user ID to username
 				if (pastAssignedUserIds != null && !pastAssignedUserIds.isEmpty()) {
+					Map<String, MUser> pastAssignedUsersById = this.getUsersById(commandExecutionContext,
+							pastAssignedUserIds);
+					List<String> pastAssignedUserNames = pastAssignedUserIds.stream()
+							.map(userId -> pastAssignedUsersById.get(userId).getUsername())
+							.collect(Collectors.toList());
 					statusMessage += "\n* Last assigned to:"
-							+ pastAssignedUserIds.stream().collect(Collectors.joining(", "));
+							+ pastAssignedUserNames.stream().collect(Collectors.joining(", "));
 				}
 
 				// The last time the task has been done.
@@ -63,7 +69,10 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 				if (lastDone != null) {
 					Instant lastDoneTime = lastDone.getKey();
 					String lastDoneUserId = lastDone.getValue();
-					statusMessage += "\n* Last done on " + lastDoneTime.toString() + " by " + lastDoneUserId + ".";
+					String lastDoneUserName = this
+							.getUsersById(commandExecutionContext, Collections.singletonList(lastDoneUserId))
+							.get(lastDoneUserId).getUsername();
+					statusMessage += "\n* Last done on " + lastDoneTime.toString() + " by " + lastDoneUserName + ".";
 				}
 
 				// The number of registered users.

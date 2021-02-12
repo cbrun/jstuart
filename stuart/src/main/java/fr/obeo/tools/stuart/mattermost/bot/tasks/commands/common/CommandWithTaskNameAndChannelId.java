@@ -94,7 +94,10 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 		Sheet taskSheet = this.getTaskSheet(commandExecutionContext);
 		if (taskSheet == null) {
 			String failureMessage = "Task \"" + this.getTaskName()
-					+ "\" does not exist. You may want to create it using command \"";
+					+ "\" does not exist. You may want to create it using command \""
+					+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_CREATE)
+							.apply(this.getTaskName())
+					+ "\".";
 			try {
 				commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), failureMessage);
 			} catch (IOException exception) {

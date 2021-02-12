@@ -44,7 +44,7 @@ public class SharedTasks {
 	 * @throws IOException
 	 */
 	public void handle(MMBot bot, MPost post) throws IOException {
-		SharedTasksCommand command = SharedTasksCommandFactory.tryToParsePostIntoCommand(post);
+		SharedTasksCommand command = new SharedTasksCommandFactory(bot).tryToParsePostIntoCommand(post);
 		if (command != null) {
 			try {
 				command.execute(new CommandExecutionContext(bot, post, this.sharedTasksSheetId));

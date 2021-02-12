@@ -36,7 +36,8 @@ import fr.obeo.tools.stuart.mattermost.bot.internal.BotSocketListener;
 import fr.obeo.tools.stuart.mattermost.bot.internal.ChannelsWrapper;
 import fr.obeo.tools.stuart.mattermost.bot.internal.MessagesWrapper;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
-import fr.obeo.tools.stuart.mattermost.bot.user.MUserGetUsersByIdsParam;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUserGetUsersByIdParam;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUserGetUsersByUsernameParam;
 
 class LoginMsg {
 
@@ -379,12 +380,34 @@ public class MMBot {
 		return Maps.newLinkedHashMap();
 	}
 
-	public Map<String, MUser> getUsers(List<String> userIds) throws IOException {
-		MUserGetUsersByIdsParam mUserGetUsersByIdsParam = new MUserGetUsersByIdsParam();
-		mUserGetUsersByIdsParam.setUserIds(userIds);
-		String json = mUserGetUsersByIdsParam.getJson();
+	public Map<String, MUser> getUsersById(List<String> userIds) throws IOException {
+		MUserGetUsersByIdParam mUserGetUsersByIdParam = new MUserGetUsersByIdParam(userIds);
+		String json = mUserGetUsersByIdParam.asJson();
 
 		Request request = new Request.Builder().url(host + "api/" + API_VERSION + "/users/ids")
+				.header("Authorization", " Bearer " + this.token).addHeader("Cookie", "MMTOKEN=" + this.token)
+				.post(RequestBody.create(MediaType.parse("application/json"), json)).build();
+
+		Response response = client.newCall(request).execute();
+		try (ResponseBody body = response.body()) {
+			if (response.isSuccessful()) {
+				String bodyString = body.string();
+				MUser[] users = gson.fromJson(bodyString, MUser[].class);
+				Map<String, MUser> usersFromId = Arrays.asList(users).stream()
+						.collect(Collectors.toMap(user -> user.getId(), user -> user));
+				if (usersFromId != null) {
+					return usersFromId;
+				}
+			}
+		}
+		return Maps.newLinkedHashMap();
+	}
+
+	public Map<String, MUser> getUsersByUsername(List<String> userNames) throws IOException {
+		MUserGetUsersByUsernameParam mUserGetUsersByUsernameParam = new MUserGetUsersByUsernameParam(userNames);
+		String json = mUserGetUsersByUsernameParam.asJson();
+
+		Request request = new Request.Builder().url(host + "api/" + API_VERSION + "/users/usernames")
 				.header("Authorization", " Bearer " + this.token).addHeader("Cookie", "MMTOKEN=" + this.token)
 				.post(RequestBody.create(MediaType.parse("application/json"), json)).build();
 

@@ -65,9 +65,9 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	private void userIsAlreadyRegistered(CommandExecutionContext commandExecutionContext)
 			throws CommandExecutionException {
 		String message = "Failed user registration. You are already registered for task \"" + this.getTaskName()
-				+ "\". To unregister yourself, use command \"" + SharedTasksCommandFactory.COMMAND_STARTER
-				+ this.getTaskName() + SharedTasksCommandFactory.COMMAND_SEPARATOR
-				+ SharedTasksCommandFactory.VERB_REMOVEME + "\".";
+				+ "\". To unregister yourself, use command \"" + SharedTasksCommandFactory.ALL_VERBS_USAGE
+						.get(SharedTasksCommandFactory.VERB_REMOVEME).apply(this.getTaskName())
+				+ "\".";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
 		} catch (IOException exception) {
@@ -90,9 +90,11 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 		String range = SharedTasksGoogleUtils.getAllUsersRangeForTask(this.getTaskName(), this.getChannelId());
 		try {
 			AppendValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
-					.append(commandExecutionContext.getSharedTasksSheetId(), range, body).setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW)
-					.execute();
-			String successMessage = "Successfully registered user for task \"" + this.getTaskName() + "\".";
+					.append(commandExecutionContext.getSharedTasksSheetId(), range, body)
+					.setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
+			String successMessage = "Successfully registered "
+					+ this.getMattermostUser(commandExecutionContext).getUsername() + " for task \""
+					+ this.getTaskName() + "\".";
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new CommandExecutionException("There was an issue while registering user \"" + this.getUserId()

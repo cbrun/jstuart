@@ -1,13 +1,19 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import fr.obeo.tools.stuart.mattermost.MattermostSyntax;
+import fr.obeo.tools.stuart.mattermost.bot.MMBot;
 import fr.obeo.tools.stuart.mattermost.bot.MPost;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.AddMeCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.CreateTaskCommand;
@@ -17,6 +23,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RemoveMeCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RerollCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.StatusCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.TodoCommand;
+import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 /**
  * Factory that can parse a Mattermost post to create the corresponding
@@ -41,11 +48,44 @@ public class SharedTasksCommandFactory {
 	public static final String VERB_TODO = "Todo";
 	public static final String VERB_REROLL = "Reroll";
 	public static final String VERB_DONE = "Done";
-	public static final List<String> ALL_VERBS = Stream
-			.of(VERB_STATUS, VERB_CREATE, VERB_ADDME, VERB_REMOVEME, VERB_TODO, VERB_REROLL, VERB_DONE)
-			.collect(Collectors.toList());
+
+	private static final Function<String, String> VERB_STATUS_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_STATUS;
+	private static final Function<String, String> VERB_CREATE_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_CREATE;
+	private static final Function<String, String> VERB_ADDME_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_ADDME;
+	private static final Function<String, String> VERB_REMOVEME_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_REMOVEME;
+	private static final Function<String, String> VERB_TODO_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_TODO;
+	private static final Function<String, String> VERB_REROLL_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_REROLL;
+	private static final Function<String, String> VERB_DONE_USAGE = taskName -> COMMAND_STARTER
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_DONE + COMMAND_SEPARATOR
+			+ "(<user name>)";
+
+	public static final Map<String, Function<String, String>> ALL_VERBS_USAGE = createVerbsUsageMap();
+
+	private static Map<String, Function<String, String>> createVerbsUsageMap() {
+		Map<String, Function<String, String>> map = new LinkedHashMap<>();
+		map.put(VERB_STATUS, VERB_STATUS_USAGE);
+		map.put(VERB_CREATE, VERB_CREATE_USAGE);
+		map.put(VERB_ADDME, VERB_ADDME_USAGE);
+		map.put(VERB_REMOVEME, VERB_REMOVEME_USAGE);
+		map.put(VERB_TODO, VERB_TODO_USAGE);
+		map.put(VERB_REROLL, VERB_REROLL_USAGE);
+		map.put(VERB_DONE, VERB_DONE_USAGE);
+		return map;
+	}
 
 	private static final String KEYWORD_TASKS = "tasks";
+
+	private final MMBot bot;
+
+	public SharedTasksCommandFactory(MMBot bot) {
+		this.bot = bot;
+	}
 
 	/**
 	 * Attemps to parse a {@link MPost Mattermost post} into a
@@ -55,7 +95,7 @@ public class SharedTasksCommandFactory {
 	 * @return the corresponding {@link SharedTasksCommand}, or {@code null} if it
 	 *         could not be parsed as one.
 	 */
-	public static SharedTasksCommand tryToParsePostIntoCommand(MPost mattermostPost) {
+	public SharedTasksCommand tryToParsePostIntoCommand(MPost mattermostPost) {
 		String userMessage = mattermostPost.getMessage();
 		if (userMessage.startsWith(COMMAND_STARTER)) {
 			return parseFrom(userMessage.substring(COMMAND_STARTER.length()), mattermostPost.getChannelId(),
@@ -77,7 +117,7 @@ public class SharedTasksCommandFactory {
 	 *                    post.
 	 * @return the corresponding {@link SharedTasksCommand}.
 	 */
-	private static SharedTasksCommand parseFrom(String commandText, String channelId, String userId) {
+	private SharedTasksCommand parseFrom(String commandText, String channelId, String userId) {
 		Objects.requireNonNull(commandText);
 		Objects.requireNonNull(channelId);
 		Objects.requireNonNull(userId);
@@ -96,7 +136,21 @@ public class SharedTasksCommandFactory {
 		}
 	}
 
-	private static SharedTasksCommand parseFrom(String commandText, List<String> trimmedCoreArguments, String channelId,
+	/**
+	 * Parses the text entered by a user that corresponds to a command into a
+	 * {@link SharedTasksCommand}.
+	 * 
+	 * @param commandText          the (non-{@code null}) input text, stripped from
+	 *                             the command started symbol(s).
+	 * @param trimmedCoreArguments the (non-{@code null}) {@link List} of all
+	 *                             trimmed arguments of the command.
+	 * @param channelId            the (non-{@code null}) ID of the channel of the
+	 *                             originating post.
+	 * @param userId               the (non-{@code null}) ID of the user of the
+	 *                             originating post.
+	 * @return the corresponding {@link SharedTasksCommand}.
+	 */
+	private SharedTasksCommand parseFrom(String commandText, List<String> trimmedCoreArguments, String channelId,
 			String userId) {
 
 		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
@@ -120,16 +174,55 @@ public class SharedTasksCommandFactory {
 				final String doneUserId;
 				if (trimmedCoreArguments.size() >= 3) {
 					String userSpecification = trimmedCoreArguments.get(2);
-					// TODO interpret text to find user ID from the channel
-					doneUserId = userSpecification;
+					try {
+						MUser doneMattermostUser = findMattermostUserFromUserSpecification(userSpecification);
+						if (doneMattermostUser != null) {
+							doneUserId = doneMattermostUser.getId();
+						} else {
+							// The optional argument could not be understood as a username.
+							return new ErrorCommand(commandText, "Unknown user \"" + userSpecification + "\".");
+						}
+					} catch (IOException exception) {
+						return new ErrorCommand(commandText,
+								"There was an issue while identifying Mattermost user \"" + userSpecification + "\".");
+					}
 				} else {
 					doneUserId = userId;
 				}
 				return new DoneCommand(commandText, taskName, channelId, doneUserId);
 			}
 		}
-
 		return new ErrorCommand(commandText, errorMessage.get());
+	}
+
+	/**
+	 * Interprets a "user specification" text entered by a user into the
+	 * corresponding Mattermost user. "User specifications" are expected to follow
+	 * one of the forms below:
+	 * <ul>
+	 * <li>a username from the channel, e.g. 'stuart'</li>
+	 * <li>a username from the channel, preceded by an '@', e.g. '@stuart'</li>
+	 * </ul>
+	 * 
+	 * @param userSpecification the (non-{@code null}) user specification text
+	 *                          entered by a user.
+	 * @return the {@link MUser} corresponding to the input
+	 *         {@code userSpecification}. {@code null} if none could be determined.
+	 */
+	private MUser findMattermostUserFromUserSpecification(String userSpecification) throws IOException {
+		// First check whether the specification starts with '@' which is used for
+		// highlighting in Mattermost syntax.
+		String userNameSpecification;
+		if (userSpecification.startsWith(MattermostSyntax.HIGHLIGHT)) {
+			userNameSpecification = userSpecification.substring(1);
+		} else {
+			userNameSpecification = userSpecification;
+		}
+
+		// Search for a user using its username.
+		Map<String, MUser> usersByUsername = this.bot
+				.getUsersByUsername(Collections.singletonList(userNameSpecification));
+		return usersByUsername.get(userNameSpecification);
 	}
 
 	private static Optional<String> getIssuesWithCommand(List<String> trimmedCoreArguments) {
@@ -163,10 +256,11 @@ public class SharedTasksCommandFactory {
 
 	private static List<String> getIssuesWithVerbName(String taskName) {
 		List<String> issues = new ArrayList<>();
-		boolean correctVerb = ALL_VERBS.stream().filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst()
-				.isPresent();
+		boolean correctVerb = ALL_VERBS_USAGE.keySet().stream()
+				.filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
 		if (!correctVerb) {
-			issues.add("\"" + taskName + "\" is an not a valid verb. Please choose among " + ALL_VERBS);
+			issues.add("\"" + taskName + "\" is an not a valid verb. Please choose among: "
+					+ ALL_VERBS_USAGE.keySet().stream().collect(Collectors.joining(", ")));
 		}
 
 		return issues;
