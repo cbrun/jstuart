@@ -2,10 +2,12 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
 
+import fr.obeo.tools.stuart.mattermost.MattermostSyntax;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
@@ -42,8 +44,20 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 					this.getChannelId(), this.getUserId());
 
 			MUser doneByUser = this.getMattermostUser(commandExecutionContext);
-			String successMessage = "Task \"" + this.getTaskName() + "\" marked as done by " + doneByUser.getUsername()
-					+ ".";
+			boolean doneUserIsRegistered = this.getAllRegisteredUserIds(commandExecutionContext)
+					.contains(doneByUser.getId());
+
+			// If the task was done by someone who is not registered for it, highlight them
+			// to tell them about adding themselves to the task.
+			String successMessage = "Task \"" + this.getTaskName() + "\" marked as done by "
+					+ (doneUserIsRegistered ? "" : MattermostSyntax.HIGHLIGHT) + doneByUser.getUsername() + ".";
+			if (!doneUserIsRegistered) {
+				successMessage += " To register yourself for this task, use command \""
+						+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
+								.apply(this.getTaskName())
+						+ "\".";
+			}
+
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);
 		} catch (GoogleException | IOException exception) {
 			throw new CommandExecutionException("There was an issue while setting task \"" + this.getTaskName()

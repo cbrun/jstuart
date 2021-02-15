@@ -51,10 +51,10 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 			if (usersAndTheirTimestamp.isEmpty()) {
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(),
-							"There are no registered users for this task, so it cannot be assigned to anyone. Use command "
-									+ SharedTasksCommandFactory.COMMAND_STARTER + this.getTaskName()
-									+ SharedTasksCommandFactory.COMMAND_SEPARATOR + SharedTasksCommandFactory.VERB_ADDME
-									+ " to register yourself for this task.");
+							"There are no registered users for this task, so it cannot be assigned to anyone. Use command \""
+									+ SharedTasksCommandFactory.ALL_VERBS_USAGE
+											.get(SharedTasksCommandFactory.VERB_ADDME).apply(this.getTaskName())
+									+ "\" to register yourself for this task.");
 				} catch (IOException exception) {
 					throw new CommandExecutionException(
 							"There was an issue while responding for a task that has no registered users.", exception);

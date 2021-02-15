@@ -58,7 +58,7 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	 * @throws CommandExecutionException
 	 */
 	private void userIsNotRegistered(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
-		String message = "Failed user unregistretion from task \"" + this.getTaskName()
+		String message = "Failed user unregistration from task \"" + this.getTaskName()
 				+ "\" because you were not registered for this task in the first place. To register yourself, use command \""
 				+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
 						.apply(this.getTaskName())
