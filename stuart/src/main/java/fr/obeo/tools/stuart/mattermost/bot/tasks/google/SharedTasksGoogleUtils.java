@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
+import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
@@ -307,8 +308,8 @@ public class SharedTasksGoogleUtils {
 					.update(spreadsheetId, range, body)
 					.setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
 		} catch (IOException | GeneralSecurityException exception) {
-			throw new GoogleException(
-					"There was an issue while appending " + updatedValues + " to range \"" + range + "\".", exception);
+			throw new GoogleException("There was an issue while updating range \"" + range + "\" in spreadsheet \""
+					+ spreadsheetId + "\".", exception);
 		}
 	}
 
@@ -404,9 +405,11 @@ public class SharedTasksGoogleUtils {
 	}
 
 	/**
-	 * Set a task as done.</br>
-	 * - It will add a new record in the history.</br>
-	 * - It will also reset the affected users to this task.
+	 * Sets a task as done:</br>
+	 * <ul>
+	 * <li>Adds a new record in the realization history of the task</li>
+	 * <li>Clears the "last affected users" associated to the task</li>
+	 * </ul>
 	 * 
 	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
 	 *                            document.
@@ -414,7 +417,7 @@ public class SharedTasksGoogleUtils {
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel.
 	 * @param userId              the (non-{@code null}) ID of the Mattermost user
-	 *                            to unregister from the task.
+	 *                            who did the task.
 	 * @throws GoogleException
 	 */
 	public static void markTaskAsDone(String spreadsheetId, String taskName, String mattermostChannelId, String userId)
@@ -424,37 +427,74 @@ public class SharedTasksGoogleUtils {
 		Objects.requireNonNull(mattermostChannelId);
 		Objects.requireNonNull(userId);
 
-		// Update the records
-		String range = getTaskRealizationRecordsRange(taskName, mattermostChannelId);
+		updateTaskRealizationHistory(spreadsheetId, taskName, mattermostChannelId, userId);
+		clearLastAssignedUsersSinceLastDone(spreadsheetId, taskName, mattermostChannelId);
+	}
+
+	/**
+	 * Clears the last assigned users for the task since it was last done.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @throws GoogleException
+	 */
+	private static void clearLastAssignedUsersSinceLastDone(String spreadsheetId, String taskName,
+			String mattermostChannelId) throws GoogleException {
+		String lastAssignedUsersRange = getAllAssignedUsersSinceLastDoneRangeForTask(taskName, mattermostChannelId);
+		ClearValuesRequest clearValuesRequest = new ClearValuesRequest();
 		try {
-			ValueRange registeredUsersValueRange = GoogleUtils.getSheetsService().spreadsheets().values()
-					.get(spreadsheetId, range).execute();
-			List<List<Object>> currentValues = registeredUsersValueRange.getValues();
-			if (currentValues == null) {
-				currentValues = new ArrayList<>();
-			}
-			// Add a record in the list of rows
-			currentValues.add(Arrays.asList(userId, Instant.now().toString()));
-			ValueRange body = new ValueRange().setValues(currentValues);
-			GoogleUtils.getSheetsService().spreadsheets().values().update(spreadsheetId, range, body)
-					.setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
+			GoogleUtils.getSheetsService().spreadsheets().values()
+					.clear(spreadsheetId, lastAssignedUsersRange, clearValuesRequest).execute();
 		} catch (IOException | GeneralSecurityException exception) {
-			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
-					+ spreadsheetId + "\".", exception);
+			throw new GoogleException("There was an issue while clearing range \"" + lastAssignedUsersRange
+					+ "\" in spreadsheet \"" + spreadsheetId + "\".", exception);
+		}
+	}
+
+	/**
+	 * Updates the realization history of a task by adding a new entry into the
+	 * history.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
+	 *                            document.
+	 * @param taskName            the (non-{@code null}) name of the task.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @param userId              the (non-{@code null}) ID of the Mattermost user
+	 *                            who did the task.
+	 * @throws GoogleException
+	 */
+	private static void updateTaskRealizationHistory(String spreadsheetId, String taskName, String mattermostChannelId,
+			String userId) throws GoogleException {
+		final Instant timestamp = Instant.now();
+
+		// First retrieve the previous history.
+		List<List<Object>> realizationHistory = new ArrayList<>();
+		String taskRealizationHistoryRange = getTaskRealizationRecordsRange(taskName, mattermostChannelId);
+		try {
+			ValueRange currentTaskRealizationHistoryValueRange = GoogleUtils.getSheetsService().spreadsheets().values()
+					.get(spreadsheetId, taskRealizationHistoryRange).execute();
+			realizationHistory = currentTaskRealizationHistoryValueRange.getValues();
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while retrieving range \"" + taskRealizationHistoryRange
+					+ "\" in spreadsheet \"" + spreadsheetId + "\".", exception);
 		}
 
-		// Reset the affected users
-		range = getAllAssignedUsersSinceLastDoneRangeForTask(taskName, mattermostChannelId);
-		try {
-			List<List<Object>> emptyValues = new ArrayList<>();
-			emptyValues.add(Arrays.asList(""));
+		// Add a record into the history.
+		realizationHistory.add(Arrays.asList(userId, timestamp.toString()));
 
-			ValueRange body = new ValueRange().setValues(emptyValues);
-			GoogleUtils.getSheetsService().spreadsheets().values().update(spreadsheetId, range, body)
+		// Then update the history in the document.
+		ValueRange updateContent = new ValueRange().setValues(realizationHistory);
+		try {
+			GoogleUtils.getSheetsService().spreadsheets().values()
+					.update(spreadsheetId, taskRealizationHistoryRange, updateContent)
 					.setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
 		} catch (IOException | GeneralSecurityException exception) {
-			throw new GoogleException("There was an issue while resetting range \"" + range + "\" in spreadsheet \""
-					+ spreadsheetId + "\".", exception);
+			throw new GoogleException("There was an issue while updating range \"" + taskRealizationHistoryRange
+					+ "\" in spreadsheet \"" + spreadsheetId + "\".", exception);
 		}
 	}
 
