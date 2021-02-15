@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
-import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
 import com.google.api.services.sheets.v4.model.Request;
@@ -293,17 +293,22 @@ public class SharedTasksGoogleUtils {
 		Objects.requireNonNull(mattermostChannelId);
 		Objects.requireNonNull(userId);
 
-		List<List<Object>> valuesToAppend = Arrays.asList(Arrays.asList(userId));
-		ValueRange body = new ValueRange().setValues(valuesToAppend);
+		List<Object> assignedUsers = Stream
+				.concat(getAllAssignedUsersSinceLastDoneForTask(spreadsheetId, taskName, mattermostChannelId).stream(),
+						Stream.of(userId))
+				.collect(Collectors.toList());
+		List<List<Object>> updatedValues = Arrays.asList(assignedUsers);
+		ValueRange body = new ValueRange().setValues(updatedValues).setMajorDimension("COLUMNS");
 		String range = SharedTasksGoogleUtils.getAllAssignedUsersSinceLastDoneRangeForTask(taskName,
 				mattermostChannelId);
+
 		try {
-			AppendValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
-					.append(spreadsheetId, range, body)
+			UpdateValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
+					.update(spreadsheetId, range, body)
 					.setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException(
-					"There was an issue while appending " + valuesToAppend + " to range \"" + range + "\".", exception);
+					"There was an issue while appending " + updatedValues + " to range \"" + range + "\".", exception);
 		}
 	}
 
