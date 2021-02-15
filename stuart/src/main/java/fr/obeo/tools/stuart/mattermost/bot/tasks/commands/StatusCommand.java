@@ -57,7 +57,7 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 					List<String> pastAssignedUserNames = pastAssignedUserIds.stream()
 							.map(userId -> pastAssignedUsersById.get(userId).getUsername())
 							.collect(Collectors.toList());
-					statusMessage += "\n* Last assigned to:"
+					statusMessage += "\n* Last assigned to: "
 							+ pastAssignedUserNames.stream().collect(Collectors.joining(", "));
 				}
 

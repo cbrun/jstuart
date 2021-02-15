@@ -13,7 +13,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -394,7 +396,7 @@ public class MMBot {
 				String bodyString = body.string();
 				MUser[] users = gson.fromJson(bodyString, MUser[].class);
 				Map<String, MUser> usersFromId = Arrays.asList(users).stream()
-						.collect(Collectors.toMap(user -> user.getId(), user -> user));
+						.collect(Collectors.toMap(MUser::getId, Function.identity()));
 				if (usersFromId != null) {
 					return usersFromId;
 				}
@@ -416,10 +418,10 @@ public class MMBot {
 			if (response.isSuccessful()) {
 				String bodyString = body.string();
 				MUser[] users = gson.fromJson(bodyString, MUser[].class);
-				Map<String, MUser> usersFromId = Arrays.asList(users).stream()
-						.collect(Collectors.toMap(user -> user.getId(), user -> user));
-				if (usersFromId != null) {
-					return usersFromId;
+				Map<String, MUser> usersByUsername = Stream.of(users)
+						.collect(Collectors.toMap(MUser::getUsername, Function.identity()));
+				if (usersByUsername != null) {
+					return usersByUsername;
 				}
 			}
 		}
