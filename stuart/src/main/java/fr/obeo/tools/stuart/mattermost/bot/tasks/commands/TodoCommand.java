@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import fr.obeo.tools.stuart.mattermost.MattermostSyntax;
+import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
@@ -137,7 +137,7 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 		MUser matterMostUserToAssignTheTaskTo = this
 				.getUsersById(commandExecutionContext, Collections.singletonList(userIdToAssignTheTaskTo))
 				.get(userIdToAssignTheTaskTo);
-		String message = "Task \"" + taskName + "\" has been affected to " + MattermostSyntax.HIGHLIGHT
+		String message = "Task \"" + taskName + "\" has been affected to " + MattermostUtils.HIGHLIGHT
 				+ matterMostUserToAssignTheTaskTo.getUsername() + ".";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);

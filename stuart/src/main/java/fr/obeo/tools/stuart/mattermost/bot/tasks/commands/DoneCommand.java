@@ -2,7 +2,7 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
 
-import fr.obeo.tools.stuart.mattermost.MattermostSyntax;
+import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
@@ -50,7 +50,7 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 			// If the task was done by someone who is not registered for it, highlight them
 			// to tell them about adding themselves to the task.
 			String successMessage = "Task \"" + this.getTaskName() + "\" marked as done by "
-					+ (doneUserIsRegistered ? "" : MattermostSyntax.HIGHLIGHT) + doneByUser.getUsername() + ".";
+					+ (doneUserIsRegistered ? "" : MattermostUtils.HIGHLIGHT) + doneByUser.getUsername() + ".";
 			if (!doneUserIsRegistered) {
 				successMessage += " To register yourself for this task, use command \""
 						+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)

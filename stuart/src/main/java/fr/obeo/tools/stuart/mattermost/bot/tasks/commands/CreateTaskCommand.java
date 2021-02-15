@@ -72,9 +72,10 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 			SharedTasksGoogleUtils.createNewSheet(context.getSharedTasksSheetId(),
 					SharedTasksGoogleUtils.getSheetTitleForTask(this.getTaskName(), this.getChannelId()));
 			String successMessage = "Successfully created task \"" + this.getTaskName()
-					+ "\". To register yourself for this task, type command \""
-					+ SharedTasksCommandFactory.COMMAND_STARTER + this.getTaskName()
-					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + SharedTasksCommandFactory.VERB_ADDME + "\".";
+					+ "\". To register yourself for this task, use command \""
+					+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
+							.apply(this.getTaskName())
+					+ "\".";
 			context.getBot().respond(context.getPost(), successMessage);
 		} catch (IOException | GoogleException exception) {
 			throw new CommandExecutionException(

@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import fr.obeo.tools.stuart.mattermost.MattermostSyntax;
+import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.MMBot;
 import fr.obeo.tools.stuart.mattermost.bot.MPost;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.AddMeCommand;
@@ -23,6 +23,8 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RemoveMeCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RerollCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.StatusCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.TodoCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 /**
@@ -39,8 +41,12 @@ public class SharedTasksCommandFactory {
 	 */
 	public final static String COMMAND_STARTER = "!";
 
-	public final static String COMMAND_SEPARATOR = " ";
+	/**
+	 * Used by the parser to find keywords and arguments.
+	 */
+	private final static String COMMAND_SEPARATOR = " ";
 
+	// TODO: we may need a proper enum with all our known instances.
 	public static final String VERB_STATUS = "Status";
 	public static final String VERB_CREATE = "Create";
 	public static final String VERB_ADDME = "AddMe";
@@ -49,26 +55,43 @@ public class SharedTasksCommandFactory {
 	public static final String VERB_REROLL = "Reroll";
 	public static final String VERB_DONE = "Done";
 
-	private static final Function<String, String> VERB_STATUS_USAGE = taskName -> COMMAND_STARTER
+	/**
+	 * Marker for a function that provides, for a task name, how to use a particular
+	 * verb.
+	 * 
+	 * @author flatombe
+	 *
+	 */
+	@FunctionalInterface
+	public static interface TaskNameToVerbUsage extends Function<String, String> {
+	};
+
+	private static final TaskNameToVerbUsage VERB_STATUS_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_STATUS;
-	private static final Function<String, String> VERB_CREATE_USAGE = taskName -> COMMAND_STARTER
+	private static final TaskNameToVerbUsage VERB_CREATE_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_CREATE;
-	private static final Function<String, String> VERB_ADDME_USAGE = taskName -> COMMAND_STARTER
+	private static final TaskNameToVerbUsage VERB_ADDME_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_ADDME;
-	private static final Function<String, String> VERB_REMOVEME_USAGE = taskName -> COMMAND_STARTER
+	private static final TaskNameToVerbUsage VERB_REMOVEME_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_REMOVEME;
-	private static final Function<String, String> VERB_TODO_USAGE = taskName -> COMMAND_STARTER
+	private static final TaskNameToVerbUsage VERB_TODO_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_TODO;
-	private static final Function<String, String> VERB_REROLL_USAGE = taskName -> COMMAND_STARTER
+	private static final TaskNameToVerbUsage VERB_REROLL_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_REROLL;
-	private static final Function<String, String> VERB_DONE_USAGE = taskName -> COMMAND_STARTER
+	private static final TaskNameToVerbUsage VERB_DONE_USAGE = taskName -> COMMAND_STARTER
 			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_DONE + COMMAND_SEPARATOR
 			+ "(<user name>)";
 
-	public static final Map<String, Function<String, String>> ALL_VERBS_USAGE = createVerbsUsageMap();
+	/**
+	 * This {@link Map} centralizes all verbs that may be used for keyword
+	 * {@link #KEYWORD_TASKS}. Associated to each verb is a {@link Function} that
+	 * provides a user-facing String to show the usage of the verb for a particular
+	 * task name.
+	 */
+	public static final Map<String, TaskNameToVerbUsage> ALL_VERBS_USAGE = createVerbsUsageMap();
 
-	private static Map<String, Function<String, String>> createVerbsUsageMap() {
-		Map<String, Function<String, String>> map = new LinkedHashMap<>();
+	private static Map<String, TaskNameToVerbUsage> createVerbsUsageMap() {
+		Map<String, TaskNameToVerbUsage> map = new LinkedHashMap<>();
 		map.put(VERB_STATUS, VERB_STATUS_USAGE);
 		map.put(VERB_CREATE, VERB_CREATE_USAGE);
 		map.put(VERB_ADDME, VERB_ADDME_USAGE);
@@ -80,6 +103,12 @@ public class SharedTasksCommandFactory {
 	}
 
 	private static final String KEYWORD_TASKS = "tasks";
+
+	/**
+	 * The maximum length authorized for a task name.
+	 */
+	private static final int TASK_NAME_MAXIMUM_LENGTH = GoogleUtils.SHEET_NAME_MAXIMUM_LENGTH
+			- (MattermostUtils.CHANNEL_ID_LENGTH + SharedTasksGoogleUtils.TASK_SHEET_TITLE_SEPARATOR.length());
 
 	private final MMBot bot;
 
@@ -213,7 +242,7 @@ public class SharedTasksCommandFactory {
 		// First check whether the specification starts with '@' which is used for
 		// highlighting in Mattermost syntax.
 		String userNameSpecification;
-		if (userSpecification.startsWith(MattermostSyntax.HIGHLIGHT)) {
+		if (userSpecification.startsWith(MattermostUtils.HIGHLIGHT)) {
 			userNameSpecification = userSpecification.substring(1);
 		} else {
 			userNameSpecification = userSpecification;
@@ -244,12 +273,17 @@ public class SharedTasksCommandFactory {
 	}
 
 	private static List<String> getIssuesWithTaskName(String taskName) {
-		// TODO: check that the task name is valid, in particular with regards to the
-		// naming we can use in spreadsheet sheet names.
 		List<String> issues = new ArrayList<>();
 		if (taskName.equalsIgnoreCase(KEYWORD_TASKS)) {
+			// Otherwise it will clash with our keyword.
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
 		}
+		if (taskName.length() > TASK_NAME_MAXIMUM_LENGTH) {
+			// Otherwise we won't be able to create the corresponding sheet.
+			issues.add("Task name may not have more than " + TASK_NAME_MAXIMUM_LENGTH + " characters.");
+		}
+		// TODO: probably find a way to restrict away the usage of smilies/emojis or
+		// most syntax stuff of Mattermost.
 
 		return issues;
 	}

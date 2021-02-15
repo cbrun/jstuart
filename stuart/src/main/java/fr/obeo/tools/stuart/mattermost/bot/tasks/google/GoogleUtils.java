@@ -22,6 +22,20 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 public class GoogleUtils {
 
 	/**
+	 * The maximum number of characters that a sheet name in a spreadsheet document
+	 * can have.
+	 */
+	public static final int SHEET_NAME_MAXIMUM_LENGTH = 50;
+
+	/**
+	 * Value that may be passed to
+	 * {@link com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.Update#setValueInputOption(String)}
+	 * so that the strings with which we update a spreadsheet do not get interpreted
+	 * as other data types.
+	 */
+	public static final String VALUE_INPUT_OPTION_RAW = "RAW";
+
+	/**
 	 * The name of this application, it will appear in the header of the messages
 	 * sent to the Google API.
 	 */

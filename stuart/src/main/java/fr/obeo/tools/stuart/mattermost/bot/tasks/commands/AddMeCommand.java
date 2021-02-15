@@ -91,7 +91,7 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 		try {
 			AppendValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
 					.append(commandExecutionContext.getSharedTasksSheetId(), range, body)
-					.setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
+					.setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
 			String successMessage = "Successfully registered "
 					+ this.getMattermostUser(commandExecutionContext).getUsername() + " for task \""
 					+ this.getTaskName() + "\".";

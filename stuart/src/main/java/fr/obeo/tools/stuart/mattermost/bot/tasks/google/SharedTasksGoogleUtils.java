@@ -38,7 +38,17 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
  */
 public class SharedTasksGoogleUtils {
 
-	public static final String VALUE_INPUT_OPTION_RAW = "RAW";
+	/**
+	 * The separator we use between a task name and a Mattermost channel ID to form
+	 * a sheet name. <b>Changing this will require migrating the contents of the
+	 * spreadsheet used.</b>
+	 */
+	public static final String TASK_SHEET_TITLE_SEPARATOR = "_";
+
+	/**
+	 * <b>Changing this will require migrating the contents of the
+	 * spreadsheet used.</b>
+	 */
 	public static final String USER_ID__COLUMN = "A";
 	public static final String LAST_TIME_STAMP__COLUMN = "B";
 	public static final String AFFECTED_USER_ID__COLUMN = "C";
@@ -93,7 +103,7 @@ public class SharedTasksGoogleUtils {
 		Objects.requireNonNull(taskName);
 		Objects.requireNonNull(mattermostChannelId);
 
-		return taskName + "_" + mattermostChannelId;
+		return taskName + TASK_SHEET_TITLE_SEPARATOR + mattermostChannelId;
 	}
 
 	/**
@@ -306,7 +316,7 @@ public class SharedTasksGoogleUtils {
 		try {
 			UpdateValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
 					.update(spreadsheetId, range, body)
-					.setValueInputOption(SharedTasksGoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
+					.setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException("There was an issue while updating range \"" + range + "\" in spreadsheet \""
 					+ spreadsheetId + "\".", exception);
@@ -353,7 +363,7 @@ public class SharedTasksGoogleUtils {
 				}
 				ValueRange body = new ValueRange().setValues(newValues);
 				UpdateValuesResponse updateResult = GoogleUtils.getSheetsService().spreadsheets().values()
-						.update(spreadsheetId, range, body).setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
+						.update(spreadsheetId, range, body).setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
 			} else {
 				throw new IllegalStateException("Cannot remove user \"" + userId + "\" from task \"" + taskName
 						+ "\" because they are not registered for this task.");
@@ -491,7 +501,7 @@ public class SharedTasksGoogleUtils {
 		try {
 			GoogleUtils.getSheetsService().spreadsheets().values()
 					.update(spreadsheetId, taskRealizationHistoryRange, updateContent)
-					.setValueInputOption(VALUE_INPUT_OPTION_RAW).execute();
+					.setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException("There was an issue while updating range \"" + taskRealizationHistoryRange
 					+ "\" in spreadsheet \"" + spreadsheetId + "\".", exception);
