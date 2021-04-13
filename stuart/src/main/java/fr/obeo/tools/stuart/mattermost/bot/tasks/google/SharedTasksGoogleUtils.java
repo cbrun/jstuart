@@ -46,8 +46,8 @@ public class SharedTasksGoogleUtils {
 	public static final String TASK_SHEET_TITLE_SEPARATOR = "_";
 
 	/**
-	 * <b>Changing this will require migrating the contents of the
-	 * spreadsheet used.</b>
+	 * <b>Changing this will require migrating the contents of the spreadsheet
+	 * used.</b>
 	 */
 	public static final String USER_ID__COLUMN = "A";
 	public static final String LAST_TIME_STAMP__COLUMN = "B";
@@ -315,8 +315,8 @@ public class SharedTasksGoogleUtils {
 
 		try {
 			UpdateValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
-					.update(spreadsheetId, range, body)
-					.setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
+					.update(spreadsheetId, range, body).setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW)
+					.execute();
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException("There was an issue while updating range \"" + range + "\" in spreadsheet \""
 					+ spreadsheetId + "\".", exception);
@@ -363,7 +363,8 @@ public class SharedTasksGoogleUtils {
 				}
 				ValueRange body = new ValueRange().setValues(newValues);
 				UpdateValuesResponse updateResult = GoogleUtils.getSheetsService().spreadsheets().values()
-						.update(spreadsheetId, range, body).setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW).execute();
+						.update(spreadsheetId, range, body).setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW)
+						.execute();
 			} else {
 				throw new IllegalStateException("Cannot remove user \"" + userId + "\" from task \"" + taskName
 						+ "\" because they are not registered for this task.");
@@ -487,7 +488,10 @@ public class SharedTasksGoogleUtils {
 		try {
 			ValueRange currentTaskRealizationHistoryValueRange = GoogleUtils.getSheetsService().spreadsheets().values()
 					.get(spreadsheetId, taskRealizationHistoryRange).execute();
-			realizationHistory = currentTaskRealizationHistoryValueRange.getValues();
+			if (currentTaskRealizationHistoryValueRange != null
+					&& currentTaskRealizationHistoryValueRange.getValues() != null) {
+				realizationHistory.addAll(currentTaskRealizationHistoryValueRange.getValues());
+			}
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException("There was an issue while retrieving range \"" + taskRealizationHistoryRange
 					+ "\" in spreadsheet \"" + spreadsheetId + "\".", exception);
