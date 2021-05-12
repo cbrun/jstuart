@@ -2,6 +2,8 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -26,7 +28,7 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class StatusCommand extends CommandWithTaskNameAndChannelId {
-
+	
 	/**
 	 * Creates a new {@link StatusCommand}.
 	 * 
@@ -72,7 +74,9 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 					String lastDoneUserName = this
 							.getUsersById(commandExecutionContext, Collections.singletonList(lastDoneUserId))
 							.get(lastDoneUserId).getUsername();
-					statusMessage += "\n* Last done on " + lastDoneTime.toString() + " by " + lastDoneUserName + ".";
+					LocalDateTime localDoneTime = LocalDateTime.ofInstant(lastDoneTime, ZoneId.of( "Europe/Paris" ));
+
+					statusMessage += "\n* Last done on " + TIME_FORMATTER.format(localDoneTime) + " by " + lastDoneUserName + ".";
 				}
 
 				// The number of registered users.

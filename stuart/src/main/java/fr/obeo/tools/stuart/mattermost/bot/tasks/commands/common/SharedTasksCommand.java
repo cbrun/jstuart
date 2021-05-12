@@ -1,7 +1,9 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -11,6 +13,8 @@ public abstract class SharedTasksCommand {
 
 	private final String text;
 
+	protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy MMMM dd  HH:mm", new Locale("en"));
+	
 	/**
 	 * Creates a new {@link SharedTasksCommand}.
 	 * 

@@ -288,12 +288,12 @@ public class SharedTasksCommandFactory {
 		return issues;
 	}
 
-	private static List<String> getIssuesWithVerbName(String taskName) {
+	private static List<String> getIssuesWithVerbName(String verbName) {
 		List<String> issues = new ArrayList<>();
 		boolean correctVerb = ALL_VERBS_USAGE.keySet().stream()
-				.filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
+				.filter(s -> s.toLowerCase().equals(verbName.toLowerCase())).findFirst().isPresent();
 		if (!correctVerb) {
-			issues.add("\"" + taskName + "\" is an not a valid verb. Please choose among: "
+			issues.add("\"" + verbName + "\" is an not a valid verb. Please choose among: "
 					+ ALL_VERBS_USAGE.keySet().stream().collect(Collectors.joining(", ")));
 		}
 
