@@ -102,7 +102,7 @@ public class SharedTasksCommandFactory {
 		return map;
 	}
 
-	private static final String KEYWORD_TASKS = "tasks";
+	private static final String KEYWORD_TASKS = "task";
 
 	/**
 	 * The maximum length authorized for a task name.
