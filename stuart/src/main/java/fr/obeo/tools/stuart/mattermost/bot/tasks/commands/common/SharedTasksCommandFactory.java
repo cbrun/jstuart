@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.MMBot;
@@ -66,21 +67,20 @@ public class SharedTasksCommandFactory {
 	public static interface TaskNameToVerbUsage extends Function<String, String> {
 	};
 
-	private static final TaskNameToVerbUsage VERB_STATUS_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_STATUS;
-	private static final TaskNameToVerbUsage VERB_CREATE_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_CREATE;
-	private static final TaskNameToVerbUsage VERB_ADDME_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_ADDME;
-	private static final TaskNameToVerbUsage VERB_REMOVEME_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_REMOVEME;
-	private static final TaskNameToVerbUsage VERB_TODO_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_TODO;
-	private static final TaskNameToVerbUsage VERB_REROLL_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_REROLL;
-	private static final TaskNameToVerbUsage VERB_DONE_USAGE = taskName -> COMMAND_STARTER
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + VERB_DONE + COMMAND_SEPARATOR
-			+ "(<user name>)";
+	private static final TaskNameToVerbUsage VERB_STATUS_USAGE = taskName -> COMMAND_STARTER + VERB_STATUS
+			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR;
+	private static final TaskNameToVerbUsage VERB_CREATE_USAGE = taskName -> COMMAND_STARTER + VERB_CREATE
+			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+	private static final TaskNameToVerbUsage VERB_ADDME_USAGE = taskName -> COMMAND_STARTER + VERB_ADDME
+			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+	private static final TaskNameToVerbUsage VERB_REMOVEME_USAGE = taskName -> COMMAND_STARTER + COMMAND_SEPARATOR
+			+ VERB_REMOVEME + COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+	private static final TaskNameToVerbUsage VERB_TODO_USAGE = taskName -> COMMAND_STARTER + VERB_TODO
+			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+	private static final TaskNameToVerbUsage VERB_REROLL_USAGE = taskName -> COMMAND_STARTER + VERB_REROLL
+			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+	private static final TaskNameToVerbUsage VERB_DONE_USAGE = taskName -> COMMAND_STARTER + VERB_DONE
+			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + "(<user name>)";
 
 	/**
 	 * This {@link Map} centralizes all verbs that may be used for keyword
@@ -184,8 +184,8 @@ public class SharedTasksCommandFactory {
 
 		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
 		if (!errorMessage.isPresent()) {
-			String taskName = trimmedCoreArguments.get(0);
-			String verbLiteral = trimmedCoreArguments.get(1);
+			String verbLiteral = trimmedCoreArguments.get(0);
+			String taskName = trimmedCoreArguments.get(1);
 			if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
 				return new StatusCommand(commandText, taskName, channelId);
 			} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
@@ -257,14 +257,13 @@ public class SharedTasksCommandFactory {
 	private static Optional<String> getIssuesWithCommand(List<String> trimmedCoreArguments) {
 		List<String> issues = new ArrayList<>();
 
-		if (!(trimmedCoreArguments.size() >= 2)) {
-			issues.add("There should be at least a task name and a verb.");
+		if (trimmedCoreArguments.size() < 2) {
+			issues.add("There should be at least a verb and a task name.");
 		} else {
-			String verbName = trimmedCoreArguments.get(1);
+			String verbName = trimmedCoreArguments.get(0);
 			issues.addAll(getIssuesWithVerbName(verbName));
-		}
-		if (trimmedCoreArguments.size() >= 1) {
-			String taskName = trimmedCoreArguments.get(0);
+
+			String taskName = trimmedCoreArguments.get(1);
 			issues.addAll(getIssuesWithTaskName(taskName));
 		}
 
@@ -278,6 +277,13 @@ public class SharedTasksCommandFactory {
 			// Otherwise it will clash with our keyword.
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
 		}
+
+		boolean incorrectVerb = ALL_VERBS_USAGE.keySet().stream()
+				.filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
+		if (incorrectVerb) {
+			issues.add("\"" + taskName + "\" can not be named like a verb");
+		}
+
 		if (taskName.length() > TASK_NAME_MAXIMUM_LENGTH) {
 			// Otherwise we won't be able to create the corresponding sheet.
 			issues.add("Task name may not have more than " + TASK_NAME_MAXIMUM_LENGTH + " characters.");
