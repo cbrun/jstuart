@@ -5,6 +5,7 @@ import java.util.List;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
@@ -19,6 +20,16 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  *
  */
 public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
+	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "This action unregisters you for the task.";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_REMOVEME
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+		};
+	};
 
 	/**
 	 * Creates a new {@link RemoveMeCommand}.
@@ -60,8 +71,8 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	private void userIsNotRegistered(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
 		String message = "Failed user unregistration from task \"" + this.getTaskName()
 				+ "\" because you were not registered for this task in the first place. To register yourself, use command \""
-				+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
-						.apply(this.getTaskName())
+				+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_ADDME)
+						.getUsage(this.getTaskName())
 				+ "\".";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);

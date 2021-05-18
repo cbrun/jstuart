@@ -5,6 +5,7 @@ import java.io.IOException;
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
@@ -20,6 +21,16 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
+	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "This action sets the task as DONE. By default the task is done by you otherwise you can add the optional <user name> argument";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_DONE
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>") + SharedTasksCommandFactory.COMMAND_SEPARATOR + "(<user name>)";
+		};
+	};
 
 	/**
 	 * Creates a new {@link DoneCommand}.
@@ -53,8 +64,8 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 					+ (doneUserIsRegistered ? "" : MattermostUtils.HIGHLIGHT) + doneByUser.getUsername() + ".";
 			if (!doneUserIsRegistered) {
 				successMessage += " To register yourself for this task, use command \""
-						+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
-								.apply(this.getTaskName())
+						+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_ADDME)
+								.getUsage(this.getTaskName())
 						+ "\".";
 			}
 

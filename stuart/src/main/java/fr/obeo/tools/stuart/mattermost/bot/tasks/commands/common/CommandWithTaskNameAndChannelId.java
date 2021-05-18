@@ -23,6 +23,12 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 
 	private final String channelId;
 
+	public interface CommandInformation {
+		String getUsage(String taskName);
+
+		String getDocumentation();
+	}
+
 	/**
 	 * Creates a new {@link CommandWithTaskNameAndChannelId}.
 	 * 
@@ -95,8 +101,8 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 		if (taskSheet == null) {
 			String failureMessage = "Task \"" + this.getTaskName()
 					+ "\" does not exist. You may want to create it using command \""
-					+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_CREATE)
-							.apply(this.getTaskName())
+					+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_CREATE)
+							.getUsage(this.getTaskName())
 					+ "\".";
 			try {
 				commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), failureMessage);

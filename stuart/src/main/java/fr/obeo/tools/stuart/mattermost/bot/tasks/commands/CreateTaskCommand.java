@@ -20,6 +20,16 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  *
  */
 public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
+	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "This action creates the task. The next action is to add people to this created task.";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_CREATE
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+		};
+	};
 
 	/**
 	 * Creates a new {@link CreatedTaskCommand}.
@@ -73,8 +83,8 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 					SharedTasksGoogleUtils.getSheetTitleForTask(this.getTaskName(), this.getChannelId()));
 			String successMessage = "Successfully created task \"" + this.getTaskName()
 					+ "\". To register yourself for this task, use command \""
-					+ SharedTasksCommandFactory.ALL_VERBS_USAGE.get(SharedTasksCommandFactory.VERB_ADDME)
-							.apply(this.getTaskName())
+					+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_ADDME)
+							.getUsage(this.getTaskName())
 					+ "\".";
 			context.getBot().respond(context.getPost(), successMessage);
 		} catch (IOException | GoogleException exception) {

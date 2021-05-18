@@ -20,6 +20,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.AddMeCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.CreateTaskCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.DoneCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.ErrorCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.HelpCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RemoveMeCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RerollCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.StatusCommand;
@@ -45,7 +46,7 @@ public class SharedTasksCommandFactory {
 	/**
 	 * Used by the parser to find keywords and arguments.
 	 */
-	private final static String COMMAND_SEPARATOR = " ";
+	public final static String COMMAND_SEPARATOR = " ";
 
 	// TODO: we may need a proper enum with all our known instances.
 	public static final String VERB_STATUS = "Status";
@@ -55,50 +56,25 @@ public class SharedTasksCommandFactory {
 	public static final String VERB_TODO = "Todo";
 	public static final String VERB_REROLL = "Reroll";
 	public static final String VERB_DONE = "Done";
-
-	/**
-	 * Marker for a function that provides, for a task name, how to use a particular
-	 * verb.
-	 * 
-	 * @author flatombe
-	 *
-	 */
-	@FunctionalInterface
-	public static interface TaskNameToVerbUsage extends Function<String, String> {
-	};
-
-	private static final TaskNameToVerbUsage VERB_STATUS_USAGE = taskName -> COMMAND_STARTER + VERB_STATUS
-			+ (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR;
-	private static final TaskNameToVerbUsage VERB_CREATE_USAGE = taskName -> COMMAND_STARTER + VERB_CREATE
-			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
-	private static final TaskNameToVerbUsage VERB_ADDME_USAGE = taskName -> COMMAND_STARTER + VERB_ADDME
-			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
-	private static final TaskNameToVerbUsage VERB_REMOVEME_USAGE = taskName -> COMMAND_STARTER + COMMAND_SEPARATOR
-			+ VERB_REMOVEME + COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
-	private static final TaskNameToVerbUsage VERB_TODO_USAGE = taskName -> COMMAND_STARTER + VERB_TODO
-			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
-	private static final TaskNameToVerbUsage VERB_REROLL_USAGE = taskName -> COMMAND_STARTER + VERB_REROLL
-			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
-	private static final TaskNameToVerbUsage VERB_DONE_USAGE = taskName -> COMMAND_STARTER + VERB_DONE
-			+ COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>") + COMMAND_SEPARATOR + "(<user name>)";
+	public static final String VERB_HELP = "Help";
 
 	/**
 	 * This {@link Map} centralizes all verbs that may be used for keyword
 	 * {@link #KEYWORD_TASKS}. Associated to each verb is a {@link Function} that
-	 * provides a user-facing String to show the usage of the verb for a particular
+	 * provides a user-facing information to show the usage and documentation of the verb for a particular
 	 * task name.
 	 */
-	public static final Map<String, TaskNameToVerbUsage> ALL_VERBS_USAGE = createVerbsUsageMap();
-
-	private static Map<String, TaskNameToVerbUsage> createVerbsUsageMap() {
-		Map<String, TaskNameToVerbUsage> map = new LinkedHashMap<>();
-		map.put(VERB_STATUS, VERB_STATUS_USAGE);
-		map.put(VERB_CREATE, VERB_CREATE_USAGE);
-		map.put(VERB_ADDME, VERB_ADDME_USAGE);
-		map.put(VERB_REMOVEME, VERB_REMOVEME_USAGE);
-		map.put(VERB_TODO, VERB_TODO_USAGE);
-		map.put(VERB_REROLL, VERB_REROLL_USAGE);
-		map.put(VERB_DONE, VERB_DONE_USAGE);
+	public static final Map<String, CommandWithTaskNameAndChannelId.CommandInformation> ALL_VERBS_INFORMATION = createVerbsInformationMap();
+	
+	private static Map<String, CommandWithTaskNameAndChannelId.CommandInformation> createVerbsInformationMap() {
+		Map<String, CommandWithTaskNameAndChannelId.CommandInformation> map = new LinkedHashMap<>();
+		map.put(VERB_STATUS, StatusCommand.INFORMATION);
+		map.put(VERB_CREATE, CreateTaskCommand.INFORMATION);
+		map.put(VERB_ADDME, AddMeCommand.INFORMATION);
+		map.put(VERB_REMOVEME, RemoveMeCommand.INFORMATION);
+		map.put(VERB_TODO, TodoCommand.INFORMATION);
+		map.put(VERB_REROLL, RerollCommand.INFORMATION);
+		map.put(VERB_DONE, DoneCommand.INFORMATION);
 		return map;
 	}
 
@@ -182,6 +158,13 @@ public class SharedTasksCommandFactory {
 	private SharedTasksCommand parseFrom(String commandText, List<String> trimmedCoreArguments, String channelId,
 			String userId) {
 
+		// TODO we should delegate the error management to the concrete command rather
+		// doing it here
+		String verbName = trimmedCoreArguments.get(0);
+		if (trimmedCoreArguments.size() > 0 && VERB_HELP.equalsIgnoreCase(verbName)) {
+			return new HelpCommand(commandText);
+		}
+
 		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
 		if (!errorMessage.isPresent()) {
 			String verbLiteral = trimmedCoreArguments.get(0);
@@ -198,6 +181,8 @@ public class SharedTasksCommandFactory {
 				return new TodoCommand(commandText, taskName, channelId);
 			} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
 				return new RerollCommand(commandText, taskName, channelId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_HELP)) {
+				return new HelpCommand(commandText);
 			} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
 				// There may optionally be a user designated after the verb.
 				final String doneUserId;
@@ -278,7 +263,7 @@ public class SharedTasksCommandFactory {
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
 		}
 
-		boolean incorrectVerb = ALL_VERBS_USAGE.keySet().stream()
+		boolean incorrectVerb = ALL_VERBS_INFORMATION.keySet().stream()
 				.filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
 		if (incorrectVerb) {
 			issues.add("\"" + taskName + "\" can not be named like a verb");
@@ -296,11 +281,11 @@ public class SharedTasksCommandFactory {
 
 	private static List<String> getIssuesWithVerbName(String verbName) {
 		List<String> issues = new ArrayList<>();
-		boolean correctVerb = ALL_VERBS_USAGE.keySet().stream()
+		boolean correctVerb = ALL_VERBS_INFORMATION.keySet().stream()
 				.filter(s -> s.toLowerCase().equals(verbName.toLowerCase())).findFirst().isPresent();
 		if (!correctVerb) {
 			issues.add("\"" + verbName + "\" is an not a valid verb. Please choose among: "
-					+ ALL_VERBS_USAGE.keySet().stream().collect(Collectors.joining(", ")));
+					+ ALL_VERBS_INFORMATION.keySet().stream().collect(Collectors.joining(", ")));
 		}
 
 		return issues;

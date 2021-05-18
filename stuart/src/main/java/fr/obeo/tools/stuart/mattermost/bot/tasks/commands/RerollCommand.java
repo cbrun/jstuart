@@ -1,6 +1,8 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 
 /**
  * {@link SharedTasksCommand} implementation for assigning a task to someone
@@ -10,6 +12,17 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
  *
  */
 public class RerollCommand extends TodoCommand {
+
+	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "This action sets the tasks as having to be done";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_REROLL
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+		};
+	};
 
 	/**
 	 * Creates a new {@link RerollCommand}.

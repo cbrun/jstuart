@@ -28,6 +28,16 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class TodoCommand extends CommandWithTaskNameAndChannelId {
+	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "This action sets the tasks as having to be done";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_TODO
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+		};
+	};
 
 	/**
 	 * Creates a new {@link TodoCommand}.
@@ -52,8 +62,8 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(),
 							"There are no registered users for this task, so it cannot be assigned to anyone. Use command \""
-									+ SharedTasksCommandFactory.ALL_VERBS_USAGE
-											.get(SharedTasksCommandFactory.VERB_ADDME).apply(this.getTaskName())
+									+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION
+											.get(SharedTasksCommandFactory.VERB_ADDME).getUsage(this.getTaskName())
 									+ "\" to register yourself for this task.");
 				} catch (IOException exception) {
 					throw new CommandExecutionException(

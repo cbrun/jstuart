@@ -16,6 +16,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
@@ -28,7 +29,17 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class StatusCommand extends CommandWithTaskNameAndChannelId {
-	
+	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "This action gives information about the task such as if the task has to be done or the last time the task has been done";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_STATUS
+					+ (taskName != null ? taskName : "<task name>");
+		};
+	};
+
 	/**
 	 * Creates a new {@link StatusCommand}.
 	 * 
@@ -74,9 +85,10 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 					String lastDoneUserName = this
 							.getUsersById(commandExecutionContext, Collections.singletonList(lastDoneUserId))
 							.get(lastDoneUserId).getUsername();
-					LocalDateTime localDoneTime = LocalDateTime.ofInstant(lastDoneTime, ZoneId.of( "Europe/Paris" ));
+					LocalDateTime localDoneTime = LocalDateTime.ofInstant(lastDoneTime, ZoneId.of("Europe/Paris"));
 
-					statusMessage += "\n* Last done on " + TIME_FORMATTER.format(localDoneTime) + " by " + lastDoneUserName + ".";
+					statusMessage += "\n* Last done on " + TIME_FORMATTER.format(localDoneTime) + " by "
+							+ lastDoneUserName + ".";
 				}
 
 				// The number of registered users.
