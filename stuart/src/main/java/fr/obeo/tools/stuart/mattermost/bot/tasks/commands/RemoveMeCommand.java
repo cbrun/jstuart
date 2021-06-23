@@ -20,9 +20,9 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  *
  */
 public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
-	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
 		public String getDocumentation() {
-			return "This action unregisters you for the task.";
+			return "To unregister yourself from a task";
 		};
 
 		public String getUsage(String taskName) {

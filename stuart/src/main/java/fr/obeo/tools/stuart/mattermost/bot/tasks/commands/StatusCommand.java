@@ -29,14 +29,14 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class StatusCommand extends CommandWithTaskNameAndChannelId {
-	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
 		public String getDocumentation() {
-			return "This action gives information about the task such as if the task has to be done or the last time the task has been done";
+			return "To display information about the task (current state, last done timestamp, etc.)";
 		};
 
 		public String getUsage(String taskName) {
 			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_STATUS
-					+ (taskName != null ? taskName : "<task name>");
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
 		};
 	};
 
@@ -92,7 +92,8 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 				}
 
 				// The number of registered users.
-				statusMessage += "\n* " + numberOfRegisteredUsers + " registered users.";
+				statusMessage += "\n* " + numberOfRegisteredUsers + " registered user"
+						+ (numberOfRegisteredUsers != 1 ? "s" : "") + ".";
 
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), statusMessage);

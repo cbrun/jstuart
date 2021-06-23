@@ -2,15 +2,11 @@ package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
 
-import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
-import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 /**
  * {@link SharedTasksCommand} implementation to show the tasks usage.
@@ -20,6 +16,16 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  */
 public class HelpCommand extends SharedTasksCommand {
 
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+		public String getDocumentation() {
+			return "To displays the help contents";
+		};
+
+		public String getUsage(String taskName) {
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_HELP;
+		};
+	};
+
 	public HelpCommand(String commandText) {
 		super(commandText);
 	}
@@ -28,16 +34,17 @@ public class HelpCommand extends SharedTasksCommand {
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
 		StringBuilder helpMessage = new StringBuilder();
 
-		helpMessage.append("The task bot allows you to create and manage tasks\n");
-		helpMessage.append("To do it, use the associated verb with the following synthax\n");
-		helpMessage.append("!task <verb> [<args>]\n");
+		helpMessage.append("The task bot allows creating and managing shared tasks\n");
+		helpMessage.append(
+				"Tasks may be created, registered for, or assigned using a fair distribution algorithm, using the following commands:");
 		SharedTasksCommandFactory.ALL_VERBS_INFORMATION.keySet().stream().forEach(verb -> {
-			helpMessage.append("\t");
-			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(verb).getUsage(null));
-			helpMessage.append("\t");
+			helpMessage.append("\n* ");
+			helpMessage
+					.append("```" + SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(verb).getUsage(null) + "```");
+			helpMessage.append("    ");
 			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(verb).getDocumentation());
-			helpMessage.append("\n");
 		});
+		// TODO: See if we can list all tasks of the current channel?
 
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), helpMessage.toString());

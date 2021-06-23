@@ -21,9 +21,9 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
-	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
 		public String getDocumentation() {
-			return "This action sets the task as DONE. By default the task is done by you otherwise you can add the optional <user name> argument";
+			return "To mark the task as done, by you (default) or someone else via the optional argument";
 		};
 
 		public String getUsage(String taskName) {

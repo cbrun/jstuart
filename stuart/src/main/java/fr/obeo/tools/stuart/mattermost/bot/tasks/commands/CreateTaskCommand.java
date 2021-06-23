@@ -20,9 +20,9 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  *
  */
 public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
-	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
 		public String getDocumentation() {
-			return "This action creates the task. The next action is to add people to this created task.";
+			return "To create a new task for this channel";
 		};
 
 		public String getUsage(String taskName) {

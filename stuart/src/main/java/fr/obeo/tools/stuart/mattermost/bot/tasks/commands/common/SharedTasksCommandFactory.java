@@ -94,7 +94,7 @@ public class SharedTasksCommandFactory {
 	}
 
 	/**
-	 * Attemps to parse a {@link MPost Mattermost post} into a
+	 * Attempts to parse a {@link MPost Mattermost post} into a
 	 * {@link SharedTasksCommand}.
 	 * 
 	 * @param mattermostPost the (non-{@code null}) {@link MPost} to parse.

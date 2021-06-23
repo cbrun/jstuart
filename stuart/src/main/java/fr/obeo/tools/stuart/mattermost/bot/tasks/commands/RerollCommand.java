@@ -13,9 +13,9 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
  */
 public class RerollCommand extends TodoCommand {
 
-	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
 		public String getDocumentation() {
-			return "This action sets the tasks as having to be done";
+			return "Re-assigns a task that has to be done";
 		};
 
 		public String getUsage(String taskName) {

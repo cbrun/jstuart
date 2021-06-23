@@ -28,9 +28,9 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class TodoCommand extends CommandWithTaskNameAndChannelId {
-	static public CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
 		public String getDocumentation() {
-			return "This action sets the tasks as having to be done";
+			return "To mark the task as having to be done";
 		};
 
 		public String getUsage(String taskName) {
