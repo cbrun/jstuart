@@ -11,7 +11,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import org.apache.commons.lang.StringUtils;
 
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.MMBot;
@@ -61,11 +62,11 @@ public class SharedTasksCommandFactory {
 	/**
 	 * This {@link Map} centralizes all verbs that may be used for keyword
 	 * {@link #KEYWORD_TASKS}. Associated to each verb is a {@link Function} that
-	 * provides a user-facing information to show the usage and documentation of the verb for a particular
-	 * task name.
+	 * provides a user-facing information to show the usage and documentation of the
+	 * verb for a particular task name.
 	 */
 	public static final Map<String, CommandWithTaskNameAndChannelId.CommandInformation> ALL_VERBS_INFORMATION = createVerbsInformationMap();
-	
+
 	private static Map<String, CommandWithTaskNameAndChannelId.CommandInformation> createVerbsInformationMap() {
 		Map<String, CommandWithTaskNameAndChannelId.CommandInformation> map = new LinkedHashMap<>();
 		map.put(VERB_STATUS, StatusCommand.INFORMATION);
@@ -258,6 +259,13 @@ public class SharedTasksCommandFactory {
 
 	private static List<String> getIssuesWithTaskName(String taskName) {
 		List<String> issues = new ArrayList<>();
+
+		if (!StringUtils.isAlphanumeric(taskName)) {
+			// Hinder users from using Mattermost-syntax characters for their task names by
+			// allowing only alpha-numeric names.
+			issues.add("Task name must be alpha-numeric.");
+		}
+
 		if (taskName.equalsIgnoreCase(KEYWORD_TASKS)) {
 			// Otherwise it will clash with our keyword.
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
@@ -273,8 +281,6 @@ public class SharedTasksCommandFactory {
 			// Otherwise we won't be able to create the corresponding sheet.
 			issues.add("Task name may not have more than " + TASK_NAME_MAXIMUM_LENGTH + " characters.");
 		}
-		// TODO: probably find a way to restrict away the usage of smilies/emojis or
-		// most syntax stuff of Mattermost.
 
 		return issues;
 	}
