@@ -45,6 +45,14 @@ Create a message for any new bug or any new comment on a bugzilla ticket.
 
 ![Jenkins](doc/jenkins.png)
 
+## Modules
+
+### Shared tasks
+
+The bot provides a shared tasks utility, backed by a Google Spreadsheet.
+The goal is to allow users to create tasks in a channel, and any user of that channel may register themselves as volunteers for tasks. Any user may declare that a particular task needs to be done, in which case the bot assigns the task using a fair distribution algorithm.
+To use this module, the ID of a publicly-accessible Google Spreadsheet **must** be provided in the arguments when starting the bot.
+
 
 ## How is that supposed to be used ?
 
