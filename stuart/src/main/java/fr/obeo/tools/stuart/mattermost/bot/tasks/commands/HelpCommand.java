@@ -1,18 +1,15 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
-import java.util.List;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
- * {@link SharedTasksCommand} implementation to show the tasks usage.
+ * {@link SharedTasksCommand} implementation to show the help.
  * 
  * @author lfasani
  *
@@ -20,7 +17,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 public class HelpCommand extends SharedTasksCommand {
 
 	public static CommandDocumentation DOCUMENTATION = new CommandDocumentation() {
-		
+
 		@Override
 		public String getPurpose() {
 			return "Displays the help contents";
@@ -46,31 +43,14 @@ public class HelpCommand extends SharedTasksCommand {
 		SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.keySet().stream().forEach(verb -> {
 			helpMessage.append("\n* ");
 			helpMessage
-					.append("```" + SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getUsage(null) + "```");
+					.append("```" + SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getUsage() + "```");
 			helpMessage.append(" - ");
 			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getPurpose());
 		});
 
 		try {
-			List<String> namesOfTasksAvailableInChannel = SharedTasksGoogleUtils
-					.getAllTasksOfChannel(commandExecutionContext.getSharedTasksSheetId(), this.getChannelId());
-			helpMessage.append("\n");
-			if (namesOfTasksAvailableInChannel.isEmpty()) {
-				helpMessage.append("There are no tasks for this channel. To create a task, use command ```"
-						+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_CREATE)
-								.getUsage(null)
-						+ "```.");
-			} else {
-				helpMessage.append("There " + (namesOfTasksAvailableInChannel.size() == 1 ? "is" : "are") + " "
-						+ namesOfTasksAvailableInChannel.size() + " task"
-						+ (namesOfTasksAvailableInChannel.size() == 1 ? "" : "s") + " for this channel:");
-				namesOfTasksAvailableInChannel.stream().forEach(taskName -> {
-					helpMessage.append("\n* ");
-					helpMessage.append(taskName);
-				});
-			}
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), helpMessage.toString());
-		} catch (IOException | GoogleException exception) {
+		} catch (IOException exception) {
 			throw new CommandExecutionException(
 					"There was an issue while providing the help for channel \"" + this.getChannelId()
 							+ "\" and spreadsheet " + commandExecutionContext.getSharedTasksSheetId() + ".",

@@ -21,6 +21,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.CreateTaskCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.DoneCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.ErrorCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.HelpCommand;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.ListCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RemoveMeCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.StatusCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.TodoCommand;
@@ -55,6 +56,7 @@ public class SharedTasksCommandFactory {
 	public static final String VERB_TODO = "todo";
 	public static final String VERB_DONE = "done";
 	public static final String VERB_HELP = "help";
+	public static final String VERB_LIST = "list";
 
 	/**
 	 * This {@link Map} centralizes all verbs that may be used for keyword
@@ -67,6 +69,7 @@ public class SharedTasksCommandFactory {
 	private static Map<String, CommandDocumentation> createVerbDocumentationMap() {
 		Map<String, CommandDocumentation> verbToDocumentation = new LinkedHashMap<>();
 		verbToDocumentation.put(VERB_HELP, HelpCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_LIST, ListCommand.DOCUMENTATION);
 		verbToDocumentation.put(VERB_CREATE, CreateTaskCommand.DOCUMENTATION);
 		verbToDocumentation.put(VERB_STATUS, StatusCommand.DOCUMENTATION);
 		verbToDocumentation.put(VERB_ADDME, AddMeCommand.DOCUMENTATION);
@@ -162,6 +165,8 @@ public class SharedTasksCommandFactory {
 			String verbLiteral = trimmedCoreArguments.get(0);
 			if (verbLiteral.equalsIgnoreCase(VERB_HELP)) {
 				return new HelpCommand(commandText, channelId);
+			} else if (verbLiteral.equalsIgnoreCase(VERB_LIST)) {
+				return new ListCommand(commandText, channelId);
 			} else {
 				String taskName = trimmedCoreArguments.get(1);
 				if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
