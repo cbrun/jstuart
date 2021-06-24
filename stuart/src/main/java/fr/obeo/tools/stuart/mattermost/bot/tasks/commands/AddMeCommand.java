@@ -8,9 +8,9 @@ import java.util.List;
 import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
@@ -25,14 +25,19 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  *
  */
 public class AddMeCommand extends CommandWithTaskNameAndUserId {
-	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
-		public String getDocumentation() {
-			return "To register yourself for a task";
+	public static CommandDocumentation DOCUMENTATION = new CommandDocumentation() {
+
+		@Override
+		public String getPurpose() {
+			return "Registers the caller for the task";
 		};
 
-		public String getUsage(String taskName) {
+		@Override
+		public String getUsage(String... commandArguments) {
+			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
+					: "<task name>";
 			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_ADDME
-					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
 
@@ -76,7 +81,7 @@ public class AddMeCommand extends CommandWithTaskNameAndUserId {
 	private void userIsAlreadyRegistered(CommandExecutionContext commandExecutionContext)
 			throws CommandExecutionException {
 		String message = "Failed user registration. You are already registered for task \"" + this.getTaskName()
-				+ "\". To unregister yourself, use command ```" + SharedTasksCommandFactory.ALL_VERBS_INFORMATION
+				+ "\". To unregister yourself, use command ```" + SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION
 						.get(SharedTasksCommandFactory.VERB_REMOVEME).getUsage(this.getTaskName())
 				+ "```.";
 		try {

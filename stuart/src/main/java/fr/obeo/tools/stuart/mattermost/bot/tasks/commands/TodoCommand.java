@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
@@ -28,14 +29,19 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class TodoCommand extends CommandWithTaskName {
-	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
-		public String getDocumentation() {
-			return "To mark the task as having to be done";
+	public static CommandDocumentation DOCUMENTATION = new CommandDocumentation() {
+
+		@Override
+		public String getPurpose() {
+			return "(Re)assigns the task to a registered user";
 		};
 
-		public String getUsage(String taskName) {
+		@Override
+		public String getUsage(String... commandArguments) {
+			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
+					: "<task name>";
 			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_TODO
-					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
 
@@ -62,7 +68,7 @@ public class TodoCommand extends CommandWithTaskName {
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(),
 							"There are no registered users for this task, so it cannot be assigned to anyone. Use command ```"
-									+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION
+									+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION
 											.get(SharedTasksCommandFactory.VERB_ADDME).getUsage(this.getTaskName())
 									+ "``` to register yourself for this task.");
 				} catch (IOException exception) {

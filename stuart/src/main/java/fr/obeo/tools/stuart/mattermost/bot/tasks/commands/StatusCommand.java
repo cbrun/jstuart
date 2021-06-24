@@ -14,6 +14,7 @@ import com.google.api.services.sheets.v4.model.Sheet;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
@@ -29,14 +30,19 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  *
  */
 public class StatusCommand extends CommandWithTaskName {
-	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
-		public String getDocumentation() {
-			return "To display information about the task (current state, last done timestamp, etc.)";
+	public static CommandDocumentation DOCUMENTATION = new CommandDocumentation() {
+		
+		@Override
+		public String getPurpose() {
+			return "Displays information about the task (current state, last done timestamp, etc.)";
 		};
 
-		public String getUsage(String taskName) {
+		@Override
+		public String getUsage(String... commandArguments) {
+			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
+					: "<task name>";
 			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_STATUS
-					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>");
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
 

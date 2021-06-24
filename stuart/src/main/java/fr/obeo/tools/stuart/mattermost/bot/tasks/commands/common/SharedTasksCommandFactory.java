@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -23,7 +22,6 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.DoneCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.ErrorCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.HelpCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RemoveMeCommand;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.RerollCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.StatusCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.TodoCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
@@ -55,29 +53,27 @@ public class SharedTasksCommandFactory {
 	public static final String VERB_ADDME = "addMe";
 	public static final String VERB_REMOVEME = "removeMe";
 	public static final String VERB_TODO = "todo";
-	public static final String VERB_REROLL = "reroll";
 	public static final String VERB_DONE = "done";
 	public static final String VERB_HELP = "help";
 
 	/**
 	 * This {@link Map} centralizes all verbs that may be used for keyword
-	 * {@link #KEYWORD_TASKS}. Associated to each verb is a {@link Function} that
-	 * provides a user-facing information to show the usage and documentation of the
-	 * verb for a particular task name.
+	 * {@link #KEYWORD_TASKS}. Associated to each verb is a
+	 * {@link CommandDocumentation} that provides a user-facing information to show
+	 * the usage and documentation of the verb for a particular task name.
 	 */
-	public static final Map<String, CommandWithTaskName.CommandInformation> ALL_VERBS_INFORMATION = createVerbsInformationMap();
+	public static final Map<String, CommandDocumentation> ALL_VERBS_DOCUMENTATION = createVerbDocumentationMap();
 
-	private static Map<String, CommandWithTaskName.CommandInformation> createVerbsInformationMap() {
-		Map<String, CommandWithTaskName.CommandInformation> map = new LinkedHashMap<>();
-		map.put(VERB_HELP, HelpCommand.INFORMATION);
-		map.put(VERB_CREATE, CreateTaskCommand.INFORMATION);
-		map.put(VERB_STATUS, StatusCommand.INFORMATION);
-		map.put(VERB_ADDME, AddMeCommand.INFORMATION);
-		map.put(VERB_REMOVEME, RemoveMeCommand.INFORMATION);
-		map.put(VERB_TODO, TodoCommand.INFORMATION);
-		map.put(VERB_REROLL, RerollCommand.INFORMATION);
-		map.put(VERB_DONE, DoneCommand.INFORMATION);
-		return map;
+	private static Map<String, CommandDocumentation> createVerbDocumentationMap() {
+		Map<String, CommandDocumentation> verbToDocumentation = new LinkedHashMap<>();
+		verbToDocumentation.put(VERB_HELP, HelpCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_CREATE, CreateTaskCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_STATUS, StatusCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_ADDME, AddMeCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_REMOVEME, RemoveMeCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_TODO, TodoCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_DONE, DoneCommand.DOCUMENTATION);
+		return verbToDocumentation;
 	}
 
 	private static final String KEYWORD_TASKS = "task";
@@ -178,8 +174,6 @@ public class SharedTasksCommandFactory {
 					return new RemoveMeCommand(commandText, channelId, taskName, userId);
 				} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
 					return new TodoCommand(commandText, channelId, taskName);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
-					return new RerollCommand(commandText, channelId, taskName);
 				} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
 					// There may optionally be a user designated after the verb.
 					final String doneUserId;
@@ -244,7 +238,7 @@ public class SharedTasksCommandFactory {
 
 		if (trimmedCoreArguments.size() < 1) {
 			issues.add("Invalid command. Try one of the following verbs: "
-					+ ALL_VERBS_INFORMATION.keySet().stream().collect(Collectors.joining(", ")) + ".");
+					+ ALL_VERBS_DOCUMENTATION.keySet().stream().collect(Collectors.joining(", ")) + ".");
 		} else {
 			String verbName = trimmedCoreArguments.get(0);
 			issues.addAll(getIssuesWithVerbName(verbName));
@@ -273,7 +267,7 @@ public class SharedTasksCommandFactory {
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
 		}
 
-		boolean incorrectVerb = ALL_VERBS_INFORMATION.keySet().stream()
+		boolean incorrectVerb = ALL_VERBS_DOCUMENTATION.keySet().stream()
 				.filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
 		if (incorrectVerb) {
 			issues.add("\"" + taskName + "\" can not be named like a verb");
@@ -289,11 +283,11 @@ public class SharedTasksCommandFactory {
 
 	private static List<String> getIssuesWithVerbName(String verbName) {
 		List<String> issues = new ArrayList<>();
-		boolean correctVerb = ALL_VERBS_INFORMATION.keySet().stream()
+		boolean correctVerb = ALL_VERBS_DOCUMENTATION.keySet().stream()
 				.filter(s -> s.toLowerCase().equals(verbName.toLowerCase())).findFirst().isPresent();
 		if (!correctVerb) {
 			issues.add("\"" + verbName + "\" is an not a valid verb. Please choose among: "
-					+ ALL_VERBS_INFORMATION.keySet().stream().collect(Collectors.joining(", ")));
+					+ ALL_VERBS_DOCUMENTATION.keySet().stream().collect(Collectors.joining(", ")));
 		}
 
 		return issues;

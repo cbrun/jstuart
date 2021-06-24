@@ -9,7 +9,9 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
 
 /**
  * {@link SharedTasksCommand} implementation for when we could not parse text
- * into a valid command to execute.
+ * into a valid command to execute. This is not really a command usable by the
+ * user, but rather the representation of a failed command creation, providing
+ * feedback to the user as to which part of the syntax was incorrect or missing.
  * 
  * @author flatombe
  *

@@ -20,12 +20,6 @@ public abstract class CommandWithTaskName extends SharedTasksCommand {
 
 	private final String taskName;
 
-	public interface CommandInformation {
-		String getUsage(String taskName);
-
-		String getDocumentation();
-	}
-
 	/**
 	 * Creates a new {@link CommandWithTaskName}.
 	 * 
@@ -88,7 +82,7 @@ public abstract class CommandWithTaskName extends SharedTasksCommand {
 		if (taskSheet == null) {
 			String failureMessage = "Task \"" + this.getTaskName()
 					+ "\" does not exist. You may want to create it using command \""
-					+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_CREATE)
+					+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_CREATE)
 							.getUsage(this.getTaskName())
 					+ "\".";
 			try {

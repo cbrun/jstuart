@@ -5,7 +5,7 @@ import java.util.List;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
@@ -19,12 +19,15 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  */
 public class HelpCommand extends SharedTasksCommand {
 
-	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
-		public String getDocumentation() {
-			return "To displays the help contents";
+	public static CommandDocumentation DOCUMENTATION = new CommandDocumentation() {
+		
+		@Override
+		public String getPurpose() {
+			return "Displays the help contents";
 		};
 
-		public String getUsage(String taskName) {
+		@Override
+		public String getUsage(String... taskName) {
 			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_HELP;
 		};
 	};
@@ -40,12 +43,12 @@ public class HelpCommand extends SharedTasksCommand {
 		helpMessage.append("The task bot allows creating and managing shared tasks\n");
 		helpMessage.append(
 				"Tasks may be created, registered for, or assigned using a fair distribution algorithm, using the following commands:");
-		SharedTasksCommandFactory.ALL_VERBS_INFORMATION.keySet().stream().forEach(verb -> {
+		SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.keySet().stream().forEach(verb -> {
 			helpMessage.append("\n* ");
 			helpMessage
-					.append("```" + SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(verb).getUsage(null) + "```");
-			helpMessage.append("    ");
-			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(verb).getDocumentation());
+					.append("```" + SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getUsage(null) + "```");
+			helpMessage.append(" - ");
+			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getPurpose());
 		});
 
 		try {
@@ -54,7 +57,7 @@ public class HelpCommand extends SharedTasksCommand {
 			helpMessage.append("\n");
 			if (namesOfTasksAvailableInChannel.isEmpty()) {
 				helpMessage.append("There are no tasks for this channel. To create a task, use command ```"
-						+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_CREATE)
+						+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_CREATE)
 								.getUsage(null)
 						+ "```.");
 			} else {
