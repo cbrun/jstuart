@@ -77,7 +77,9 @@ public class SimpleBot {
 		OkHttpClient client = new OkHttpClient();
 		final MMBot bot = MMBot.logIn(client, this.mattermostServer, this.login, this.pwd);
 
-		bot.onMessage(new RespondForSharedTasks(sharedTasksSheetId));
+		if (sharedTasksSheetId != null && !sharedTasksSheetId.isEmpty()) {
+			bot.onMessage(new RespondForSharedTasks(sharedTasksSheetId));
+		}
 
 		for (String bugzilla : bugzillas) {
 			bot.onMessage(new RespondWithBugzillaReferences(bugzilla));
