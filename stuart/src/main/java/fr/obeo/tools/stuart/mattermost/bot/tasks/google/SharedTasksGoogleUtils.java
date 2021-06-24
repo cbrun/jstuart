@@ -94,6 +94,9 @@ public class SharedTasksGoogleUtils {
 	 * Provides the title for the sheet in the spreadsheet that will hold the
 	 * information regarding a particular task of a channel.
 	 * 
+	 * Must be consistent with {@link #isSheetTitleForChannel(String, String)} and
+	 * {@link #getTaskNameFromSheetTitleForChannel(String, String)}.
+	 * 
 	 * @param taskName            the (non-{@code null}) name of the task.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel.
@@ -104,6 +107,75 @@ public class SharedTasksGoogleUtils {
 		Objects.requireNonNull(mattermostChannelId);
 
 		return taskName + TASK_SHEET_TITLE_SEPARATOR + mattermostChannelId;
+	}
+
+	/**
+	 * Provides whether a sheet, based on its title, is used for a task of a
+	 * specific Mattermost channel.
+	 * 
+	 * Must be consistent with {@link #getSheetTitleForTask(String, String)} and
+	 * {@link #getTaskNameFromSheetTitleForChannel(String, String)}.
+	 * 
+	 * @param sheetTitle          the (non-{@code null}) sheet title.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return {@code true} if {@code sheetTitle} matches the structure we use to
+	 *         assign sheets to channels as defined in
+	 *         {@link #getSheetTitleForTask(String, String)}, {@code false}
+	 *         otherwise.
+	 */
+	public static boolean isSheetTitleForChannel(String sheetTitle, String mattermostChannelId) {
+		Objects.requireNonNull(sheetTitle);
+		Objects.requireNonNull(mattermostChannelId);
+
+		return sheetTitle.endsWith(TASK_SHEET_TITLE_SEPARATOR + mattermostChannelId);
+	}
+
+	/**
+	 * Provides the task name from a sheet title and the Mattermost channel the task
+	 * was created for.
+	 * 
+	 * @param sheetTitle          the (non-{@code null}) sheet title.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the (non-{@code null}) {@link String task name} based on the sheet
+	 *         title structure defined by
+	 *         {@link #getSheetTitleForTask(String, String)}.
+	 */
+	public static String getTaskNameFromSheetTitleForChannel(String sheetTitle, String mattermostChannelId) {
+		Objects.requireNonNull(sheetTitle);
+		Objects.requireNonNull(mattermostChannelId);
+
+		return sheetTitle.substring(0, sheetTitle.indexOf(TASK_SHEET_TITLE_SEPARATOR + mattermostChannelId));
+	}
+
+	/**
+	 * Provides the names of all the tasks of a particular Mattermost channel.
+	 * 
+	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @return the (non-{@code null}) {@link List} of all task names of the channel.
+	 * @throws GoogleException
+	 */
+	public static List<String> getAllTasksOfChannel(String spreadsheetId, String mattermostChannelId)
+			throws GoogleException {
+		Objects.requireNonNull(spreadsheetId);
+		Objects.requireNonNull(mattermostChannelId);
+
+		try {
+			Spreadsheet spreadsheetDocument = GoogleUtils.getSheetsService().spreadsheets().get(spreadsheetId)
+					.execute();
+			List<Sheet> allSheets = spreadsheetDocument.getSheets();
+			return allSheets.stream().filter(
+					candidate -> isSheetTitleForChannel(candidate.getProperties().getTitle(), mattermostChannelId))
+					.map(sheetForChannel -> getTaskNameFromSheetTitleForChannel(
+							sheetForChannel.getProperties().getTitle(), mattermostChannelId))
+					.collect(Collectors.toList());
+		} catch (IOException | GeneralSecurityException exception) {
+			throw new GoogleException("There was an issue while trying to load spreadsheet \"" + spreadsheetId + "\".",
+					exception);
+		}
 	}
 
 	/**

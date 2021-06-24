@@ -21,11 +21,14 @@ public class ErrorCommand extends SharedTasksCommand {
 	/**
 	 * Creates a new {@link ErrorCommand}.
 	 * 
-	 * @param commandText  the (non-{@code null}) textual form of the command.
-	 * @param errorMessage the (non-{@code null}) additional error message.
+	 * @param commandText         the (non-{@code null}) textual form of the
+	 *                            command.
+	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
+	 *                            channel.
+	 * @param errorMessage        the (non-{@code null}) additional error message.
 	 */
-	public ErrorCommand(String commandText, String errorMessage) {
-		super(commandText);
+	public ErrorCommand(String commandText, String mattermostChannelId, String errorMessage) {
+		super(commandText, mattermostChannelId);
 		this.errorMessage = Objects.requireNonNull(errorMessage);
 	}
 

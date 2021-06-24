@@ -5,8 +5,8 @@ import java.io.IOException;
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
@@ -20,15 +20,16 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  * @author lfasani
  *
  */
-public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+public class DoneCommand extends CommandWithTaskNameAndUserId {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To mark the task as done, by you (default) or someone else via the optional argument";
 		};
 
 		public String getUsage(String taskName) {
 			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_DONE
-					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>") + SharedTasksCommandFactory.COMMAND_SEPARATOR + "(<user name>)";
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + (taskName != null ? taskName : "<task name>")
+					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + "(<user name>)";
 		};
 	};
 
@@ -37,15 +38,15 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task that has
-	 *                            been done.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel concerned by this command.
+	 * @param taskName            the (non-{@code null}) name of the task that has
+	 *                            been done.
 	 * @param mattermostUserId    the (non-{@code null}) ID of the Mattermost user
 	 *                            who did the task.
 	 */
-	public DoneCommand(String commandText, String taskName, String mattermostChannelId, String mattermostUserId) {
-		super(commandText, taskName, mattermostChannelId, mattermostUserId);
+	public DoneCommand(String commandText, String mattermostChannelId, String taskName, String mattermostUserId) {
+		super(commandText, mattermostChannelId, taskName, mattermostUserId);
 	}
 
 	@Override
@@ -63,10 +64,10 @@ public class DoneCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 			String successMessage = "Task \"" + this.getTaskName() + "\" marked as done by "
 					+ (doneUserIsRegistered ? "" : MattermostUtils.HIGHLIGHT) + doneByUser.getUsername() + ".";
 			if (!doneUserIsRegistered) {
-				successMessage += " To register yourself for this task, use command \""
+				successMessage += " To register yourself for this task, use command ```"
 						+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_ADDME)
 								.getUsage(this.getTaskName())
-						+ "\".";
+						+ "```.";
 			}
 
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);

@@ -11,17 +11,14 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
- * Partial {@link SharedTasksCommand} implementation that holds a task name and
- * a mattermost channel ID.
+ * Partial {@link SharedTasksCommand} implementation that holds a task name.
  * 
  * @author flatombe
  *
  */
-public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand {
+public abstract class CommandWithTaskName extends SharedTasksCommand {
 
 	private final String taskName;
-
-	private final String channelId;
 
 	public interface CommandInformation {
 		String getUsage(String taskName);
@@ -30,19 +27,18 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 	}
 
 	/**
-	 * Creates a new {@link CommandWithTaskNameAndChannelId}.
+	 * Creates a new {@link CommandWithTaskName}.
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task concerned
-	 *                            by this command.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the channel concerned
 	 *                            by this command.
+	 * @param taskName            the (non-{@code null}) name of the task concerned
+	 *                            by this command.
 	 */
-	public CommandWithTaskNameAndChannelId(String commandText, String taskName, String mattermostChannelId) {
-		super(commandText);
+	public CommandWithTaskName(String commandText, String mattermostChannelId, String taskName) {
+		super(commandText, mattermostChannelId);
 		this.taskName = taskName;
-		this.channelId = mattermostChannelId;
 	}
 
 	/**
@@ -53,15 +49,6 @@ public abstract class CommandWithTaskNameAndChannelId extends SharedTasksCommand
 	 */
 	public String getTaskName() {
 		return this.taskName;
-	}
-
-	/**
-	 * Provides the ID of the Mattermost channel concerned by this command.
-	 * 
-	 * @return the (non-{@code null}) ID of the Mattermost channel.
-	 */
-	public String getChannelId() {
-		return this.channelId;
 	}
 
 	/**

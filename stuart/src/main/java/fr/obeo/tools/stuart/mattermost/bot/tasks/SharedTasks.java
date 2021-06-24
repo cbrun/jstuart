@@ -49,7 +49,7 @@ public class SharedTasks {
 			try {
 				command.execute(new CommandExecutionContext(bot, post, this.sharedTasksSheetId));
 			} catch (CommandExecutionException exception) {
-				throw new IOException("There was an issue while executing command \"" + command.toText() + "\".",
+				throw new IOException("There was an issue while executing command \"" + command.getText() + "\".",
 						exception);
 			}
 		}

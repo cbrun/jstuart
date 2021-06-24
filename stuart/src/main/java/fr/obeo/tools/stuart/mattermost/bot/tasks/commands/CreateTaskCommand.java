@@ -6,7 +6,7 @@ import com.google.api.services.sheets.v4.model.Sheet;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
@@ -19,8 +19,8 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  * @author flatombe
  *
  */
-public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+public class CreateTaskCommand extends CommandWithTaskName {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To create a new task for this channel";
 		};
@@ -36,12 +36,12 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task to create.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel concerned by this command.
+	 * @param taskName            the (non-{@code null}) name of the task to create.
 	 */
-	public CreateTaskCommand(String commandText, String taskName, String mattermostChannelId) {
-		super(commandText, taskName, mattermostChannelId);
+	public CreateTaskCommand(String commandText, String mattermostChannelId, String taskName) {
+		super(commandText, mattermostChannelId, taskName);
 	}
 
 	@Override
@@ -82,10 +82,10 @@ public class CreateTaskCommand extends CommandWithTaskNameAndChannelId {
 			SharedTasksGoogleUtils.createNewSheet(context.getSharedTasksSheetId(),
 					SharedTasksGoogleUtils.getSheetTitleForTask(this.getTaskName(), this.getChannelId()));
 			String successMessage = "Successfully created task \"" + this.getTaskName()
-					+ "\". To register yourself for this task, use command \""
+					+ "\". To register yourself for this task, use command ```"
 					+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_ADDME)
 							.getUsage(this.getTaskName())
-					+ "\".";
+					+ "```.";
 			context.getBot().respond(context.getPost(), successMessage);
 		} catch (IOException | GoogleException exception) {
 			throw new CommandExecutionException(

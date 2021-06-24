@@ -10,8 +10,8 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
@@ -24,8 +24,8 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  * @author flatombe
  *
  */
-public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+public class AddMeCommand extends CommandWithTaskNameAndUserId {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To register yourself for a task";
 		};
@@ -41,15 +41,15 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task the user
-	 *                            wants to add themselves to.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel concerned by this command.
+	 * @param taskName            the (non-{@code null}) name of the task the user
+	 *                            wants to add themselves to.
 	 * @param mattermostUserId    the (non-{@code null}) ID of the Mattermost user
 	 *                            that wants to add themselves to the task.
 	 */
-	public AddMeCommand(String commandText, String taskName, String mattermostChannelId, String mattermostUserId) {
-		super(commandText, taskName, mattermostChannelId, mattermostUserId);
+	public AddMeCommand(String commandText, String mattermostChannelId, String taskName, String mattermostUserId) {
+		super(commandText, mattermostChannelId, taskName, mattermostUserId);
 	}
 
 	@Override
@@ -76,9 +76,9 @@ public class AddMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	private void userIsAlreadyRegistered(CommandExecutionContext commandExecutionContext)
 			throws CommandExecutionException {
 		String message = "Failed user registration. You are already registered for task \"" + this.getTaskName()
-				+ "\". To unregister yourself, use command \"" + SharedTasksCommandFactory.ALL_VERBS_INFORMATION
+				+ "\". To unregister yourself, use command ```" + SharedTasksCommandFactory.ALL_VERBS_INFORMATION
 						.get(SharedTasksCommandFactory.VERB_REMOVEME).getUsage(this.getTaskName())
-				+ "\".";
+				+ "```.";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
 		} catch (IOException exception) {

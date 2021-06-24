@@ -14,7 +14,7 @@ import com.google.api.services.sheets.v4.model.Sheet;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
@@ -28,8 +28,8 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  * @author flatombe
  *
  */
-public class StatusCommand extends CommandWithTaskNameAndChannelId {
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+public class StatusCommand extends CommandWithTaskName {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To display information about the task (current state, last done timestamp, etc.)";
 		};
@@ -45,13 +45,13 @@ public class StatusCommand extends CommandWithTaskNameAndChannelId {
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task for which
-	 *                            we want the status.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel concerned by this command.
+	 * @param taskName            the (non-{@code null}) name of the task for which
+	 *                            we want the status.
 	 */
-	public StatusCommand(String commandText, String taskName, String mattermostChannelId) {
-		super(commandText, taskName, mattermostChannelId);
+	public StatusCommand(String commandText, String mattermostChannelId, String taskName) {
+		super(commandText, mattermostChannelId, taskName);
 	}
 
 	@Override

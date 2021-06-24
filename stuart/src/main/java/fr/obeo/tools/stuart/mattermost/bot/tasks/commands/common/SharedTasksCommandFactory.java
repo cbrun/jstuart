@@ -50,14 +50,14 @@ public class SharedTasksCommandFactory {
 	public final static String COMMAND_SEPARATOR = " ";
 
 	// TODO: we may need a proper enum with all our known instances.
-	public static final String VERB_STATUS = "Status";
-	public static final String VERB_CREATE = "Create";
-	public static final String VERB_ADDME = "AddMe";
-	public static final String VERB_REMOVEME = "RemoveMe";
-	public static final String VERB_TODO = "Todo";
-	public static final String VERB_REROLL = "Reroll";
-	public static final String VERB_DONE = "Done";
-	public static final String VERB_HELP = "Help";
+	public static final String VERB_STATUS = "status";
+	public static final String VERB_CREATE = "create";
+	public static final String VERB_ADDME = "addMe";
+	public static final String VERB_REMOVEME = "removeMe";
+	public static final String VERB_TODO = "todo";
+	public static final String VERB_REROLL = "reroll";
+	public static final String VERB_DONE = "done";
+	public static final String VERB_HELP = "help";
 
 	/**
 	 * This {@link Map} centralizes all verbs that may be used for keyword
@@ -65,12 +65,13 @@ public class SharedTasksCommandFactory {
 	 * provides a user-facing information to show the usage and documentation of the
 	 * verb for a particular task name.
 	 */
-	public static final Map<String, CommandWithTaskNameAndChannelId.CommandInformation> ALL_VERBS_INFORMATION = createVerbsInformationMap();
+	public static final Map<String, CommandWithTaskName.CommandInformation> ALL_VERBS_INFORMATION = createVerbsInformationMap();
 
-	private static Map<String, CommandWithTaskNameAndChannelId.CommandInformation> createVerbsInformationMap() {
-		Map<String, CommandWithTaskNameAndChannelId.CommandInformation> map = new LinkedHashMap<>();
-		map.put(VERB_STATUS, StatusCommand.INFORMATION);
+	private static Map<String, CommandWithTaskName.CommandInformation> createVerbsInformationMap() {
+		Map<String, CommandWithTaskName.CommandInformation> map = new LinkedHashMap<>();
+		map.put(VERB_HELP, HelpCommand.INFORMATION);
 		map.put(VERB_CREATE, CreateTaskCommand.INFORMATION);
+		map.put(VERB_STATUS, StatusCommand.INFORMATION);
 		map.put(VERB_ADDME, AddMeCommand.INFORMATION);
 		map.put(VERB_REMOVEME, RemoveMeCommand.INFORMATION);
 		map.put(VERB_TODO, TodoCommand.INFORMATION);
@@ -132,12 +133,12 @@ public class SharedTasksCommandFactory {
 				.asList(commandText.trim().split(SharedTasksCommandFactory.COMMAND_SEPARATOR)).stream()
 				.map(String::trim).collect(Collectors.toList());
 		if (trimmedArguments.isEmpty()) {
-			return new ErrorCommand(commandText, "Empty text cannot be parsed as a command");
+			return new ErrorCommand(commandText, channelId, "Empty text cannot be parsed as a command");
 		} else {
 			if (trimmedArguments.get(0).equalsIgnoreCase(KEYWORD_TASKS)) {
-				return parseFrom(commandText, trimmedArguments.subList(1, trimmedArguments.size()), channelId, userId);
+				return parseFrom(commandText, channelId, trimmedArguments.subList(1, trimmedArguments.size()), userId);
 			} else {
-				return parseFrom(commandText, trimmedArguments, channelId, userId);
+				return parseFrom(commandText, channelId, trimmedArguments, userId);
 			}
 		}
 	}
@@ -148,66 +149,64 @@ public class SharedTasksCommandFactory {
 	 * 
 	 * @param commandText          the (non-{@code null}) input text, stripped from
 	 *                             the command started symbol(s).
-	 * @param trimmedCoreArguments the (non-{@code null}) {@link List} of all
-	 *                             trimmed arguments of the command.
 	 * @param channelId            the (non-{@code null}) ID of the channel of the
 	 *                             originating post.
+	 * @param trimmedCoreArguments the (non-{@code null}) {@link List} of all
+	 *                             trimmed arguments of the command.
 	 * @param userId               the (non-{@code null}) ID of the user of the
 	 *                             originating post.
 	 * @return the corresponding {@link SharedTasksCommand}.
 	 */
-	private SharedTasksCommand parseFrom(String commandText, List<String> trimmedCoreArguments, String channelId,
+	private SharedTasksCommand parseFrom(String commandText, String channelId, List<String> trimmedCoreArguments,
 			String userId) {
-
 		// TODO we should delegate the error management to the concrete command rather
 		// doing it here
-		String verbName = trimmedCoreArguments.get(0);
-		if (trimmedCoreArguments.size() > 0 && VERB_HELP.equalsIgnoreCase(verbName)) {
-			return new HelpCommand(commandText);
-		}
-
 		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
 		if (!errorMessage.isPresent()) {
 			String verbLiteral = trimmedCoreArguments.get(0);
-			String taskName = trimmedCoreArguments.get(1);
-			if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
-				return new StatusCommand(commandText, taskName, channelId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
-				return new CreateTaskCommand(commandText, taskName, channelId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
-				return new AddMeCommand(commandText, taskName, channelId, userId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
-				return new RemoveMeCommand(commandText, taskName, channelId, userId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
-				return new TodoCommand(commandText, taskName, channelId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
-				return new RerollCommand(commandText, taskName, channelId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_HELP)) {
-				return new HelpCommand(commandText);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
-				// There may optionally be a user designated after the verb.
-				final String doneUserId;
-				if (trimmedCoreArguments.size() >= 3) {
-					String userSpecification = trimmedCoreArguments.get(2);
-					try {
-						MUser doneMattermostUser = findMattermostUserFromUserSpecification(userSpecification);
-						if (doneMattermostUser != null) {
-							doneUserId = doneMattermostUser.getId();
-						} else {
-							// The optional argument could not be understood as a username.
-							return new ErrorCommand(commandText, "Unknown user \"" + userSpecification + "\".");
+			if (verbLiteral.equalsIgnoreCase(VERB_HELP)) {
+				return new HelpCommand(commandText, channelId);
+			} else {
+				String taskName = trimmedCoreArguments.get(1);
+				if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
+					return new StatusCommand(commandText, channelId, taskName);
+				} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
+					return new CreateTaskCommand(commandText, channelId, taskName);
+				} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
+					return new AddMeCommand(commandText, channelId, taskName, userId);
+				} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
+					return new RemoveMeCommand(commandText, channelId, taskName, userId);
+				} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
+					return new TodoCommand(commandText, channelId, taskName);
+				} else if (verbLiteral.equalsIgnoreCase(VERB_REROLL)) {
+					return new RerollCommand(commandText, channelId, taskName);
+				} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
+					// There may optionally be a user designated after the verb.
+					final String doneUserId;
+					if (trimmedCoreArguments.size() >= 3) {
+						String userSpecification = trimmedCoreArguments.get(2);
+						try {
+							MUser doneMattermostUser = findMattermostUserFromUserSpecification(userSpecification);
+							if (doneMattermostUser != null) {
+								doneUserId = doneMattermostUser.getId();
+							} else {
+								// The optional argument could not be understood as a username.
+								return new ErrorCommand(commandText, channelId,
+										"Unknown user \"" + userSpecification + "\".");
+							}
+						} catch (IOException exception) {
+							return new ErrorCommand(commandText, channelId,
+									"There was an issue while identifying Mattermost user \"" + userSpecification
+											+ "\".");
 						}
-					} catch (IOException exception) {
-						return new ErrorCommand(commandText,
-								"There was an issue while identifying Mattermost user \"" + userSpecification + "\".");
+					} else {
+						doneUserId = userId;
 					}
-				} else {
-					doneUserId = userId;
+					return new DoneCommand(commandText, channelId, taskName, doneUserId);
 				}
-				return new DoneCommand(commandText, taskName, channelId, doneUserId);
 			}
 		}
-		return new ErrorCommand(commandText, errorMessage.get());
+		return new ErrorCommand(commandText, channelId, errorMessage.get());
 	}
 
 	/**
@@ -243,14 +242,17 @@ public class SharedTasksCommandFactory {
 	private static Optional<String> getIssuesWithCommand(List<String> trimmedCoreArguments) {
 		List<String> issues = new ArrayList<>();
 
-		if (trimmedCoreArguments.size() < 2) {
-			issues.add("There should be at least a verb and a task name.");
+		if (trimmedCoreArguments.size() < 1) {
+			issues.add("Invalid command. Try one of the following verbs: "
+					+ ALL_VERBS_INFORMATION.keySet().stream().collect(Collectors.joining(", ")) + ".");
 		} else {
 			String verbName = trimmedCoreArguments.get(0);
 			issues.addAll(getIssuesWithVerbName(verbName));
 
-			String taskName = trimmedCoreArguments.get(1);
-			issues.addAll(getIssuesWithTaskName(taskName));
+			if (trimmedCoreArguments.size() > 1) {
+				String taskName = trimmedCoreArguments.get(1);
+				issues.addAll(getIssuesWithTaskName(taskName));
+			}
 		}
 
 		String errorMessage = issues.stream().collect(Collectors.joining("\n"));

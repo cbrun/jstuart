@@ -1,6 +1,6 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 
@@ -8,12 +8,14 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
  * {@link SharedTasksCommand} implementation for assigning a task to someone
  * else.
  * 
+ * TODO: remove as this is redundant with {@link TodoCommand}.
+ * 
  * @author flatombe
  *
  */
 public class RerollCommand extends TodoCommand {
 
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "Re-assigns a task that has to be done";
 		};
@@ -29,13 +31,13 @@ public class RerollCommand extends TodoCommand {
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task for which
-	 *                            to reroll.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel concerned by this command.
+	 * @param taskName            the (non-{@code null}) name of the task for which
+	 *                            to reroll.
 	 */
-	public RerollCommand(String commandText, String taskName, String mattermostChannelId) {
-		super(commandText, taskName, mattermostChannelId);
+	public RerollCommand(String commandText, String mattermostChannelId, String taskName) {
+		super(commandText, mattermostChannelId, taskName);
 	}
 
 }

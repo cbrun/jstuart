@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
@@ -27,8 +27,8 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  * @author flatombe
  *
  */
-public class TodoCommand extends CommandWithTaskNameAndChannelId {
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+public class TodoCommand extends CommandWithTaskName {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To mark the task as having to be done";
 		};
@@ -61,10 +61,10 @@ public class TodoCommand extends CommandWithTaskNameAndChannelId {
 			if (usersAndTheirTimestamp.isEmpty()) {
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(),
-							"There are no registered users for this task, so it cannot be assigned to anyone. Use command \""
+							"There are no registered users for this task, so it cannot be assigned to anyone. Use command ```"
 									+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION
 											.get(SharedTasksCommandFactory.VERB_ADDME).getUsage(this.getTaskName())
-									+ "\" to register yourself for this task.");
+									+ "``` to register yourself for this task.");
 				} catch (IOException exception) {
 					throw new CommandExecutionException(
 							"There was an issue while responding for a task that has no registered users.", exception);

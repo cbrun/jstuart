@@ -1,12 +1,15 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
+import java.util.List;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
 /**
  * {@link SharedTasksCommand} implementation to show the tasks usage.
@@ -16,7 +19,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksComm
  */
 public class HelpCommand extends SharedTasksCommand {
 
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To displays the help contents";
 		};
@@ -26,8 +29,8 @@ public class HelpCommand extends SharedTasksCommand {
 		};
 	};
 
-	public HelpCommand(String commandText) {
-		super(commandText);
+	public HelpCommand(String commandText, String mattermostChannelId) {
+		super(commandText, mattermostChannelId);
 	}
 
 	@Override
@@ -44,12 +47,31 @@ public class HelpCommand extends SharedTasksCommand {
 			helpMessage.append("    ");
 			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(verb).getDocumentation());
 		});
-		// TODO: See if we can list all tasks of the current channel?
 
 		try {
+			List<String> namesOfTasksAvailableInChannel = SharedTasksGoogleUtils
+					.getAllTasksOfChannel(commandExecutionContext.getSharedTasksSheetId(), this.getChannelId());
+			helpMessage.append("\n");
+			if (namesOfTasksAvailableInChannel.isEmpty()) {
+				helpMessage.append("There are no tasks for this channel. To create a task, use command ```"
+						+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_CREATE)
+								.getUsage(null)
+						+ "```.");
+			} else {
+				helpMessage.append("There " + (namesOfTasksAvailableInChannel.size() == 1 ? "is" : "are") + " "
+						+ namesOfTasksAvailableInChannel.size() + " task"
+						+ (namesOfTasksAvailableInChannel.size() == 1 ? "" : "s") + " for this channel:");
+				namesOfTasksAvailableInChannel.stream().forEach(taskName -> {
+					helpMessage.append("\n* ");
+					helpMessage.append(taskName);
+				});
+			}
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), helpMessage.toString());
-		} catch (IOException exception) {
-			throw new CommandExecutionException("There was an error while sending the help content", exception);
+		} catch (IOException | GoogleException exception) {
+			throw new CommandExecutionException(
+					"There was an issue while providing the help for channel \"" + this.getChannelId()
+							+ "\" and spreadsheet " + commandExecutionContext.getSharedTasksSheetId() + ".",
+					exception);
 		}
 	}
 }

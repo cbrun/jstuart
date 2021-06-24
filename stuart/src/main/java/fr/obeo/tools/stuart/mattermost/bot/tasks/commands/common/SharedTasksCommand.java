@@ -11,17 +11,21 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
 
 public abstract class SharedTasksCommand {
 
+	protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy MMMM dd  HH:mm",
+			new Locale("en"));
+
 	private final String text;
 
-	protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy MMMM dd  HH:mm", new Locale("en"));
-	
+	private final String channelId;
+
 	/**
 	 * Creates a new {@link SharedTasksCommand}.
 	 * 
 	 * @param commandText the (non-{@code null}) textual form of the command.
 	 */
-	public SharedTasksCommand(String commandText) {
+	public SharedTasksCommand(String commandText, String mattermostChannelId) {
 		this.text = commandText;
+		this.channelId = mattermostChannelId;
 	}
 
 	/**
@@ -79,7 +83,16 @@ public abstract class SharedTasksCommand {
 	 * 
 	 * @return the (non-{@code null}) {@link String} corresponding to this command.
 	 */
-	public String toText() {
+	public String getText() {
 		return this.text;
+	}
+
+	/**
+	 * Provides the ID of the Mattermost channel concerned by this command.
+	 * 
+	 * @return the (non-{@code null}) ID of the Mattermost channel.
+	 */
+	public String getChannelId() {
+		return this.channelId;
 	}
 }

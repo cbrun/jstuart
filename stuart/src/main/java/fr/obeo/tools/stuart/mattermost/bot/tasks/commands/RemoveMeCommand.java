@@ -5,8 +5,8 @@ import java.util.List;
 
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelId;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndChannelIdAndUserId;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
@@ -19,8 +19,8 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
  * @author flatombe
  *
  */
-public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
-	public static CommandWithTaskNameAndChannelId.CommandInformation INFORMATION = new CommandWithTaskNameAndChannelId.CommandInformation() {
+public class RemoveMeCommand extends CommandWithTaskNameAndUserId {
+	public static CommandWithTaskName.CommandInformation INFORMATION = new CommandWithTaskName.CommandInformation() {
 		public String getDocumentation() {
 			return "To unregister yourself from a task";
 		};
@@ -36,15 +36,15 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	 * 
 	 * @param commandText         the (non-{@code null}) textual form of the
 	 *                            command.
-	 * @param taskName            the (non-{@code null}) name of the task the user
-	 *                            wants to remove themselves from.
 	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
 	 *                            channel concerned by this command.
+	 * @param taskName            the (non-{@code null}) name of the task the user
+	 *                            wants to remove themselves from.
 	 * @param mattermostUserId    the (non-{@code null}) ID of the Mattermost user
 	 *                            that wants to remove themselves from the task.
 	 */
-	public RemoveMeCommand(String commandText, String taskName, String mattermostChannelId, String mattermostUserId) {
-		super(commandText, taskName, mattermostChannelId, mattermostUserId);
+	public RemoveMeCommand(String commandText, String mattermostChannelId, String taskName, String mattermostUserId) {
+		super(commandText, mattermostChannelId, taskName, mattermostUserId);
 	}
 
 	@Override
@@ -70,10 +70,10 @@ public class RemoveMeCommand extends CommandWithTaskNameAndChannelIdAndUserId {
 	 */
 	private void userIsNotRegistered(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
 		String message = "Failed user unregistration from task \"" + this.getTaskName()
-				+ "\" because you were not registered for this task in the first place. To register yourself, use command \""
+				+ "\" because you were not registered for this task in the first place. To register yourself, use command ```"
 				+ SharedTasksCommandFactory.ALL_VERBS_INFORMATION.get(SharedTasksCommandFactory.VERB_ADDME)
 						.getUsage(this.getTaskName())
-				+ "\".";
+				+ "```.";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
 		} catch (IOException exception) {
