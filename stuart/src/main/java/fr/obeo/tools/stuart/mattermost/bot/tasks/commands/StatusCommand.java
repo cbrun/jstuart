@@ -93,8 +93,8 @@ public class StatusCommand extends CommandWithTaskName {
 							.get(lastDoneUserId).getUsername();
 					LocalDateTime localDoneTime = LocalDateTime.ofInstant(lastDoneTime, ZoneId.of("Europe/Paris"));
 
-					statusMessage += "\n* Last done on " + TIME_FORMATTER.format(localDoneTime) + " by "
-							+ lastDoneUserName + ".";
+					statusMessage += "\n* Last done on " + TIME_FORMATTER.format(localDoneTime) + " by `"
+							+ lastDoneUserName + "`.";
 				}
 
 				// The number of registered users.
