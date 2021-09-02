@@ -65,7 +65,6 @@ public class StatusCommand extends CommandWithTaskName {
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
 		Sheet taskSheet = this.getExistingTaskSheetElseRespondWithMessage(commandExecutionContext);
 		if (taskSheet != null) {
-			int numberOfRegisteredUsers = this.getAllRegisteredUserIds(commandExecutionContext).size();
 			try {
 				String statusMessage = "Status of task \"" + this.getTaskName() + "\":";
 
@@ -99,8 +98,10 @@ public class StatusCommand extends CommandWithTaskName {
 				}
 
 				// The number of registered users.
-				statusMessage += "\n* " + numberOfRegisteredUsers + " registered user"
-						+ (numberOfRegisteredUsers != 1 ? "s" : "") + ".";
+				List<String> registeredUserIds = this.getAllRegisteredUserIds(commandExecutionContext);
+				String registeredUsers = getUsersById(commandExecutionContext, registeredUserIds).values().stream()
+						.map(user -> "`" + user.getUsername() + "`").collect(Collectors.joining(","));
+				statusMessage += "\n*  Registered users: " + registeredUsers;
 
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), statusMessage);
