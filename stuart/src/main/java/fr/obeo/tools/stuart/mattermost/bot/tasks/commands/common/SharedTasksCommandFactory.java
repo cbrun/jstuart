@@ -63,19 +63,20 @@ public class SharedTasksCommandFactory {
 	 * {@link #KEYWORD_TASKS}. Associated to each verb is a
 	 * {@link CommandDocumentation} that provides a user-facing information to show
 	 * the usage and documentation of the verb for a particular task name.
+	 * Verbs are indexed in lower case.
 	 */
 	public static final Map<String, CommandDocumentation> ALL_VERBS_DOCUMENTATION = createVerbDocumentationMap();
 
 	private static Map<String, CommandDocumentation> createVerbDocumentationMap() {
 		Map<String, CommandDocumentation> verbToDocumentation = new LinkedHashMap<>();
-		verbToDocumentation.put(VERB_HELP, HelpCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_LIST, ListCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_CREATE, CreateTaskCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_STATUS, StatusCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_ADDME, AddMeCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_REMOVEME, RemoveMeCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_TODO, TodoCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_DONE, DoneCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_HELP.toLowerCase(), HelpCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_LIST.toLowerCase(), ListCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_CREATE.toLowerCase(), CreateTaskCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_STATUS.toLowerCase(), StatusCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_ADDME.toLowerCase(), AddMeCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_REMOVEME.toLowerCase(), RemoveMeCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_TODO.toLowerCase(), TodoCommand.DOCUMENTATION);
+		verbToDocumentation.put(VERB_DONE.toLowerCase(), DoneCommand.DOCUMENTATION);
 		return verbToDocumentation;
 	}
 
@@ -163,45 +164,56 @@ public class SharedTasksCommandFactory {
 		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
 		if (!errorMessage.isPresent()) {
 			String verbLiteral = trimmedCoreArguments.get(0);
+
+			// These verbs don't expect a task name.
 			if (verbLiteral.equalsIgnoreCase(VERB_HELP)) {
 				return new HelpCommand(commandText, channelId);
 			} else if (verbLiteral.equalsIgnoreCase(VERB_LIST)) {
 				return new ListCommand(commandText, channelId);
 			} else {
-				String taskName = trimmedCoreArguments.get(1);
-				if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
-					return new StatusCommand(commandText, channelId, taskName);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
-					return new CreateTaskCommand(commandText, channelId, taskName);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
-					return new AddMeCommand(commandText, channelId, taskName, userId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
-					return new RemoveMeCommand(commandText, channelId, taskName, userId);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
-					return new TodoCommand(commandText, channelId, taskName);
-				} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
-					// There may optionally be a user designated after the verb.
-					final String doneUserId;
-					if (trimmedCoreArguments.size() >= 3) {
-						String userSpecification = trimmedCoreArguments.get(2);
-						try {
-							MUser doneMattermostUser = findMattermostUserFromUserSpecification(userSpecification);
-							if (doneMattermostUser != null) {
-								doneUserId = doneMattermostUser.getId();
-							} else {
-								// The optional argument could not be understood as a username.
+				// All verbs below expect a task name.
+				if (trimmedCoreArguments.size() <= 1) {
+					// Print the command usage if we are missing the task name.
+					final CommandDocumentation commandDocumentation = SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION
+							.get(verbLiteral.toLowerCase());
+					final String helpMessage = "Missing task name in: " + "```" + commandDocumentation.getUsage() + "```";
+					return new ErrorCommand(commandText, channelId, helpMessage);
+				} else {
+					String taskName = trimmedCoreArguments.get(1);
+					if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
+						return new StatusCommand(commandText, channelId, taskName);
+					} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
+						return new CreateTaskCommand(commandText, channelId, taskName);
+					} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
+						return new AddMeCommand(commandText, channelId, taskName, userId);
+					} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
+						return new RemoveMeCommand(commandText, channelId, taskName, userId);
+					} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
+						return new TodoCommand(commandText, channelId, taskName);
+					} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
+						// There may optionally be a user designated after the verb.
+						final String doneUserId;
+						if (trimmedCoreArguments.size() >= 3) {
+							String userSpecification = trimmedCoreArguments.get(2);
+							try {
+								MUser doneMattermostUser = findMattermostUserFromUserSpecification(userSpecification);
+								if (doneMattermostUser != null) {
+									doneUserId = doneMattermostUser.getId();
+								} else {
+									// The optional argument could not be understood as a username.
+									return new ErrorCommand(commandText, channelId,
+											"Unknown user \"" + userSpecification + "\".");
+								}
+							} catch (IOException exception) {
 								return new ErrorCommand(commandText, channelId,
-										"Unknown user \"" + userSpecification + "\".");
+										"There was an issue while identifying Mattermost user \"" + userSpecification
+												+ "\".");
 							}
-						} catch (IOException exception) {
-							return new ErrorCommand(commandText, channelId,
-									"There was an issue while identifying Mattermost user \"" + userSpecification
-											+ "\".");
+						} else {
+							doneUserId = userId;
 						}
-					} else {
-						doneUserId = userId;
+						return new DoneCommand(commandText, channelId, taskName, doneUserId);
 					}
-					return new DoneCommand(commandText, channelId, taskName, doneUserId);
 				}
 			}
 		}
