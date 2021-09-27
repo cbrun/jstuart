@@ -7,6 +7,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 
 /**
  * {@link SharedTasksCommand} implementation to show the help.
@@ -25,7 +26,7 @@ public class HelpCommand extends SharedTasksCommand {
 
 		@Override
 		public String getUsage(String... taskName) {
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_HELP;
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.HELP.getLabel();
 		};
 	};
 
@@ -40,12 +41,11 @@ public class HelpCommand extends SharedTasksCommand {
 		helpMessage.append("The task bot allows creating and managing shared tasks\n");
 		helpMessage.append(
 				"Tasks may be created, registered for, or assigned using a fair distribution algorithm, using the following commands:");
-		SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.keySet().stream().forEach(verb -> {
+		SharedTasksVerb.getAllVerbDocumentations().stream().forEach(documentation -> {
 			helpMessage.append("\n* ");
-			helpMessage
-					.append("```" + SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getUsage() + "```");
+			helpMessage.append("```" + documentation.getUsage() + "```");
 			helpMessage.append(" - ");
-			helpMessage.append(SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(verb).getPurpose());
+			helpMessage.append(documentation.getPurpose());
 		});
 
 		try {

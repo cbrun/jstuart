@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.api.services.sheets.v4.model.Sheet;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
@@ -82,9 +83,7 @@ public abstract class CommandWithTaskName extends SharedTasksCommand {
 		if (taskSheet == null) {
 			String failureMessage = "Task \"" + this.getTaskName()
 					+ "\" does not exist. You may want to create it using command \""
-					+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_CREATE)
-							.getUsage(this.getTaskName())
-					+ "\".";
+					+ SharedTasksVerb.CREATE.getDocumentation().getUsage(this.getTaskName()) + "\".";
 			try {
 				commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), failureMessage);
 			} catch (IOException exception) {

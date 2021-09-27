@@ -14,6 +14,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
@@ -36,7 +37,7 @@ public class AddMeCommand extends CommandWithTaskNameAndUserId {
 		public String getUsage(String... commandArguments) {
 			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
 					: "<task name>";
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_ADDME
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.ADDME.getLabel()
 					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
@@ -81,9 +82,8 @@ public class AddMeCommand extends CommandWithTaskNameAndUserId {
 	private void userIsAlreadyRegistered(CommandExecutionContext commandExecutionContext)
 			throws CommandExecutionException {
 		String message = "Failed user registration. You are already registered for task \"" + this.getTaskName()
-				+ "\". To unregister yourself, use command ```" + SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION
-						.get(SharedTasksCommandFactory.VERB_REMOVEME).getUsage(this.getTaskName())
-				+ "```.";
+				+ "\". To unregister yourself, use command ```"
+				+ SharedTasksVerb.REMOVEME.getDocumentation().getUsage(this.getTaskName()) + "```.";
 		try {
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), message);
 		} catch (IOException exception) {

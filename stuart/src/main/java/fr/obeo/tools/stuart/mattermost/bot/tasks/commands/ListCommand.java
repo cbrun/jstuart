@@ -8,6 +8,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
@@ -32,7 +33,7 @@ public class ListCommand extends SharedTasksCommand {
 
 		@Override
 		public String getUsage(String... taskName) {
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_LIST;
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.LIST.getLabel();
 		};
 	};
 
@@ -50,9 +51,7 @@ public class ListCommand extends SharedTasksCommand {
 			messageBuilder.append("\n");
 			if (namesOfTasksAvailableInChannel.isEmpty()) {
 				messageBuilder.append("There are no tasks for this channel. To create a task, use command ```"
-						+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_CREATE)
-								.getUsage()
-						+ "```.");
+						+ SharedTasksVerb.CREATE.getDocumentation().getUsage() + "```.");
 			} else {
 				messageBuilder.append("There " + (namesOfTasksAvailableInChannel.size() == 1 ? "is" : "are") + " "
 						+ namesOfTasksAvailableInChannel.size() + " task"

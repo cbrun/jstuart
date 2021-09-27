@@ -16,6 +16,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
@@ -40,7 +41,7 @@ public class TodoCommand extends CommandWithTaskName {
 		public String getUsage(String... commandArguments) {
 			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
 					: "<task name>";
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_TODO
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.TODO.getLabel()
 					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
@@ -68,8 +69,7 @@ public class TodoCommand extends CommandWithTaskName {
 				try {
 					commandExecutionContext.getBot().respond(commandExecutionContext.getPost(),
 							"There are no registered users for this task, so it cannot be assigned to anyone. Use command ```"
-									+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION
-											.get(SharedTasksCommandFactory.VERB_ADDME).getUsage(this.getTaskName())
+									+ SharedTasksVerb.ADDME.getDocumentation().getUsage(this.getTaskName())
 									+ "``` to register yourself for this task.");
 				} catch (IOException exception) {
 					throw new CommandExecutionException(

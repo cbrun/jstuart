@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -48,36 +48,97 @@ public class SharedTasksCommandFactory {
 	 */
 	public final static String COMMAND_SEPARATOR = " ";
 
-	// TODO: we may need a proper enum with all our known instances.
-	public static final String VERB_STATUS = "status";
-	public static final String VERB_CREATE = "create";
-	public static final String VERB_ADDME = "addMe";
-	public static final String VERB_REMOVEME = "removeMe";
-	public static final String VERB_TODO = "todo";
-	public static final String VERB_DONE = "done";
-	public static final String VERB_HELP = "help";
-	public static final String VERB_LIST = "list";
+	public enum SharedTasksVerb {
+		// This literal order is used when displaying the help to end-users.
+		HELP("help", HelpCommand.DOCUMENTATION), LIST("list", ListCommand.DOCUMENTATION),
+		CREATE("create", CreateTaskCommand.DOCUMENTATION), STATUS("status", StatusCommand.DOCUMENTATION),
+		ADDME("addMe", AddMeCommand.DOCUMENTATION), REMOVEME("removeMe", RemoveMeCommand.DOCUMENTATION),
+		TODO("todo", TodoCommand.DOCUMENTATION), DONE("done", DoneCommand.DOCUMENTATION);
 
-	/**
-	 * This {@link Map} centralizes all verbs that may be used for keyword
-	 * {@link #KEYWORD_TASKS}. Associated to each verb is a
-	 * {@link CommandDocumentation} that provides a user-facing information to show
-	 * the usage and documentation of the verb for a particular task name.
-	 * Verbs are indexed in lower case.
-	 */
-	public static final Map<String, CommandDocumentation> ALL_VERBS_DOCUMENTATION = createVerbDocumentationMap();
+		private final String id;
+		private final String label;
+		private final CommandDocumentation documentation;
 
-	private static Map<String, CommandDocumentation> createVerbDocumentationMap() {
-		Map<String, CommandDocumentation> verbToDocumentation = new LinkedHashMap<>();
-		verbToDocumentation.put(VERB_HELP.toLowerCase(), HelpCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_LIST.toLowerCase(), ListCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_CREATE.toLowerCase(), CreateTaskCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_STATUS.toLowerCase(), StatusCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_ADDME.toLowerCase(), AddMeCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_REMOVEME.toLowerCase(), RemoveMeCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_TODO.toLowerCase(), TodoCommand.DOCUMENTATION);
-		verbToDocumentation.put(VERB_DONE.toLowerCase(), DoneCommand.DOCUMENTATION);
-		return verbToDocumentation;
+		/**
+		 * Creates a {@link SharedTasksVerb}.
+		 * 
+		 * @param label         the (non-{@code null}) user-facing label of this verb.
+		 *                      It must be caselessly unique.
+		 * @param documentation the (non-{@code null}) {@link CommandDocumentation} for
+		 *                      this verb.
+		 */
+		private SharedTasksVerb(String label, CommandDocumentation documentation) {
+			this.label = Objects.requireNonNull(label);
+			this.id = this.label.toLowerCase();
+			this.documentation = Objects.requireNonNull(documentation);
+		}
+
+		/**
+		 * Provides the {@link List} of all verb labels.
+		 * 
+		 * @return the (non-{@code null}) {@link List} of all the
+		 *         {@link SharedTasksVerb#getLabel() labels} of all
+		 *         {@link SharedTasksVerb} literals.
+		 */
+		public static List<String> getAllVerbLabels() {
+			return Stream.of(SharedTasksVerb.values()).map(SharedTasksVerb::getLabel).collect(Collectors.toList());
+		}
+
+		/**
+		 * Attemps to find the {@link SharedTasksVerb} matching the given
+		 * {@link String}. The matching relies on lower-casing the verb label and the
+		 * given String.
+		 * 
+		 * @param verbDenomination the (non-{@code null}) {@link String} that supposedly
+		 *                         designates one of {@link SharedTasksVerb}.
+		 * @return the (non-{@code null}) {@link Optional} representing the matching
+		 *         {@link SharedTasksVerb}.
+		 */
+		public static Optional<SharedTasksVerb> find(String verbDenomination) {
+			Objects.requireNonNull(verbDenomination);
+
+			return Stream.of(SharedTasksVerb.values())
+					.filter(verb -> verb.getId().equals(verbDenomination.toLowerCase())).findFirst();
+		}
+
+		/**
+		 * Provides the {@link List} of all verb documentations.
+		 * 
+		 * @return the (non-{@code null}) {@link List} of all the
+		 *         {@link SharedTasksVerb#getDocumentation() documentations} of all
+		 *         {@link SharedTasksVerb} literals.
+		 */
+		public static List<CommandDocumentation> getAllVerbDocumentations() {
+			return Stream.of(SharedTasksVerb.values()).map(SharedTasksVerb::getDocumentation)
+					.collect(Collectors.toList());
+		}
+
+		/**
+		 * Provides the ID of this verb.
+		 * 
+		 * @return the (non-{@code null}) unique ID for this verb.
+		 */
+		public String getId() {
+			return this.id;
+		}
+
+		/**
+		 * Provides the label for this verb.
+		 * 
+		 * @return the (non-{@code null}) user-facing label for this verb.
+		 */
+		public String getLabel() {
+			return this.label;
+		}
+
+		/**
+		 * Provides the documentation for this verb.
+		 * 
+		 * @return the (non-{@code null}) {@link CommandDocumentation} for this verb.
+		 */
+		public CommandDocumentation getDocumentation() {
+			return this.documentation;
+		}
 	}
 
 	private static final String KEYWORD_TASKS = "task";
@@ -166,31 +227,32 @@ public class SharedTasksCommandFactory {
 			String verbLiteral = trimmedCoreArguments.get(0);
 
 			// These verbs don't expect a task name.
-			if (verbLiteral.equalsIgnoreCase(VERB_HELP)) {
+			if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.HELP.getLabel())) {
 				return new HelpCommand(commandText, channelId);
-			} else if (verbLiteral.equalsIgnoreCase(VERB_LIST)) {
+			} else if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.LIST.getLabel())) {
 				return new ListCommand(commandText, channelId);
 			} else {
 				// All verbs below expect a task name.
 				if (trimmedCoreArguments.size() <= 1) {
 					// Print the command usage if we are missing the task name.
-					final CommandDocumentation commandDocumentation = SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION
-							.get(verbLiteral.toLowerCase());
-					final String helpMessage = "Missing task name in: " + "```" + commandDocumentation.getUsage() + "```";
+					final CommandDocumentation commandDocumentation = SharedTasksVerb.find(verbLiteral).get()
+							.getDocumentation();
+					final String helpMessage = "Missing task name in: " + "```" + commandDocumentation.getUsage()
+							+ "```";
 					return new ErrorCommand(commandText, channelId, helpMessage);
 				} else {
 					String taskName = trimmedCoreArguments.get(1);
-					if (verbLiteral.equalsIgnoreCase(VERB_STATUS)) {
+					if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.STATUS.getLabel())) {
 						return new StatusCommand(commandText, channelId, taskName);
-					} else if (verbLiteral.equalsIgnoreCase(VERB_CREATE)) {
+					} else if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.CREATE.getLabel())) {
 						return new CreateTaskCommand(commandText, channelId, taskName);
-					} else if (verbLiteral.equalsIgnoreCase(VERB_ADDME)) {
+					} else if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.ADDME.getLabel())) {
 						return new AddMeCommand(commandText, channelId, taskName, userId);
-					} else if (verbLiteral.equalsIgnoreCase(VERB_REMOVEME)) {
+					} else if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.REMOVEME.getLabel())) {
 						return new RemoveMeCommand(commandText, channelId, taskName, userId);
-					} else if (verbLiteral.equalsIgnoreCase(VERB_TODO)) {
+					} else if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.TODO.getLabel())) {
 						return new TodoCommand(commandText, channelId, taskName);
-					} else if (verbLiteral.equalsIgnoreCase(VERB_DONE)) {
+					} else if (verbLiteral.equalsIgnoreCase(SharedTasksVerb.DONE.getLabel())) {
 						// There may optionally be a user designated after the verb.
 						final String doneUserId;
 						if (trimmedCoreArguments.size() >= 3) {
@@ -255,7 +317,7 @@ public class SharedTasksCommandFactory {
 
 		if (trimmedCoreArguments.size() < 1) {
 			issues.add("Invalid command. Try one of the following verbs: "
-					+ ALL_VERBS_DOCUMENTATION.keySet().stream().collect(Collectors.joining(", ")) + ".");
+					+ SharedTasksVerb.getAllVerbLabels().stream().collect(Collectors.joining(", ")) + ".");
 		} else {
 			String verbName = trimmedCoreArguments.get(0);
 			issues.addAll(getIssuesWithVerbName(verbName));
@@ -284,10 +346,10 @@ public class SharedTasksCommandFactory {
 			issues.add("Task name may not be \"" + KEYWORD_TASKS + "\".");
 		}
 
-		boolean incorrectVerb = ALL_VERBS_DOCUMENTATION.keySet().stream()
-				.filter(s -> s.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
+		boolean incorrectVerb = SharedTasksVerb.getAllVerbLabels().stream()
+				.filter(verbLabel -> verbLabel.toLowerCase().equals(taskName.toLowerCase())).findFirst().isPresent();
 		if (incorrectVerb) {
-			issues.add("\"" + taskName + "\" can not be named like a verb");
+			issues.add("\"" + taskName + "\" cannot be named like a verb");
 		}
 
 		if (taskName.length() > TASK_NAME_MAXIMUM_LENGTH) {
@@ -300,11 +362,11 @@ public class SharedTasksCommandFactory {
 
 	private static List<String> getIssuesWithVerbName(String verbName) {
 		List<String> issues = new ArrayList<>();
-		boolean correctVerb = ALL_VERBS_DOCUMENTATION.keySet().stream()
-				.filter(s -> s.toLowerCase().equals(verbName.toLowerCase())).findFirst().isPresent();
+		boolean correctVerb = SharedTasksVerb.getAllVerbLabels().stream()
+				.filter(verbLabel -> verbLabel.toLowerCase().equals(verbName.toLowerCase())).findFirst().isPresent();
 		if (!correctVerb) {
-			issues.add("\"" + verbName + "\" is an not a valid verb. Please choose among: "
-					+ ALL_VERBS_DOCUMENTATION.keySet().stream().collect(Collectors.joining(", ")));
+			issues.add("\"" + verbName + "\" is not a valid verb. Please use one of: "
+					+ SharedTasksVerb.getAllVerbLabels().stream().collect(Collectors.joining(", ")));
 		}
 
 		return issues;

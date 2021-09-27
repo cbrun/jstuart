@@ -9,6 +9,7 @@ import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutio
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskNameAndUserId;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
@@ -34,7 +35,7 @@ public class DoneCommand extends CommandWithTaskNameAndUserId {
 					: "<task name>";
 			final String userName = (commandArguments != null && commandArguments.length > 1) ? commandArguments[1]
 					: "(<user name>)";
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_DONE
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.DONE.getLabel()
 					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName
 					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + userName;
 		};
@@ -72,9 +73,7 @@ public class DoneCommand extends CommandWithTaskNameAndUserId {
 					+ (doneUserIsRegistered ? "" : MattermostUtils.HIGHLIGHT) + doneByUser.getUsername() + ".";
 			if (!doneUserIsRegistered) {
 				successMessage += " To register yourself for this task, use command ```"
-						+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_ADDME)
-								.getUsage(this.getTaskName())
-						+ "```.";
+						+ SharedTasksVerb.ADDME.getDocumentation().getUsage(this.getTaskName()) + "```.";
 			}
 
 			commandExecutionContext.getBot().respond(commandExecutionContext.getPost(), successMessage);

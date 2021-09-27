@@ -4,12 +4,13 @@ import java.io.IOException;
 
 import com.google.api.services.sheets.v4.model.Sheet;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 
@@ -32,7 +33,7 @@ public class CreateTaskCommand extends CommandWithTaskName {
 		public String getUsage(String... commandArguments) {
 			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
 					: "<task name>";
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_CREATE
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.CREATE.getLabel()
 					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
@@ -89,9 +90,7 @@ public class CreateTaskCommand extends CommandWithTaskName {
 					SharedTasksGoogleUtils.getSheetTitleForTask(this.getTaskName(), this.getChannelId()));
 			String successMessage = "Successfully created task \"" + this.getTaskName()
 					+ "\". To register yourself for this task, use command ```"
-					+ SharedTasksCommandFactory.ALL_VERBS_DOCUMENTATION.get(SharedTasksCommandFactory.VERB_ADDME)
-							.getUsage(this.getTaskName())
-					+ "```.";
+					+ SharedTasksVerb.ADDME.getDocumentation().getUsage(this.getTaskName()) + "```.";
 			context.getBot().respond(context.getPost(), successMessage);
 		} catch (IOException | GoogleException exception) {
 			throw new CommandExecutionException(

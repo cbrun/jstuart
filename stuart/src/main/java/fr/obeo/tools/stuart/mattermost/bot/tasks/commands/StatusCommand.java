@@ -12,12 +12,13 @@ import java.util.stream.Collectors;
 
 import com.google.api.services.sheets.v4.model.Sheet;
 
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionContext;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandExecutionException;
-import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandWithTaskName;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommand;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory;
+import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.SharedTasksCommandFactory.SharedTasksVerb;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.GoogleException;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.google.SharedTasksGoogleUtils;
 import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
@@ -31,7 +32,7 @@ import fr.obeo.tools.stuart.mattermost.bot.user.MUser;
  */
 public class StatusCommand extends CommandWithTaskName {
 	public static CommandDocumentation DOCUMENTATION = new CommandDocumentation() {
-		
+
 		@Override
 		public String getPurpose() {
 			return "Displays information about the task (current state, last done timestamp, etc.)";
@@ -41,7 +42,7 @@ public class StatusCommand extends CommandWithTaskName {
 		public String getUsage(String... commandArguments) {
 			final String taskName = (commandArguments != null && commandArguments.length > 0) ? commandArguments[0]
 					: "<task name>";
-			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksCommandFactory.VERB_STATUS
+			return SharedTasksCommandFactory.COMMAND_STARTER + SharedTasksVerb.STATUS.getLabel()
 					+ SharedTasksCommandFactory.COMMAND_SEPARATOR + taskName;
 		};
 	};
