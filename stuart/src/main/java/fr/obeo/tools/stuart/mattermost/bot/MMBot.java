@@ -222,28 +222,32 @@ public class MMBot {
 						 * the json format changed with Mattermost 3.3 with a generic "event" which
 						 * might hold data.
 						 */
-						MEvent event = gson.fromJson(data, MEvent.class);
-						if (event.getData().get("post") != null) {
-							MPost p = gson.fromJson(event.getData().get("post"), MPost.class);
-							if (p.getTeamId() == null) {
-								p.setTeamId(event.getTeamId());
+						try {
+							MEvent event = gson.fromJson(data, MEvent.class);
+							if (event.getData().get("post") != null) {
+								MPost p = gson.fromJson(event.getData().get("post"), MPost.class);
+								if (p.getTeamId() == null) {
+									p.setTeamId(event.getTeamId());
+								}
+								if (event.getData().get("team_id") != null && p.getTeamId() == null) {
+									p.setTeamId(event.getData().get("team_id"));
+								}
+								if (Strings.isNullOrEmpty(p.getTeamId())) {
+									p.setTeamId(u.getTeamId());
+								}
+								/*
+								 * with 3.5 we get the channel ID directly with the post whereas previously we
+								 * got it in the event itself.
+								 */
+								if (p.getChannelId() == null) {
+									p.setChannelId(event.getChannelId());
+								}
+								transmitPost(p);
+							} else if (event.getData().get("message") != null) {
+								System.out.println("MMBot.listen().new BotSocketListener() {...}.onMessage()");
 							}
-							if (event.getData().get("team_id") != null && p.getTeamId() == null) {
-								p.setTeamId(event.getData().get("team_id"));
-							}
-							if (Strings.isNullOrEmpty(p.getTeamId())) {
-								p.setTeamId(u.getTeamId());
-							}
-							/*
-							 * with 3.5 we get the channel ID directly with the post whereas previously we
-							 * got it in the event itself.
-							 */
-							if (p.getChannelId() == null) {
-								p.setChannelId(event.getChannelId());
-							}
-							transmitPost(p);
-						} else if (event.getData().get("message") != null) {
-							System.out.println("MMBot.listen().new BotSocketListener() {...}.onMessage()");
+						} catch (Exception e) {
+							System.out.println("Bad data " + data);
 						}
 
 					} else {
