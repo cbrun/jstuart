@@ -476,7 +476,9 @@ public class SharedTasksGoogleUtils {
 				return result.getValues().stream().collect(HashMap::new, (map, row) -> {
 					Instant timestamp = (row.size() > 1) ? Instant.parse((String) row.get(1)) : null;
 					String userId = (String) row.get(0);
-					map.put(timestamp, userId);
+					if (timestamp!=null) {
+						map.put(timestamp, userId);
+					}
 				}, HashMap::putAll);
 			} else {
 				return new HashMap<>();
