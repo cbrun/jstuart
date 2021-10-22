@@ -172,7 +172,7 @@ public class ObeoMattermostInstanceTest {
 		if (!trace.containsKey(post.getKey())) {
 			try {
 				System.err.println("Sending :" + post.getKey());
-				//emitter.accept(MattermostPost.fromGenericPost(post));
+				emitter.accept(MattermostPost.fromGenericPost(post));
 				trace.put(post.getKey(), new Date());
 				Thread.sleep(500);
 			} catch (Exception e) {
