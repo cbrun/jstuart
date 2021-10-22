@@ -1,4 +1,4 @@
-package fr.obeo.tools.stuart.mattermost.bot;
+package fr.obeo.tools.stuart.mattermost.bot.user;
 
 public class MUser {
 	String email;

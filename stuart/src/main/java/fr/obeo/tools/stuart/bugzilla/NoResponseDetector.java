@@ -143,7 +143,7 @@ public class NoResponseDetector {
 		BugzillaHttpSession session = new BugzillaHttpSession();
 		session.setBaseUrl(new URL(this.baseURL));
 		session.setBugzillaBugClass(DefaultIssue.class);
-		Iterator<Issue> openedIssues = Iterators.emptyIterator();
+		Iterator<Issue> openedIssues = Collections.emptyIterator();
 		if (session.open()) {
 			DefaultSearchData searchData = new DefaultSearchData();
 			for (String productName : products) {
@@ -164,7 +164,7 @@ public class NoResponseDetector {
 		BugzillaHttpSession session = new BugzillaHttpSession();
 		session.setBaseUrl(new URL(this.baseURL));
 		session.setBugzillaBugClass(DefaultIssue.class);
-		Iterator<Issue> allIssues = Iterators.emptyIterator();
+		Iterator<Issue> allIssues = Collections.emptyIterator();
 		if (session.open()) {
 			DefaultSearchData searchData = new DefaultSearchData();
 			for (String productName : products) {
