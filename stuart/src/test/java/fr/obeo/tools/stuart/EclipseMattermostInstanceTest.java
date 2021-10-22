@@ -52,7 +52,7 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(
 					new RssLogger(new URL("https://dev.eclipse.org/mhonarc/lists/eclipse.org-committers/maillist.rss"),
 							daysAgo).get());
-			posts.addAll(new RssLogger(new URL("http://planet.eclipse.org/planet/rss20.xml"), daysAgo).get());
+			posts.addAll(new RssLogger(new URL("https://newsroom.eclipse.org/news/announcements.xml"), daysAgo).get());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
@@ -152,7 +152,7 @@ public class EclipseMattermostInstanceTest {
 		posts.addAll(
 				new RssLogger(new URL("https://dev.eclipse.org/mhonarc/lists/virgo-dev/maillist.rss"), daysAgo).get());
 
-		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo/", daysAgo).getBuildResults());
+		//posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/virgo/", daysAgo).getBuildResults());
 
 		posts.addAll(new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 				.bugzillaLog(3, Sets.newHashSet("Virgo")));
@@ -189,7 +189,7 @@ public class EclipseMattermostInstanceTest {
 
 		List<Post> posts = Lists.newArrayList();
 
-		posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/packaging/job/epp-logging.head/", daysAgo)
+		posts.addAll(new JenkinsLogger("https://ci.eclipse.org/packaging/", daysAgo)
 				.getBuildResults());
 
 		for (Post post : new EclipseForumsLogger().collectPosts(69, daysAgo)) {
@@ -365,7 +365,7 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://github.com/eclipse/packagedrone.git", "https://github.com/eclipse/packagedrone/commit/"));
 			posts.addAll(new EclipseForumsLogger().collectPosts(318, daysAgo));
-			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/package-drone/", daysAgo).getBuildResults());
+			//posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/package-drone/", daysAgo).getBuildResults());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
@@ -424,7 +424,7 @@ public class EclipseMattermostInstanceTest {
 			posts.addAll(new EclipseForumsLogger().collectPosts(262, daysAgo));
 
 			posts.addAll(
-					new JenkinsLogger("https://hudson.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
+					new JenkinsLogger("https://ci.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
 			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
 					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius"), nbDays));
 			posts.addAll(

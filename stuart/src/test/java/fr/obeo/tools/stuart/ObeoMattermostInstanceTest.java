@@ -61,7 +61,7 @@ public class ObeoMattermostInstanceTest {
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://github.com/sbegaudeau/eef.git", "https://github.com/sbegaudeau/eef/commit/"));
 
-			posts.addAll(new JenkinsLogger("https://hudson.eclipse.org/eef/", daysAgo).getBuildResults(trace.keySet()));
+			posts.addAll(new JenkinsLogger("https://ci.eclipse.org/eef/", daysAgo).getBuildResults(trace.keySet()));
 			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
 					.getPatchsets(Sets.newHashSet("eef/org.eclipse.eef"), nbDays));
 
