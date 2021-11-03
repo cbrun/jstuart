@@ -78,7 +78,7 @@ public class EclipseMattermostInstanceTest {
 			storage = ".";
 		}
 		// channels
-		String webtoolsChannel = System.getenv("WEBTOOLS-BOTS-CHANNEL");
+		String webtoolsChannel = System.getenv("WEBTOOLS_BOTS_CHANNEL");
 		if (webtoolsChannel == null) {
 			webtoolsChannel = "webtools-bots";
 		}
