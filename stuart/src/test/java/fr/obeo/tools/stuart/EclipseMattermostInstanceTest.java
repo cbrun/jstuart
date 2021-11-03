@@ -179,7 +179,7 @@ public class EclipseMattermostInstanceTest {
 		}
 
 		// channels
-		String aeriChannel = System.getenv("AERI-CHANNEL");
+		String aeriChannel = System.getenv("AERI_CHANNEL");
 
 		MattermostEmitter aeriEmitter = new MattermostEmitter("https", host, aeriChannel);
 
