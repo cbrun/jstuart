@@ -47,14 +47,13 @@ public class RssLogger {
 				SyndFeed feed = null;
 				try (XmlReader xmlReader = new XmlReader(feedUrl)) {
 					feed = input.build(xmlReader);
-				}
-				catch(IOException e) {
+				} catch (IOException e) {
 					// problem reading the stream or URL
 					feed = new SyndFeedImpl();
 				}
-				Date publishedDate =feed.getPublishedDate();				
+				Date publishedDate = feed.getPublishedDate();
 				for (SyndEntry entry : feed.getEntries()) {
-					 publishedDate = entry.getPublishedDate();
+					publishedDate = entry.getPublishedDate();
 					if (publishedDate == null) {
 						publishedDate = entry.getUpdatedDate();
 					}
@@ -78,6 +77,12 @@ public class RssLogger {
 
 						Post newPost = Post.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
 								entry.getAuthor(), RSS_ICON, publishedDate).addURLs(entry.getUri());
+						if (entry.getUri() != null && entry.getUri().startsWith("http")) {
+							newPost.addURLs(entry.getUri());
+						}
+						if (entry.getLink() != null) {
+							newPost.addURLs(entry.getLink());
+						}
 						Element img = Jsoup.parse(html).getElementsByTag("img").first();
 						if (img != null && img.attr("src") != null) {
 							String href = img.attr("src");
