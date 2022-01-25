@@ -172,6 +172,52 @@ public class ObeoMattermostInstanceTest {
 			Assert.fail("Expecting the M2DOC_CHANNEL environment variable to be set");
 		}
 	}
+	
+	
+	@Test
+	public void sendEventsToP4CChan() throws Exception {
+
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String channel = System.getenv("PYTHON4C_CHANNEL");
+		if (channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
+
+			int nbDays = 10;
+
+			Date daysAgo = getDateXDaysAgo(nbDays);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_python4cproperties_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
+					"https://github.com/labs4capella/python4capella.git", "https://github.com/labs4capella/python4capella.git/commit"));
+
+			
+			// from Capella Forum
+			posts.addAll(new RssLogger(new URL("https://forum.mbse-capella.org/c/Scripting-with-Capella-Python4Capella/23.rss"), daysAgo).setIcon(SO_ICON)
+					.get());
+		
+
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the PYTHON4C_CHANNEL environment variable to be set");
+		}
+	}
 
 	private void send(MattermostEmitter emitter, Map<String, Date> trace, Post post) {
 		if (!trace.containsKey(post.getKey())) {
