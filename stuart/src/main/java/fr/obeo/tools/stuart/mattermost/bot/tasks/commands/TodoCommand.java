@@ -113,7 +113,7 @@ public class TodoCommand extends CommandWithTaskName {
 			// been assigned already.
 			Optional<String> unassignedUserIdWithOldestTimestamp = usersAndTheirTimestamp.entrySet().stream()
 					.filter(entry -> !pastAssignedUsers.contains(entry.getKey()))
-					.max(Comparator.comparing(entry -> entry.getValue())).map(entry -> entry.getKey());
+					.min(Comparator.comparing(entry -> entry.getValue())).map(entry -> entry.getKey());
 			if (unassignedUserIdWithOldestTimestamp.isPresent()) {
 				selectedUserId = unassignedUserIdWithOldestTimestamp.get();
 			} else {

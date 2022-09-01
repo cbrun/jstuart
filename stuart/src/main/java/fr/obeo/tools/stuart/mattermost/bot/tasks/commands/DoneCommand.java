@@ -1,6 +1,8 @@
 package fr.obeo.tools.stuart.mattermost.bot.tasks.commands;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Map;
 
 import fr.obeo.tools.stuart.mattermost.MattermostUtils;
 import fr.obeo.tools.stuart.mattermost.bot.tasks.commands.common.CommandDocumentation;
@@ -60,12 +62,12 @@ public class DoneCommand extends CommandWithTaskNameAndUserId {
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
 		try {
+			Map<String, Instant> allRegisteredUserIdsAndTheirTS = this.getAllRegisteredUsersAndTheirTimestamps(commandExecutionContext);
 			SharedTasksGoogleUtils.markTaskAsDone(commandExecutionContext.getSharedTasksSheetId(), this.getTaskName(),
-					this.getChannelId(), this.getUserId());
+					this.getChannelId(), this.getUserId(), allRegisteredUserIdsAndTheirTS);
 
 			MUser doneByUser = this.getMattermostUser(commandExecutionContext);
-			boolean doneUserIsRegistered = this.getAllRegisteredUserIds(commandExecutionContext)
-					.contains(doneByUser.getId());
+			boolean doneUserIsRegistered = allRegisteredUserIdsAndTheirTS.keySet().contains(doneByUser.getId());
 
 			// If the task was done by someone who is not registered for it, highlight them
 			// to tell them about adding themselves to the task.
