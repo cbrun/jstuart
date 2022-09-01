@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -476,7 +477,7 @@ public class SharedTasksGoogleUtils {
 				return result.getValues().stream().collect(HashMap::new, (map, row) -> {
 					Instant timestamp = (row.size() > 1) ? Instant.parse((String) row.get(1)) : null;
 					String userId = (String) row.get(0);
-					if (timestamp!=null) {
+					if (timestamp != null) {
 						map.put(timestamp, userId);
 					}
 				}, HashMap::putAll);
@@ -496,24 +497,29 @@ public class SharedTasksGoogleUtils {
 	 * <li>Clears the "last affected users" associated to the task</li>
 	 * </ul>
 	 * 
-	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
-	 *                            document.
-	 * @param taskName            the (non-{@code null}) name of the task.
-	 * @param mattermostChannelId the (non-{@code null}) ID of the Mattermost
-	 *                            channel.
-	 * @param userId              the (non-{@code null}) ID of the Mattermost user
-	 *                            who did the task.
+	 * @param spreadsheetId                  the (non-{@code null}) ID of the
+	 *                                       spreadsheet document.
+	 * @param taskName                       the (non-{@code null}) name of the
+	 *                                       task.
+	 * @param mattermostChannelId            the (non-{@code null}) ID of the
+	 *                                       Mattermost channel.
+	 * @param userId                         the (non-{@code null}) ID of the
+	 *                                       Mattermost user who did the task.
+	 * @param allRegisteredUserIdsAnfTheirTS
 	 * @throws GoogleException
 	 */
-	public static void markTaskAsDone(String spreadsheetId, String taskName, String mattermostChannelId, String userId)
-			throws GoogleException {
+	public static void markTaskAsDone(String spreadsheetId, String taskName, String mattermostChannelId, String userId,
+			Map<String, Instant> allRegisteredUserIdsAnfTheirTS) throws GoogleException {
 		Objects.requireNonNull(spreadsheetId);
 		Objects.requireNonNull(taskName);
 		Objects.requireNonNull(mattermostChannelId);
 		Objects.requireNonNull(userId);
+		Objects.requireNonNull(allRegisteredUserIdsAnfTheirTS);
 
-		updateTaskRealizationHistory(spreadsheetId, taskName, mattermostChannelId, userId);
+		updateTaskRealizationHistory(spreadsheetId, taskName, mattermostChannelId, userId,
+				allRegisteredUserIdsAnfTheirTS);
 		clearLastAssignedUsersSinceLastDone(spreadsheetId, taskName, mattermostChannelId);
+
 	}
 
 	/**
@@ -541,7 +547,7 @@ public class SharedTasksGoogleUtils {
 
 	/**
 	 * Updates the realization history of a task by adding a new entry into the
-	 * history.
+	 * history and update the last timestamp for the user.
 	 * 
 	 * @param spreadsheetId       the (non-{@code null}) ID of the spreadsheet
 	 *                            document.
@@ -553,7 +559,7 @@ public class SharedTasksGoogleUtils {
 	 * @throws GoogleException
 	 */
 	private static void updateTaskRealizationHistory(String spreadsheetId, String taskName, String mattermostChannelId,
-			String userId) throws GoogleException {
+			String userId, Map<String, Instant> allRegisteredUserIdsAnfTheirTS) throws GoogleException {
 		final Instant timestamp = Instant.now();
 
 		// First retrieve the previous history.
@@ -584,6 +590,32 @@ public class SharedTasksGoogleUtils {
 			throw new GoogleException("There was an issue while updating range \"" + taskRealizationHistoryRange
 					+ "\" in spreadsheet \"" + spreadsheetId + "\".", exception);
 		}
+
+		// If the user is registered, it updates the last time stamp
+		if (allRegisteredUserIdsAnfTheirTS.containsKey(userId)) {
+			allRegisteredUserIdsAnfTheirTS.put(userId, timestamp);
+
+			List<List<Object>> updatedLastTSValues = Arrays
+					.asList(allRegisteredUserIdsAnfTheirTS.values().stream().map(ts -> {
+						String timeStampString = "";
+						if (ts != null) {
+							timeStampString = ts.toString();
+						}
+						return timeStampString;
+					}).collect(Collectors.toList()));
+			ValueRange body = new ValueRange().setValues(updatedLastTSValues).setMajorDimension("COLUMNS");
+			String range = getSheetTitleForTask(taskName, mattermostChannelId) + "!" + LAST_TIME_STAMP__COLUMN + ":"
+					+ LAST_TIME_STAMP__COLUMN;
+
+			try {
+				UpdateValuesResponse result = GoogleUtils.getSheetsService().spreadsheets().values()
+						.update(spreadsheetId, range, body).setValueInputOption(GoogleUtils.VALUE_INPUT_OPTION_RAW)
+						.execute();
+			} catch (IOException | GeneralSecurityException exception) {
+				throw new GoogleException("There was an issue while updating range \"" + range + "\" in spreadsheet \""
+						+ spreadsheetId + "\".", exception);
+			}
+		}
 	}
 
 	/**
@@ -612,13 +644,13 @@ public class SharedTasksGoogleUtils {
 				// If the casts fail it means that was an issue while inserting a user ID or
 				// timestamp in the
 				// first column, as we should only insert strings.
-				return result.getValues().stream().collect(HashMap::new, (map, row) -> {
+				return result.getValues().stream().collect(LinkedHashMap::new, (map, row) -> {
 					String userId = (String) row.get(0);
 					Instant timestamp = (row.size() > 1) ? Instant.parse((String) row.get(1)) : null;
 					map.put(userId, timestamp);
 				}, HashMap::putAll);
 			} else {
-				return new HashMap<>();
+				return new LinkedHashMap<>();
 			}
 		} catch (IOException | GeneralSecurityException exception) {
 			throw new GoogleException("There was an issue while retrieving range \"" + range + "\" in spreadsheet \""
