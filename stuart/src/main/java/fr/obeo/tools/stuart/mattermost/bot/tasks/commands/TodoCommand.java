@@ -97,7 +97,7 @@ public class TodoCommand extends CommandWithTaskName {
 	 *                               lastt done.
 	 * @return the user ID to whom the task must be assigned.
 	 */
-	private static String determineNextUserToAssignTheTaskTo(Map<String, Instant> usersAndTheirTimestamp,
+	public static String determineNextUserToAssignTheTaskTo(Map<String, Instant> usersAndTheirTimestamp,
 			List<String> pastAssignedUsers) {
 		String selectedUserId;
 

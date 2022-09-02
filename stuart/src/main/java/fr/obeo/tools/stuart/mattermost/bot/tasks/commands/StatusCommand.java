@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -63,6 +64,7 @@ public class StatusCommand extends CommandWithTaskName {
 
 	@Override
 	public void execute(CommandExecutionContext commandExecutionContext) throws CommandExecutionException {
+
 		Sheet taskSheet = this.getExistingTaskSheetElseRespondWithMessage(commandExecutionContext);
 		if (taskSheet != null) {
 			try {
@@ -76,9 +78,20 @@ public class StatusCommand extends CommandWithTaskName {
 					List<String> pastAssignedUserNames = pastAssignedUserIds.stream()
 							.map(userId -> pastAssignedUsersById.get(userId).getUsername())
 							.collect(Collectors.toList());
-					statusMessage += "\n* Last assigned to: "
-							+ pastAssignedUserNames.stream().collect(Collectors.joining(", "));
+					statusMessage += "\n* Currently assigned to: `"
+							+ pastAssignedUserNames.get(pastAssignedUserNames.size() - 1) + "`";
 				}
+				
+				// determine the next user
+				Map<String, Instant> usersAndTheirTimestamp = this
+						.getAllRegisteredUsersAndTheirTimestamps(commandExecutionContext);
+				List<String> pastAssignedUsers = getPastAssignedUserIds(commandExecutionContext);
+				String userIdToAssignTheTaskTo = TodoCommand.determineNextUserToAssignTheTaskTo(usersAndTheirTimestamp,
+						pastAssignedUsers);
+				String nextUserName = this
+						.getUsersById(commandExecutionContext, Collections.singletonList(userIdToAssignTheTaskTo))
+						.get(userIdToAssignTheTaskTo).getUsername();
+				statusMessage += "\n*  Next user: " + "`" + nextUserName + "`";
 
 				// The last time the task has been done.
 				Map<Instant, String> history = SharedTasksGoogleUtils.getTaskRealizationHistory(
@@ -98,7 +111,7 @@ public class StatusCommand extends CommandWithTaskName {
 				}
 
 				// The number of registered users.
-				List<String> registeredUserIds = this.getAllRegisteredUserIds(commandExecutionContext);
+				List<String> registeredUserIds = new ArrayList(usersAndTheirTimestamp.keySet());
 				String registeredUsers = getUsersById(commandExecutionContext, registeredUserIds).values().stream()
 						.map(user -> "`" + user.getUsername() + "`").collect(Collectors.joining(","));
 				statusMessage += "\n*  Registered users: " + registeredUsers;
