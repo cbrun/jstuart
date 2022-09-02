@@ -222,6 +222,15 @@ public class SharedTasksCommandFactory {
 			String userId) {
 		// TODO we should delegate the error management to the concrete command rather
 		// doing it here
+
+		// If the verb is not known we do nothing
+		if (trimmedCoreArguments.size() > 0) {
+			String verbName = trimmedCoreArguments.get(0);
+			if (getIssuesWithVerbName(verbName).size() > 0) {
+				return null;
+			}
+		}
+
 		Optional<String> errorMessage = getIssuesWithCommand(trimmedCoreArguments);
 		if (!errorMessage.isPresent()) {
 			String verbLiteral = trimmedCoreArguments.get(0);
@@ -318,14 +327,9 @@ public class SharedTasksCommandFactory {
 		if (trimmedCoreArguments.size() < 1) {
 			issues.add("Invalid command. Try one of the following verbs: "
 					+ SharedTasksVerb.getAllVerbLabels().stream().collect(Collectors.joining(", ")) + ".");
-		} else {
-			String verbName = trimmedCoreArguments.get(0);
-			issues.addAll(getIssuesWithVerbName(verbName));
-
-			if (trimmedCoreArguments.size() > 1) {
-				String taskName = trimmedCoreArguments.get(1);
-				issues.addAll(getIssuesWithTaskName(taskName));
-			}
+		} else if (trimmedCoreArguments.size() > 1) {
+			String taskName = trimmedCoreArguments.get(1);
+			issues.addAll(getIssuesWithTaskName(taskName));
 		}
 
 		String errorMessage = issues.stream().collect(Collectors.joining("\n"));
