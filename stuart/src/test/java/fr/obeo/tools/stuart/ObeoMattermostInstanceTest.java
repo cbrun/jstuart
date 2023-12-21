@@ -139,7 +139,7 @@ public class ObeoMattermostInstanceTest {
 		if (channel != null) {
 			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
 
-			int nbDays = 10;
+			int nbDays = 30;
 
 			Date daysAgo = getDateXDaysAgo(nbDays);
 
