@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document.OutputSettings;
@@ -13,6 +14,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
@@ -57,11 +59,20 @@ public class RssLogger {
 					if (publishedDate == null) {
 						publishedDate = entry.getUpdatedDate();
 					}
-					if (publishedDate != null && publishedDate.after(daysAgo)) {
-						String html = entry.getDescription().getValue();
 
-						String htmlConvertedToText = Jsoup.clean(html, "", Whitelist.none(),
-								new OutputSettings().prettyPrint(false));
+					if (publishedDate != null && publishedDate.after(daysAgo)) {
+						String htmlConvertedToText = "";
+						Set<String> mediaURLS = Sets.newLinkedHashSet();
+						if (entry.getDescription() != null) {
+							String html = entry.getDescription().getValue();
+							htmlConvertedToText = Jsoup.clean(html, "", Whitelist.none(),
+									new OutputSettings().prettyPrint(false));
+							Element img = Jsoup.parse(html).getElementsByTag("img").first();
+							if (img != null && img.attr("src") != null) {
+								String href = img.attr("src");
+								mediaURLS.add(href);
+							}
+						}
 						StringBuffer cleaned = new StringBuffer();
 						boolean foundSignature = false;
 						for (String line : Splitter.on('\n').split(htmlConvertedToText)) {
@@ -74,20 +85,19 @@ public class RssLogger {
 								}
 							}
 						}
-
 						Post newPost = Post.createPostWithSubject(entry.getUri(), entry.getTitle(), cleaned.toString(),
 								entry.getAuthor(), RSS_ICON, publishedDate).addURLs(entry.getUri());
+
 						if (entry.getUri() != null && entry.getUri().startsWith("http")) {
 							newPost.addURLs(entry.getUri());
 						}
 						if (entry.getLink() != null) {
 							newPost.addURLs(entry.getLink());
 						}
-						Element img = Jsoup.parse(html).getElementsByTag("img").first();
-						if (img != null && img.attr("src") != null) {
-							String href = img.attr("src");
+						for (String href : mediaURLS) {
 							newPost.addMediaURLs(href);
 						}
+
 						posts.add(newPost);
 					} else {
 						foundAnOld = true;
