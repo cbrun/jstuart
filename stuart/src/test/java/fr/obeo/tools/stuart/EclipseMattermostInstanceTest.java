@@ -419,8 +419,8 @@ public class EclipseMattermostInstanceTest {
 			Date daysAgo = getDateXDaysAgo(nbDays);
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
-					"https://git.eclipse.org/r/sirius/org.eclipse.sirius",
-					"https://git.eclipse.org/c/sirius/org.eclipse.sirius.git/commit/?id="));
+					"https://github.com/eclipse-sirius/sirius-desktop.git",
+					"https://github.com/eclipse-sirius/sirius-desktop/commit/"));
 			posts.addAll(new EclipseForumsLogger().collectPosts(262, daysAgo));
 
 			posts.addAll(
