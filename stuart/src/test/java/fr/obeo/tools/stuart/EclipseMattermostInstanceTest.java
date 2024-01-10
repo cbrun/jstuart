@@ -22,6 +22,7 @@ import fr.obeo.tools.stuart.bugzilla.BugzillaLogger;
 import fr.obeo.tools.stuart.eclipseforum.EclipseForumsLogger;
 import fr.obeo.tools.stuart.gerrit.GerritLogger;
 import fr.obeo.tools.stuart.git.GitLogger;
+import fr.obeo.tools.stuart.github.GitHubPullRequestLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
 import fr.obeo.tools.stuart.mattermost.MattermostEmitter;
 import fr.obeo.tools.stuart.rss.RssLogger;
@@ -407,7 +408,8 @@ public class EclipseMattermostInstanceTest {
 		}
 
 		String channel = System.getenv("MATTERMOST_CHANNEL");
-		if (channel != null) {
+		String token = System.getenv("GITHUB_TOKEN");
+		if (channel != null && token != null) {
 			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
 
 			int nbDays = 3;
@@ -425,8 +427,7 @@ public class EclipseMattermostInstanceTest {
 
 			posts.addAll(
 					new JenkinsLogger("https://ci.eclipse.org/sirius/", daysAgo).getBuildResults(trace.keySet()));
-			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
-					.getPatchsets(Sets.newHashSet("sirius/org.eclipse.sirius"), nbDays));
+			posts.addAll(new GitHubPullRequestLogger(token).getPatchsets("eclipse-sirius", "sirius-desktop"));
 			posts.addAll(
 					new BugzillaLogger("https://bugs.eclipse.org/bugs", Sets.newHashSet("genie", "genie@eclipse.org"))
 							.bugzillaLog(3, Sets.newHashSet("Sirius")));
