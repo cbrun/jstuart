@@ -152,6 +152,8 @@ public class ObeoMattermostInstanceTest {
 					.get());
 			posts.addAll(new RssLogger(new URL("https://www.jenkins.io/security/advisories/rss.xml"), daysAgo).setIcon("https://www.svgrepo.com/show/74601/security.svg")
 					.get());
+            posts.addAll(new RssLogger(new URL("https://api.eclipse.org/cve/rss.xml"), daysAgo).setIcon("https://www.svgrepo.com/show/341780/eclipseide.svg")
+					.get());
 			posts.addAll(new RssLogger(new URL("https://spring.io/security.atom"), daysAgo).setIcon("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUKbe3Vg5PJ4wpjlDUy-noAzkT0dqhknQR4TL86jNAKA&s")
 					.get());
 
