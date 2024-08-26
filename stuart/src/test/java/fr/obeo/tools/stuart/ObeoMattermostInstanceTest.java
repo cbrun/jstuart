@@ -156,6 +156,9 @@ public class ObeoMattermostInstanceTest {
 					.get());
 			posts.addAll(new RssLogger(new URL("https://spring.io/security.atom"), daysAgo).setIcon("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUKbe3Vg5PJ4wpjlDUy-noAzkT0dqhknQR4TL86jNAKA&s")
 					.get());
+			posts.addAll(new RssLogger(new URL("https://www.cert.ssi.gouv.fr/alerte/feed/"), daysAgo).setIcon("https://www.cert.ssi.gouv.fr/static/images/logo_anssi.svg")
+					.get());
+			
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
