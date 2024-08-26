@@ -12,10 +12,11 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import fr.obeo.tools.stuart.eclipseforum.PolarsysForumsLogger;
 import fr.obeo.tools.stuart.gerrit.GerritLogger;
 import fr.obeo.tools.stuart.git.GitLogger;
 import fr.obeo.tools.stuart.jenkins.JenkinsLogger;
@@ -143,22 +144,31 @@ public class ObeoMattermostInstanceTest {
 
 			Date daysAgo = getDateXDaysAgo(nbDays);
 
-			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_securityproperties_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(
+					new File(storage + "/" + host + "_securityproperties_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
-			
-			posts.addAll(new RssLogger(new URL("https://seclists.org/rss/oss-sec.rss"), daysAgo).setIcon("https://www.svgrepo.com/show/74601/security.svg")
+
+			posts.addAll(Collections2.filter(new RssLogger(new URL("https://seclists.org/rss/oss-sec.rss"), daysAgo)
+					.setIcon("https://www.svgrepo.com/show/74601/security.svg").get(), new Predicate<Post>() {
+
+						// keeping only the messages which are not an answer on the mailling list and as
+						// such starting with "Re"
+						@Override
+						public boolean apply(Post post) {
+							return post.getSubject().startsWith("Re:");
+						}
+					}));
+			posts.addAll(new RssLogger(new URL("https://www.jenkins.io/security/advisories/rss.xml"), daysAgo)
+					.setIcon("https://www.svgrepo.com/show/74601/security.svg").get());
+			posts.addAll(new RssLogger(new URL("https://api.eclipse.org/cve/rss.xml"), daysAgo)
+					.setIcon("https://www.svgrepo.com/show/341780/eclipseide.svg").get());
+			posts.addAll(new RssLogger(new URL("https://spring.io/security.atom"), daysAgo).setIcon(
+					"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUKbe3Vg5PJ4wpjlDUy-noAzkT0dqhknQR4TL86jNAKA&s")
 					.get());
-			posts.addAll(new RssLogger(new URL("https://www.jenkins.io/security/advisories/rss.xml"), daysAgo).setIcon("https://www.svgrepo.com/show/74601/security.svg")
-					.get());
-            posts.addAll(new RssLogger(new URL("https://api.eclipse.org/cve/rss.xml"), daysAgo).setIcon("https://www.svgrepo.com/show/341780/eclipseide.svg")
-					.get());
-			posts.addAll(new RssLogger(new URL("https://spring.io/security.atom"), daysAgo).setIcon("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUKbe3Vg5PJ4wpjlDUy-noAzkT0dqhknQR4TL86jNAKA&s")
-					.get());
-			posts.addAll(new RssLogger(new URL("https://www.cert.ssi.gouv.fr/alerte/feed/"), daysAgo).setIcon("https://www.cert.ssi.gouv.fr/static/images/logo_anssi.svg")
-					.get());
-			
+			posts.addAll(new RssLogger(new URL("https://www.cert.ssi.gouv.fr/alerte/feed/"), daysAgo)
+					.setIcon("https://www.cert.ssi.gouv.fr/static/images/logo_anssi.svg").get());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
