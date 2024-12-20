@@ -233,6 +233,47 @@ public class ObeoMattermostInstanceTest {
 		}
 	}
 	
+	@Test
+	public void sendEventsToAcceleoChan() throws Exception {
+
+		String storage = System.getenv("WORKSPACE");
+		if (storage == null) {
+			storage = ".";
+		}
+
+		String channel = System.getenv("ACCELEO_CHANNEL");
+		if (channel != null) {
+			MattermostEmitter emitter = new MattermostEmitter("https", host, channel);
+
+			int nbDays = 10;
+
+			Date daysAgo = getDateXDaysAgo(nbDays);
+
+			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_acceleoproperties_trace.json"));
+			Map<String, Date> trace = traceFile.load();
+
+			List<Post> posts = Lists.newArrayList();
+			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
+					"https://github.com/eclipse-acceleo/acceleo.git", "https://github.com/eclipse-acceleo/acceleo/commit/"));
+			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/acceleo"), daysAgo).setIcon(SO_ICON)
+					.get());
+			
+			Collections.sort(posts, new Comparator<Post>() {
+				public int compare(Post m1, Post m2) {
+					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+				}
+			});
+
+			for (Post post : posts) {
+				send(emitter, trace, post);
+			}
+			traceFile.evictOldEvents(trace, 60);
+			traceFile.save(trace);
+		} else {
+			Assert.fail("Expecting the ACCELEO_CHANNEL environment variable to be set");
+		}
+	}
+
 	
 	@Test
 	public void sendEventsToP4CChan() throws Exception {
