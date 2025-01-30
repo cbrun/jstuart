@@ -62,10 +62,6 @@ public class ObeoMattermostInstanceTest {
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://github.com/sbegaudeau/eef.git", "https://github.com/sbegaudeau/eef/commit/"));
 
-			posts.addAll(new JenkinsLogger("https://ci.eclipse.org/eef/", daysAgo).getBuildResults(trace.keySet()));
-			posts.addAll(new GerritLogger("https://git.eclipse.org/r")
-					.getPatchsets(Sets.newHashSet("eef/org.eclipse.eef"), nbDays));
-
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
 					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
@@ -106,8 +102,8 @@ public class ObeoMattermostInstanceTest {
 						.setIcon(SO_ICON).get());
 			} catch (RuntimeException e) {
 				/*
-				 * we do expect such exception because there is not a single
-				 * post with uml-designer as a tag yet (08-2016)
+				 * we do expect such exception because there is not a single post with
+				 * uml-designer as a tag yet (08-2016)
 				 */
 			}
 
@@ -127,7 +123,6 @@ public class ObeoMattermostInstanceTest {
 		}
 	}
 
-	
 	@Test
 	public void sendEventsToSecurityChan() throws Exception {
 
@@ -185,7 +180,7 @@ public class ObeoMattermostInstanceTest {
 			Assert.fail("Expecting the SECURITY_CHANNEL environment variable to be set");
 		}
 	}
-	
+
 	@Test
 	public void sendEventsToM2DocChan() throws Exception {
 
@@ -210,12 +205,12 @@ public class ObeoMattermostInstanceTest {
 					"https://github.com/ObeoNetwork/M2Doc.git", "https://github.com/ObeoNetwork/M2Doc/commit/"));
 			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/m2doc"), daysAgo).setIcon(SO_ICON)
 					.get());
-			
+
 			// from Capella Forum
-			posts.addAll(new RssLogger(new URL("https://forum.mbse-capella.org/c/document-generation/21.rss"), daysAgo).setIcon(SO_ICON)
-					.get());
-			
-			//posts.addAll(new PolarsysForumsLogger("m2doc", daysAgo).forumLog());
+			posts.addAll(new RssLogger(new URL("https://forum.mbse-capella.org/c/document-generation/21.rss"), daysAgo)
+					.setIcon(SO_ICON).get());
+
+			// posts.addAll(new PolarsysForumsLogger("m2doc", daysAgo).forumLog());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
@@ -232,7 +227,7 @@ public class ObeoMattermostInstanceTest {
 			Assert.fail("Expecting the M2DOC_CHANNEL environment variable to be set");
 		}
 	}
-	
+
 	@Test
 	public void sendEventsToAcceleoChan() throws Exception {
 
@@ -254,10 +249,11 @@ public class ObeoMattermostInstanceTest {
 
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
-					"https://github.com/eclipse-acceleo/acceleo.git", "https://github.com/eclipse-acceleo/acceleo/commit/"));
+					"https://github.com/eclipse-acceleo/acceleo.git",
+					"https://github.com/eclipse-acceleo/acceleo/commit/"));
 			posts.addAll(new RssLogger(new URL("https://stackoverflow.com/feeds/tag/acceleo"), daysAgo).setIcon(SO_ICON)
 					.get());
-			
+
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
 					return m1.getCreatedAt().compareTo(m2.getCreatedAt());
@@ -274,7 +270,6 @@ public class ObeoMattermostInstanceTest {
 		}
 	}
 
-	
 	@Test
 	public void sendEventsToP4CChan() throws Exception {
 
@@ -291,18 +286,19 @@ public class ObeoMattermostInstanceTest {
 
 			Date daysAgo = getDateXDaysAgo(nbDays);
 
-			EmitterTrace traceFile = new EmitterTrace(new File(storage + "/" + host + "_python4cproperties_trace.json"));
+			EmitterTrace traceFile = new EmitterTrace(
+					new File(storage + "/" + host + "_python4cproperties_trace.json"));
 			Map<String, Date> trace = traceFile.load();
 
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
-					"https://github.com/labs4capella/python4capella.git", "https://github.com/labs4capella/python4capella.git/commit"));
+					"https://github.com/labs4capella/python4capella.git",
+					"https://github.com/labs4capella/python4capella.git/commit"));
 
-			
 			// from Capella Forum
-			posts.addAll(new RssLogger(new URL("https://forum.mbse-capella.org/c/Scripting-with-Capella-Python4Capella/23.rss"), daysAgo).setIcon(SO_ICON)
-					.get());
-		
+			posts.addAll(new RssLogger(
+					new URL("https://forum.mbse-capella.org/c/Scripting-with-Capella-Python4Capella/23.rss"), daysAgo)
+					.setIcon(SO_ICON).get());
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
