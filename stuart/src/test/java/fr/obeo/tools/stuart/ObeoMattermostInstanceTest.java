@@ -57,8 +57,8 @@ public class ObeoMattermostInstanceTest {
 
 			List<Post> posts = Lists.newArrayList();
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
-					"https://git.eclipse.org/r/eef/org.eclipse.eef",
-					"https://git.eclipse.org/c/eef/org.eclipse.eef.git/commit/?id="));
+					"https://github.com/eclipse-eef/org.eclipse.eef.git",
+					"https://github.com/eclipse-eef/org.eclipse.eef/commit/"));
 			posts.addAll(new GitLogger(new File(storage + "/clones/")).getMergedCommits(daysAgo,
 					"https://github.com/sbegaudeau/eef.git", "https://github.com/sbegaudeau/eef/commit/"));
 
