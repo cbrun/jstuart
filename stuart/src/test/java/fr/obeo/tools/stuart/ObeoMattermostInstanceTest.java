@@ -164,6 +164,11 @@ public class ObeoMattermostInstanceTest {
 					.get());
 			posts.addAll(new RssLogger(new URL("https://www.cert.ssi.gouv.fr/alerte/feed/"), daysAgo)
 					.setIcon("https://www.cert.ssi.gouv.fr/static/images/logo_anssi.svg").get());
+			posts.addAll(Collections2.filter(
+					new RssLogger(new URL("https://lists.apache.org/api/atom?list=announce&domain=apache.org"), daysAgo)
+							.setIcon("https://www.svgrepo.com/show/74601/security.svg").get(),
+					post -> (post.getSubject() != null && post.getSubject().contains("CVE"))
+							|| post.getMarkdownBody().contains("CVE")));
 
 			Collections.sort(posts, new Comparator<Post>() {
 				public int compare(Post m1, Post m2) {
